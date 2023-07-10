@@ -83,3 +83,6 @@ DerivedDataCache/*
 **/_ExternalObjects_/*
 **/MSPresets/*
 
+# Saved
+**/Saved/*
+
