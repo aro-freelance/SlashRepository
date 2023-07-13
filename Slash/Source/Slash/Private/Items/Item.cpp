@@ -2,6 +2,10 @@
 
 
 #include "Items/Item.h"
+#include "DrawDebugHelpers.h"
+#include "Slash/Slash.h"
+
+
 
 // Sets default values
 AItem::AItem()
@@ -15,15 +19,22 @@ void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	UE_LOG(LogTemp, Warning, TEXT("BeginPlay called."));
 
-	if (GEngine) {
-		GEngine->AddOnScreenDebugMessage(1000, 10.f, FColor::Cyan, FString("Item Message on Screen"));
-	}
-	else {
-		UE_LOG(LogTemp, Warning, TEXT("GEngine is null."));
-	}
+	
+	UWorld* World = GetWorld();
 
+	FVector Location = GetActorLocation();
+
+	FVector ForwardVector = GetActorForwardVector();
+	
+	/*
+	if (World) {
+		DrawDebugLine(World, Location, Location + (ForwardVector * 100), FColor::Red, true);
+	}*/
+
+
+	DebugLine(Location, ForwardVector);
+	DrawSphere(Location);
 	
 }
 
