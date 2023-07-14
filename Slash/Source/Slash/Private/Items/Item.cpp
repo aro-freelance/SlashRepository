@@ -2,8 +2,7 @@
 
 
 #include "Items/Item.h"
-#include "DrawDebugHelpers.h"
-#include "Slash/Slash.h"
+#include "Slash/DebugMacros.h"
 
 
 
@@ -19,30 +18,37 @@ void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
+	
 
 	
-	UWorld* World = GetWorld();
-
-	FVector Location = GetActorLocation();
-
-	FVector ForwardVector = GetActorForwardVector();
-	
-	/*
-	if (World) {
-		DrawDebugLine(World, Location, Location + (ForwardVector * 100), FColor::Red, true);
-	}*/
-
-
-	DebugLine(Location, ForwardVector);
-	DrawSphere(Location);
 	
 }
 
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
 
+	//movement in cm/frame = (cm/s) * (s/frame)
+	float MovementRate = 50.f * DeltaTime;
+
+	float RotationRate = 45.f * DeltaTime;
+
+	AddActorWorldOffset(FVector(MovementRate, 0.f, 0.f));
+
+	AddActorWorldRotation(FRotator(0.f, RotationRate, 0.f));
+
+	UWorld* World = GetWorld();
+	FVector Location = GetActorLocation();
+	FRotator Rotation = GetActorRotation();
+	FVector ForwardVector = GetActorForwardVector();
+	float Length = 100.f;
+
+	DRAW_SPHERE_SINGLE_FRAME(Location, FColor::Blue);
+	DRAW_VECTOR_SINGLE_FRAME(Location, ForwardVector, Length, FColor::Green);
+
+
+	
+/*
 	if (GEngine) {
 
 		FString Name = GetName(); 
@@ -55,7 +61,9 @@ void AItem::Tick(float DeltaTime)
 	}
 	else {
 		UE_LOG(LogTemp, Warning, TEXT("GEngine is null."));
-	}
+	} 
+*/
 	
+
 }
 
