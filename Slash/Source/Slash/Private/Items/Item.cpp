@@ -24,18 +24,27 @@ void AItem::BeginPlay()
 	
 }
 
+float AItem::TransformedSin()
+{
+	return SinAmplitude * FMath::Sin(RunningTime * SinSpeed);
+}
+
+float AItem::TransformedCos()
+{
+	return CosAmplitude * FMath::Cos(RunningTime * CosSpeed);
+}
+
 void AItem::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//movement in cm/frame = (cm/s) * (s/frame)
-	float MovementRate = 50.f * DeltaTime;
+	RunningTime += DeltaTime;
 
-	float RotationRate = 45.f * DeltaTime;
+	//float DeltaZ = Amplitude * FMath::Sin(RunningTime * Speed);
 
-	AddActorWorldOffset(FVector(MovementRate, 0.f, 0.f));
+	//AddActorWorldOffset(FVector(0.f, 0.f, DeltaZ));
 
-	AddActorWorldRotation(FRotator(0.f, RotationRate, 0.f));
+	//AddActorWorldRotation(FRotator(0.f, RotationRate, 0.f));
 
 	UWorld* World = GetWorld();
 	FVector Location = GetActorLocation();
