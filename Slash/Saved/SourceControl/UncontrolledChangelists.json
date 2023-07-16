@@ -5,6 +5,8 @@
 			"guid": "00000000000000000000000000000000",
 			"description": "Default Uncontrolled Changelist",
 			"files": [
+				"D:/UnrealProjects/SlashRepository/Slash/Content/Maps/My_Minimal_Default.umap",
+				"D:/UnrealProjects/SlashRepository/Slash/Content/Blueprints/Items/BP_Item.uasset",
 				"C:/Users/yelsa/OneDrive/Documents/Unreal Projects/SlashRepository/Slash/Content/__ExternalObjects__/Maps/SlashOpenWorld/9/DA/SHALN41E6FNWV1Z8ONQZ7E.uasset",
 				"C:/Users/yelsa/OneDrive/Documents/Unreal Projects/SlashRepository/Slash/Content/__ExternalActors__/Maps/SlashOpenWorld/3/AC/CR702T285PBG6TKJ1E2MID.uasset",
 				"C:/Users/yelsa/OneDrive/Documents/Unreal Projects/SlashRepository/Slash/Content/__ExternalActors__/Maps/SlashOpenWorld/9/QR/BP55LM3P92L4Y2E1GK4MQU.uasset",
