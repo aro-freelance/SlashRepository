@@ -7,6 +7,8 @@
 #include "Components/InputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+#include "Camera/CameraComponent.h"
 
 // Sets default values
 ABird::ABird()
@@ -21,6 +23,13 @@ ABird::ABird()
 	
 	BirdMesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("BirdMesh"));
 	BirdMesh->SetupAttachment(GetRootComponent());
+
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
+	CameraBoom->SetupAttachment(GetRootComponent());
+	CameraBoom->TargetArmLength = 170.f;
+
+	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
+	ViewCamera->SetupAttachment(CameraBoom);
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -45,29 +54,34 @@ void ABird::BeginPlay()
 }
 
 
-void ABird::MoveForward(float Value)
-{
-	/*
-	if (Controller && (Value != 0.f))
-	{
-		FVector Forward = GetActorForwardVector();
-		AddMovementInput(Forward, Value);
-	}
-	*/
-}
-
 void ABird::Move(const FInputActionValue& Value) 
 {
-	const bool CurrentValue = Value.Get<bool>();
+	const float DirectionValue = Value.Get<float>();
 
-	if (CurrentValue) 
+	if (DirectionValue) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Move action triggered"));
+		if (Controller && (DirectionValue != 0.f))
+		{
+			FVector Forward = GetActorForwardVector();
+			AddMovementInput(Forward, DirectionValue);
+		}
 	}
-	else 
+
+}
+
+void ABird::Look(const FInputActionValue& Value)
+{
+
+	const FVector2D LookAxisValue = Value.Get<FVector2D>();
+
+	if (GetController())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Move action triggered failed to get value"));
+		AddControllerYawInput(LookAxisValue.X);
+
+		AddControllerPitchInput(LookAxisValue.Y);
+
 	}
+
 
 }
 
@@ -87,6 +101,7 @@ void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	{
 
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ABird::Move);
+		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ABird::Look);
 
 	}
 
