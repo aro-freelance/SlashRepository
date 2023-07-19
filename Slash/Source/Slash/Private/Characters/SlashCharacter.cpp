@@ -7,6 +7,8 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
+#include "GameFramework/CharacterMovementComponent.h"
+#include "GroomComponent.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -17,12 +19,23 @@ ASlashCharacter::ASlashCharacter()
 	bUseControllerRotationRoll = false;
 	bUseControllerRotationYaw = false;
 
+	GetCharacterMovement()->bOrientRotationToMovement = true;
+	GetCharacterMovement()->RotationRate = FRotator(0.f, 500.f, 0.f);
+
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArm"));
 	CameraBoom->SetupAttachment(GetRootComponent());
 	CameraBoom->TargetArmLength = 170.f;
 
 	ViewCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("ViewCamera"));
 	ViewCamera->SetupAttachment(CameraBoom);
+
+	Hair = CreateDefaultSubobject<UGroomComponent>(TEXT("Hair"));
+	Hair->SetupAttachment(GetMesh());
+	Hair->AttachmentName = FString("head");
+
+	Eyebrows = CreateDefaultSubobject<UGroomComponent>(TEXT("Eyebrows"));
+	Eyebrows->SetupAttachment(GetMesh());
+	Eyebrows->AttachmentName = FString("head");
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
@@ -48,20 +61,15 @@ void ASlashCharacter::Move(const FInputActionValue& Value)
 	//Add later
 	//if (ActionState != EActionState::EAS_Unoccupied) return;
 
-
+	//get controller movement input
 	const FVector2D MovementVector = Value.Get<FVector2D>();
-
-	//const FVector Forward = GetActorForwardVector();
-	//AddMovementInput(Forward, MovementVector.Y);
-
-	//const FVector Right = GetActorRightVector();
-	//AddMovementInput(Right, MovementVector.X);
-
-
-	
+	//get controller camera input
 	const FRotator Rotation = Controller->GetControlRotation();
+
+	//direction rotation of camera accounting only for movement on the ground 
 	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
 
+	//move the character based on camera rotation
 	const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
 	AddMovementInput(ForwardDirection, MovementVector.Y);
 	const FVector RightDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::Y);
