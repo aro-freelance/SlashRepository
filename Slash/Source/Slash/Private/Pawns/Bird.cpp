@@ -10,7 +10,6 @@
 #include "GameFramework/SpringArmComponent.h"
 #include "Camera/CameraComponent.h"
 
-// Sets default values
 ABird::ABird()
 {
  	// Set this pawn to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
@@ -35,7 +34,6 @@ ABird::ABird()
 
 }
 
-// Called when the game starts or when spawned
 void ABird::BeginPlay()
 {
 	Super::BeginPlay();
@@ -85,14 +83,12 @@ void ABird::Look(const FInputActionValue& Value)
 
 }
 
-// Called every frame
 void ABird::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 }
 
-// Called to bind functionality to input
 void ABird::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
