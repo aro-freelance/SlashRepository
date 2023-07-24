@@ -87,6 +87,36 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 }
 
+void ASlashCharacter::Jump(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Jump pressed"));
+
+	Super::Jump();
+
+}
+
+void ASlashCharacter::Dodge(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Dodge pressed"));
+
+}
+
+void ASlashCharacter::Equip(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Equip pressed"));
+
+}
+
+void ASlashCharacter::Attack(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Attack pressed"));
+
+}
+
 
 void ASlashCharacter::Tick(float DeltaTime)
 {
@@ -102,6 +132,13 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	{
 		EnhancedInputComponent->BindAction(CharacterMoveAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Move);
 		EnhancedInputComponent->BindAction(CharacterLookAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Look);
+
+		EnhancedInputComponent->BindAction(CharacterJumpAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Jump);
+		EnhancedInputComponent->BindAction(CharacterDodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Dodge);
+		EnhancedInputComponent->BindAction(CharacterEquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
+		EnhancedInputComponent->BindAction(CharacterAttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
+
+		
 	}
 
 }

@@ -39,6 +39,27 @@ protected:
 
 	void Look(const FInputActionValue& Value);
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterJumpAction;
+
+	void Jump(const FInputActionValue& Value);
+
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterDodgeAction;
+
+	void Dodge(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterEquipAction;
+
+	void Equip(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterAttackAction;
+
+	void Attack(const FInputActionValue& Value);
+
 private:
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* CameraBoom;
