@@ -41,21 +41,24 @@ float AItem::TransformedCos()
 
 void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	const FString OtherActorName = OtherActor->GetName();
+	const FString OtherActorName = FString("Overlap started between ") + FString (this->GetName()) 
+		+ FString (" and ") + FString (OtherActor->GetName());
 	if (GEngine) 
 	{
 		GEngine->AddOnScreenDebugMessage(1, 30.f, FColor::Blue, OtherActorName);
-		UE_LOG(LogTemp, Warning, TEXT("sphere overlap"));
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *OtherActorName);
 	}
 }
 
 void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
-	const FString OtherActorName = OtherActor->GetName();
+	const FString OtherActorName = FString("Overlap ended between ") + FString(this->GetName())
+		+ FString(" and ") + FString(OtherActor->GetName());
 	if (GEngine)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("sphere end overlap"));
+		GEngine->AddOnScreenDebugMessage(1, 30.f, FColor::Green, OtherActorName);
+		UE_LOG(LogTemp, Warning, TEXT("%s"), *OtherActorName);
 	}
 
 }
