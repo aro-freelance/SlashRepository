@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
+#include "CharacterTypes.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
@@ -13,6 +14,7 @@ class UInputMappingContext;
 class UInputAction;
 class UGroomComponent;
 class AItem;
+
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ACharacter
@@ -62,6 +64,9 @@ protected:
 	void Attack(const FInputActionValue& Value);
 
 private:
+
+	ECharacterState CharacterState = ECharacterState::ECS_Unarmed;
+
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* CameraBoom;
 
@@ -81,5 +86,6 @@ private:
 //Getters and Setters
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
 
 };
