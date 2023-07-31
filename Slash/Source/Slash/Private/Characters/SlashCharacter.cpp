@@ -11,6 +11,7 @@
 #include "GroomComponent.h"
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
+#include "Items/Weapons/WeaponTypes.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -108,14 +109,59 @@ void ASlashCharacter::Dodge(const FInputActionValue& Value)
 void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("Equip pressed"));
+	CharacterState = GetCharacterState();
 
 	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
-	if (OverlappingWeapon) 
+
+	FString StateString = *UEnum::GetValueAsString(CharacterState);
+
+	//UE_LOG(LogTemp, Warning, TEXT("Equip pressed %s"), StateString);
+
+	if (CharacterState != ECharacterState::ECS_Unarmed)
 	{
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
-		CharacterState = ECharacterState::ECS_EquippedOneHanded;
+		//unequip weapon in socket
+		if (OverlappingWeapon)
+		{
+			EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
+			if (WeaponSize == EWeaponSize::ECS_TwoHanded)
+			{
+				SetCharacterState(ECharacterState::ECS_Unarmed);
+				//remove from "TwoHandedHammerSocket"
+				UE_LOG(LogTemp, Warning, TEXT("two hand unequip"));
+			}
+			else
+			{
+				SetCharacterState(ECharacterState::ECS_Unarmed);
+				//remove from "RightHandSocket"
+				UE_LOG(LogTemp, Warning, TEXT("one hand unequip"));
+			}
+
+		}
+		
 	}
+	else
+	{
+
+		if (OverlappingWeapon)
+		{
+			EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
+			if (WeaponSize == EWeaponSize::ECS_TwoHanded)
+			{
+				SetCharacterState(ECharacterState::ECS_EquippedTwoHanded);
+				OverlappingWeapon->Equip(GetMesh(), FName("TwoHandedHammerSocket"));
+				UE_LOG(LogTemp, Warning, TEXT("two hand equip"));
+			}
+			else
+			{
+				SetCharacterState(ECharacterState::ECS_EquippedOneHanded);
+				OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+				UE_LOG(LogTemp, Warning, TEXT("one hand equip"));
+			}
+
+		}
+	}
+
+	
 
 }
 

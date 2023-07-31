@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Items/Item.h"
+#include "Items/Weapons/WeaponTypes.h"
 #include "Weapon.generated.h"
 
 /**
@@ -17,6 +18,7 @@ class SLASH_API AWeapon : public AItem
 public:
 	void Equip(USceneComponent* InParent, FName InSocketName);
 	
+	
 protected:
 
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -24,5 +26,17 @@ protected:
 
 	virtual void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
+	EWeaponSize WeaponSize = EWeaponSize::ECS_OneHanded;
+
+private:
+	
+
+//Getters and Setters
+public:
+	
+	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+	FORCEINLINE EWeaponSize GetWeaponSize() const { return WeaponSize; }
 	
 };
