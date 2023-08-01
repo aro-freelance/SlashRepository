@@ -28,7 +28,7 @@ protected:
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex) override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
-	EWeaponSize WeaponSize = EWeaponSize::ECS_OneHanded;
+	EWeaponSize WeaponSize = EWeaponSize::EWS_OneHanded;
 
 private:
 	

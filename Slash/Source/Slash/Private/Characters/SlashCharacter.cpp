@@ -112,54 +112,13 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 
 	CharacterState = GetCharacterState();
 
-	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
-
-	FString StateString = *UEnum::GetValueAsString(CharacterState);
-
-	//UE_LOG(LogTemp, Warning, TEXT("Equip pressed %s"), StateString);
-
-	if (CharacterState != ECharacterState::ECS_Unarmed)
+	if (CharacterState == ECharacterState::ECS_Unarmed)
 	{
-		//unequip weapon in socket
-		if (OverlappingWeapon)
-		{
-			EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
-			if (WeaponSize == EWeaponSize::ECS_TwoHanded)
-			{
-				SetCharacterState(ECharacterState::ECS_Unarmed);
-				//remove from "TwoHandedHammerSocket"
-				UE_LOG(LogTemp, Warning, TEXT("two hand unequip"));
-			}
-			else
-			{
-				SetCharacterState(ECharacterState::ECS_Unarmed);
-				//remove from "RightHandSocket"
-				UE_LOG(LogTemp, Warning, TEXT("one hand unequip"));
-			}
-
-		}
-		
+		SocketWeapon();
 	}
 	else
 	{
-
-		if (OverlappingWeapon)
-		{
-			EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
-			if (WeaponSize == EWeaponSize::ECS_TwoHanded)
-			{
-				SetCharacterState(ECharacterState::ECS_EquippedTwoHanded);
-				OverlappingWeapon->Equip(GetMesh(), FName("TwoHandedHammerSocket"));
-				UE_LOG(LogTemp, Warning, TEXT("two hand equip"));
-			}
-			else
-			{
-				SetCharacterState(ECharacterState::ECS_EquippedOneHanded);
-				OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
-				UE_LOG(LogTemp, Warning, TEXT("one hand equip"));
-			}
-
-		}
+		UnSocketWeapon();
 	}
 
 	
@@ -170,6 +129,25 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("Attack pressed"));
+	
+	if (CanAttack()) 
+	{
+		PlayAttackMontage();
+		ActionState = EActionState::EAS_Attacking;
+	}
+
+}
+
+bool ASlashCharacter::CanAttack()
+{
+	return ActionState == EActionState::EAS_Unoccupied &&
+		   CharacterState != ECharacterState::ECS_Unarmed;
+}
+
+
+
+void ASlashCharacter::PlayAttackMontage()
+{
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -178,7 +156,7 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 
 		AnimInstance->Montage_Play(AttackSwordMontage);
 
-		int32 RandomSelection = FMath::RandRange(0, 1);
+		const int32 RandomSelection = FMath::RandRange(0, 1);
 		FName SectionName = FName();
 		switch (RandomSelection)
 		{
@@ -195,7 +173,50 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 		AnimInstance->Montage_JumpToSection(SectionName, AttackSwordMontage);
 
 	}
+}
 
+
+
+void ASlashCharacter::SocketWeapon()
+{
+	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
+	if (WeaponSize == EWeaponSize::EWS_TwoHanded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("two hand equip"));
+
+		OverlappingWeapon->Equip(GetMesh(), FName("TwoHandedHammerSocket"));
+		CharacterState = ECharacterState::ECS_EquippedTwoHanded;
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("one hand equip"));
+
+		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
+		CharacterState = ECharacterState::ECS_EquippedOneHanded;
+	}
+}
+
+void ASlashCharacter::UnSocketWeapon()
+{
+	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
+	if (WeaponSize == EWeaponSize::EWS_TwoHanded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("two hand unequip"));
+
+		//TODO remove from "TwoHandedHammerSocket"
+		CharacterState = ECharacterState::ECS_Unarmed;
+
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("one hand unequip"));
+
+		//TODO remove from "RightHandSocket"
+		CharacterState = ECharacterState::ECS_Unarmed;
+	}
 }
 
 

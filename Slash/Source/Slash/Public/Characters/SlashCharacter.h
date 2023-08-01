@@ -33,6 +33,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* SlashCharacterContext;
 
+	/*
+	* Player Input Callbacks
+	*/
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* CharacterMoveAction;
 
@@ -64,9 +68,24 @@ protected:
 
 	void Attack(const FInputActionValue& Value);
 
-private:
+	void SocketWeapon();
+	void UnSocketWeapon();
 
+	
+
+	/*
+	* Play montage functions
+	*/
+
+	void PlayAttackMontage();
+	bool CanAttack();
+
+private:
+	//UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ECharacterState CharacterState = ECharacterState::ECS_Unarmed;
+
+	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(VisibleAnywhere)
 	USpringArmComponent* CameraBoom;
@@ -83,6 +102,8 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
 
+
+
 	/*
 	* Animation Montages
 	*/
@@ -95,6 +116,9 @@ private:
 public:
 	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
-	FORCEINLINE void SetCharacterState(ECharacterState NewCharacterState) { CharacterState = NewCharacterState; }
+	
+	//FORCEINLINE void SetCharacterState(ECharacterState NewCharacterState) { CharacterState = NewCharacterState; }
+
+	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 
 };
