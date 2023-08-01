@@ -14,6 +14,7 @@ class UInputMappingContext;
 class UInputAction;
 class UGroomComponent;
 class AItem;
+class UAnimMontage;
 
 
 UCLASS()
@@ -81,6 +82,13 @@ private:
 
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
+
+	/*
+	* Animation Montages
+	*/
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackSwordMontage;
 
 
 //Getters and Setters

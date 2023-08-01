@@ -12,6 +12,7 @@
 #include "Items/Item.h"
 #include "Items/Weapons/Weapon.h"
 #include "Items/Weapons/WeaponTypes.h"
+#include "Animation/AnimMontage.h"
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -169,6 +170,31 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
 
 	UE_LOG(LogTemp, Warning, TEXT("Attack pressed"));
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && AttackSwordMontage)
+	{
+
+		AnimInstance->Montage_Play(AttackSwordMontage);
+
+		int32 RandomSelection = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = FName("Attack_h");
+			break;
+		case 1:
+			SectionName = FName("Attack_v");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackSwordMontage);
+
+	}
 
 }
 
