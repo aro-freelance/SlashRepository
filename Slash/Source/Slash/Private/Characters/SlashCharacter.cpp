@@ -62,8 +62,8 @@ void ASlashCharacter::BeginPlay()
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
 {
-	//Add later
-	//if (ActionState != EActionState::EAS_Unoccupied) return;
+	
+	if (ActionState != EActionState::EAS_Unoccupied) return;
 
 	//get controller movement input
 	const FVector2D MovementVector = Value.Get<FVector2D>();
