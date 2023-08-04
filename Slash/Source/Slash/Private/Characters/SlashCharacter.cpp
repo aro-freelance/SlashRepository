@@ -109,31 +109,231 @@ void ASlashCharacter::Dodge(const FInputActionValue& Value)
 
 void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
-
-	CharacterState = GetCharacterState();
-
-	if (CharacterState == ECharacterState::ECS_Unarmed)
-	{
-		SocketWeapon();
-	}
-	else
+	if (CanDisarm())
 	{
 		UnSocketWeapon();
 	}
-
-	
-
+	else if (CanArm())
+	{
+		SocketWeapon(HasWeapon());
+	}
 }
+
+
+
+bool ASlashCharacter::CanDisarm()
+{
+	CharacterState = GetCharacterState();
+
+	return ActionState == EActionState::EAS_Unoccupied && 
+		CharacterState != ECharacterState::ECS_Unarmed;
+}
+
+bool ASlashCharacter::CanArm()
+{
+	CharacterState = GetCharacterState();
+
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState == ECharacterState::ECS_Unarmed;
+}
+
+bool ASlashCharacter::HasWeapon()
+{
+	bool hasStoredWeapon = false;
+	if (EquippedWeapon) 
+	{
+		hasStoredWeapon = true;
+	}
+
+	return hasStoredWeapon;
+}
+
+
+
+
+void ASlashCharacter::SocketWeapon(bool HasWeapon)
+{
+	ActionState = EActionState::EAS_Equipping;
+
+	//if the player does not already have a stored weapon
+	if (!HasWeapon)
+	{
+		
+		AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+		if (OverlappingWeapon)
+		{
+			EquippedWeapon = OverlappingWeapon;
+			EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+			FName SocketName = WeaponSizeToSocketFName(WeaponSize, true);
+
+			EquippedWeapon->Equip(GetMesh(), SocketName);
+
+			CharacterState = WeaponSizeToCharacterState(WeaponSize);
+
+			UE_LOG(LogTemp, Warning, TEXT("NEW weapon block fired"));
+		}
+		//this is turned off here because there is no associated anim playing at this time
+		ActionState = EActionState::EAS_Unoccupied;
+	}
+
+	//the player has a stored weapon
+	else if (HasWeapon) 
+	{
+
+		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+		FName SocketName = WeaponSizeToSocketFName(WeaponSize, true);
+		FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, true);
+
+		EquippedWeapon->Equip(GetMesh(), SocketName);
+		PlayEquipMontage(MontageName);
+
+		CharacterState = WeaponSizeToCharacterState(WeaponSize);
+
+		UE_LOG(LogTemp, Warning, TEXT("HAS weapon block fired"));
+			
+	}
+	
+}
+
+void ASlashCharacter::UnSocketWeapon()
+{
+	ActionState = EActionState::EAS_Equipping;
+
+	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
+	if (OverlappingWeapon)
+	{
+		EquippedWeapon = OverlappingWeapon;
+		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+		FName SocketName = WeaponSizeToSocketFName(WeaponSize, false);
+		FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, false);
+
+		//TODO make a new function on weapon for sheath
+		//EquippedWeapon->Equip(GetMesh(), SocketName);
+		PlayEquipMontage(MontageName);
+
+		CharacterState = ECharacterState::ECS_Unarmed;
+	}
+	
+}
+
+ECharacterState ASlashCharacter::WeaponSizeToCharacterState(EWeaponSize WeaponSize)
+{
+	ECharacterState NewCharacterState = ECharacterState();
+
+	//TODO: add cases for other weapon types
+
+	switch (WeaponSize)
+	{
+	case EWeaponSize::EWS_OneHanded:
+		NewCharacterState = ECharacterState::ECS_EquippedOneHanded;
+		break;
+	case EWeaponSize::EWS_TwoHanded:
+		NewCharacterState = ECharacterState::ECS_EquippedTwoHanded;
+		break;
+	default:
+		break;
+	}
+
+	return NewCharacterState;
+}
+
+FName ASlashCharacter::WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEquipping)
+{
+	FName SocketName = FName();
+
+	//TODO: add cases for other weapon types
+
+	switch (WeaponSize)
+	{
+	case EWeaponSize::EWS_OneHanded: 
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponSize::EWS_TwoHanded:
+		if (isEquipping)
+		{
+			SocketName = FName("TwoHandedHammerSocket");
+		}
+		else
+		{
+			SocketName = FName("TwoHandedSheathSocket");
+		}
+		break;
+	default:
+		break;
+
+	}
+
+	return SocketName;
+}
+
+FName ASlashCharacter::WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, bool isEquipping)
+{
+	FName MontageName = FName();
+
+	//TODO: add cases for other weapon types
+
+	switch (WeaponSize)
+	{
+	case EWeaponSize::EWS_OneHanded:
+		if (isEquipping) 
+		{
+			MontageName = FName("Equip");
+		}
+		else 
+		{
+			MontageName = FName("Unequip");
+		}
+
+		break;
+	case EWeaponSize::EWS_TwoHanded:
+		if (isEquipping)
+		{
+			MontageName = FName("EquipTwoHanded");
+		}
+		else
+		{
+			MontageName = FName("UnequipTwoHanded");
+		}
+
+		break;
+	default:
+		break;
+
+	}
+
+	return MontageName;
+}
+
+
+
+void ASlashCharacter::PlayEquipMontage(FName SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && EquipSwordMontage)
+	{
+
+		AnimInstance->Montage_Play(EquipSwordMontage);
+
+		AnimInstance->Montage_JumpToSection(SectionName, EquipSwordMontage);
+
+	}
+}
+
 
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("Attack pressed"));
 	
 	if (CanAttack()) 
 	{
 		PlayAttackMontage();
-		ActionState = EActionState::EAS_Attacking;
 	}
 
 }
@@ -146,6 +346,7 @@ bool ASlashCharacter::CanAttack()
 
 
 
+
 void ASlashCharacter::PlayAttackMontage()
 {
 
@@ -153,6 +354,7 @@ void ASlashCharacter::PlayAttackMontage()
 
 	if (AnimInstance && AttackSwordMontage)
 	{
+		ActionState = EActionState::EAS_Attacking;
 
 		AnimInstance->Montage_Play(AttackSwordMontage);
 
@@ -177,47 +379,6 @@ void ASlashCharacter::PlayAttackMontage()
 
 
 
-void ASlashCharacter::SocketWeapon()
-{
-	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
-	EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
-	if (WeaponSize == EWeaponSize::EWS_TwoHanded)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("two hand equip"));
-
-		OverlappingWeapon->Equip(GetMesh(), FName("TwoHandedHammerSocket"));
-		CharacterState = ECharacterState::ECS_EquippedTwoHanded;
-
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("one hand equip"));
-
-		OverlappingWeapon->Equip(GetMesh(), FName("RightHandSocket"));
-		CharacterState = ECharacterState::ECS_EquippedOneHanded;
-	}
-}
-
-void ASlashCharacter::UnSocketWeapon()
-{
-	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
-	EWeaponSize WeaponSize = OverlappingWeapon->GetWeaponSize();
-	if (WeaponSize == EWeaponSize::EWS_TwoHanded)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("two hand unequip"));
-
-		//TODO remove from "TwoHandedHammerSocket"
-		CharacterState = ECharacterState::ECS_Unarmed;
-
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("one hand unequip"));
-
-		//TODO remove from "RightHandSocket"
-		CharacterState = ECharacterState::ECS_Unarmed;
-	}
-}
 
 
 void ASlashCharacter::Tick(float DeltaTime)

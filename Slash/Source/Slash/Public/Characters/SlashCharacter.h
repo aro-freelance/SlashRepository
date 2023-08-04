@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
+#include "Items/Weapons/WeaponTypes.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
@@ -15,6 +16,7 @@ class UInputAction;
 class UGroomComponent;
 class AItem;
 class UAnimMontage;
+class AWeapon;
 
 
 UCLASS()
@@ -68,7 +70,7 @@ protected:
 
 	void Attack(const FInputActionValue& Value);
 
-	void SocketWeapon();
+	void SocketWeapon(bool HasWeapon);
 	void UnSocketWeapon();
 
 	
@@ -79,6 +81,16 @@ protected:
 
 	void PlayAttackMontage();
 	bool CanAttack();
+
+	void PlayEquipMontage(FName SectionName);
+	bool CanDisarm();
+	bool CanArm();
+	bool HasWeapon();
+
+	FName WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEquipping);
+	FName WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, bool isEquipping);
+	ECharacterState WeaponSizeToCharacterState(EWeaponSize WeaponSize);
+
 
 private:
 	//UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -102,7 +114,8 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
 
-
+	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	AWeapon* EquippedWeapon;
 
 	/*
 	* Animation Montages
@@ -110,6 +123,9 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackSwordMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* EquipSwordMontage;
 
 
 //Getters and Setters
