@@ -396,7 +396,7 @@ void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
 
 		AnimInstance->Montage_Play(AttackSwordMontage);
 
-		const int32 RandomSelection = FMath::RandRange(0, 1);
+		const int32 RandomSelection = FMath::RandRange(0, 2);
 		FName SectionName = FName();
 		switch (RandomSelection)
 		{
@@ -406,6 +406,9 @@ void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
 		case 1:
 			SectionName = FName("Attack_v");
 			break;
+		case 2: 
+			SectionName = FName("Attack_spinjump");
+			break; 
 		default:
 			break;
 		}
@@ -421,7 +424,7 @@ void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
 
 		AnimInstance->Montage_Play(AttackHammerMontage);
 
-		const int32 RandomSelection = FMath::RandRange(0, 1);
+		const int32 RandomSelection = FMath::RandRange(0, 2);
 		FName SectionName = FName();
 		switch (RandomSelection)
 		{
@@ -430,6 +433,9 @@ void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
 			break;
 		case 1:
 			SectionName = FName("HammerSwing");
+			break;
+		case 2:
+			SectionName = FName("HammerHigh");
 			break;
 		default:
 			break;
@@ -457,8 +463,8 @@ void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 
 			if (!EquippedWeapon->IsAttachedTo(this)) 
 			{
-				EquippedWeapon = nullptr;
 				EquippedWeapon->SetItemState(EItemState::EIS_Hovering);
+				EquippedWeapon = nullptr;
 				CharacterState = ECharacterState::ECS_Unarmed;
 				ActionState = EActionState::EAS_Unoccupied;
 			}
