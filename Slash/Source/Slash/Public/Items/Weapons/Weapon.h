@@ -7,18 +7,28 @@
 #include "Items/Weapons/WeaponTypes.h"
 #include "Weapon.generated.h"
 
-/**
- * 
- */
+
+class USoundBase;
+
+
 UCLASS()
 class SLASH_API AWeapon : public AItem
 {
 	GENERATED_BODY()
 
 public:
-	void Equip(USceneComponent* InParent, FName InSocketName);
+
+	//void Equip(USceneComponent* InParent, FName InSocketName);
+
+	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
+
+	void DetachMeshFromSocket();
 	
-	
+	void PlayWeaponPickupSound();
+
+	UPROPERTY(EditAnywhere, Category = "Rotation")
+	FRotator StartingRotation = FRotator(0 , 0 , 0);
+
 protected:
 
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -30,13 +40,24 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
 	EWeaponSize WeaponSize = EWeaponSize::EWS_OneHanded;
 
+	
+
 private:
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	USoundBase* WeaponPickupSound;
+	
 	
 
 //Getters and Setters
 public:
 	
 	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+	
 	FORCEINLINE EWeaponSize GetWeaponSize() const { return WeaponSize; }
+
+	FORCEINLINE void SetItemState(EItemState NewItemState) { ItemState = NewItemState; }
+	FORCEINLINE EItemState GetItemState() const { return ItemState; }
+
 	
 };

@@ -70,8 +70,14 @@ protected:
 
 	void Attack(const FInputActionValue& Value);
 
-	void SocketWeapon(bool HasWeapon);
-	void UnSocketWeapon();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterDropWeaponAction;
+
+	void DropWeapon(const FInputActionValue& Value);
+
+	void EquipNewWeapon();
+	void EquipAnimation();
+	void UnEquipAnimation();
 
 	
 
@@ -79,7 +85,7 @@ protected:
 	* Play montage functions
 	*/
 
-	void PlayAttackMontage();
+	void PlayAttackMontage(EWeaponSize WeaponSize);
 	bool CanAttack();
 
 	void PlayEquipMontage(FName SectionName);
@@ -87,9 +93,14 @@ protected:
 	bool CanArm();
 	bool HasWeapon();
 
+	bool CanDropWeapon();
+
 	FName WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEquipping);
 	FName WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, bool isEquipping);
 	ECharacterState WeaponSizeToCharacterState(EWeaponSize WeaponSize);
+
+	UFUNCTION(BlueprintCallable)
+	void AttachWeapon(EWeaponSize WeaponSize, bool isEquipping);
 
 
 private:
@@ -114,7 +125,7 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	AItem* OverlappingItem;
 
-	UPROPERTY(VisibleAnywhere, Category = Weapon)
+	UPROPERTY(BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
 	AWeapon* EquippedWeapon;
 
 	/*
@@ -123,6 +134,10 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackSwordMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackHammerMontage;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* EquipSwordMontage;

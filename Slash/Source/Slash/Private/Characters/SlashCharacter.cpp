@@ -111,12 +111,29 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
 	if (CanDisarm())
 	{
-		UnSocketWeapon();
+		ActionState = EActionState::EAS_Equipping;
+
+		UnEquipAnimation();
 	}
 	else if (CanArm())
 	{
-		SocketWeapon(HasWeapon());
+		ActionState = EActionState::EAS_Equipping;
+
+		if (!HasWeapon())
+		{
+			EquipNewWeapon();
+		}
+		else 
+		{
+			EquipAnimation();
+		}
+		
 	}
+
+	if (ActionState == EActionState::EAS_Unoccupied) { UE_LOG(LogTemp, Warning, TEXT("equip press finished: unoccupied")); }
+	if (ActionState == EActionState::EAS_Attacking) { UE_LOG(LogTemp, Warning, TEXT("equip press finished: attacking")); }
+	if (ActionState == EActionState::EAS_Equipping) { UE_LOG(LogTemp, Warning, TEXT("equip press finished: equipping")); }
+
 }
 
 
@@ -148,71 +165,61 @@ bool ASlashCharacter::HasWeapon()
 	return hasStoredWeapon;
 }
 
-
-
-
-void ASlashCharacter::SocketWeapon(bool HasWeapon)
+void ASlashCharacter::EquipNewWeapon()
 {
-	ActionState = EActionState::EAS_Equipping;
-
-	//if the player does not already have a stored weapon
-	if (!HasWeapon)
-	{
-		
-		AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
-		if (OverlappingWeapon)
-		{
-			EquippedWeapon = OverlappingWeapon;
-			EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
-			FName SocketName = WeaponSizeToSocketFName(WeaponSize, true);
-
-			EquippedWeapon->Equip(GetMesh(), SocketName);
-
-			CharacterState = WeaponSizeToCharacterState(WeaponSize);
-
-			UE_LOG(LogTemp, Warning, TEXT("NEW weapon block fired"));
-		}
-		//this is turned off here because there is no associated anim playing at this time
-		ActionState = EActionState::EAS_Unoccupied;
-	}
-
-	//the player has a stored weapon
-	else if (HasWeapon) 
-	{
-
-		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
-		FName SocketName = WeaponSizeToSocketFName(WeaponSize, true);
-		FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, true);
-
-		EquippedWeapon->Equip(GetMesh(), SocketName);
-		PlayEquipMontage(MontageName);
-
-		CharacterState = WeaponSizeToCharacterState(WeaponSize);
-
-		UE_LOG(LogTemp, Warning, TEXT("HAS weapon block fired"));
-			
-	}
-	
-}
-
-void ASlashCharacter::UnSocketWeapon()
-{
-	ActionState = EActionState::EAS_Equipping;
+	UE_LOG(LogTemp, Warning, TEXT("equip weapon, no weapon stored"));
 
 	AWeapon* OverlappingWeapon = Cast<AWeapon>(OverlappingItem);
 	if (OverlappingWeapon)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("overlapping weapon = good"));
+
 		EquippedWeapon = OverlappingWeapon;
+
 		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
-		FName SocketName = WeaponSizeToSocketFName(WeaponSize, false);
-		FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, false);
 
-		//TODO make a new function on weapon for sheath
-		//EquippedWeapon->Equip(GetMesh(), SocketName);
-		PlayEquipMontage(MontageName);
+		CharacterState = WeaponSizeToCharacterState(WeaponSize);
 
-		CharacterState = ECharacterState::ECS_Unarmed;
+		AttachWeapon(WeaponSize, true);
+
+		EquippedWeapon->PlayWeaponPickupSound();
+
 	}
+
+	/*this is turned off here because there is no associated anim playing at this time
+	//TODO: since this is turned off here,
+	if the player spams the equip button the weapon will be picked up and then sheathed
+	this is undesirable.
+	if possible we should make it so that when the weapon is intitially picked up
+	it cannot be sheathed until a delay has passed
+	*/
+	ActionState = EActionState::EAS_Unoccupied;
+}
+
+void ASlashCharacter::EquipAnimation()
+{
+	UE_LOG(LogTemp, Warning, TEXT("equip weapon, weapon stored"));
+	EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+	FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, true);
+	CharacterState = WeaponSizeToCharacterState(WeaponSize);
+
+	PlayEquipMontage(MontageName);
+
+	//AttachWeapon is called in blueprints when anim notify happens at a certain point in the animation
+	
+}
+
+void ASlashCharacter::UnEquipAnimation()
+{
+
+	EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+	FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, false);
+
+	CharacterState = ECharacterState::ECS_Unarmed;
+
+	PlayEquipMontage(MontageName);
+
+	//AttachWeapon is called in blueprints when anim notify happens at a certain point in the animation
 	
 }
 
@@ -311,6 +318,33 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, boo
 	return MontageName;
 }
 
+/*
+this is called in blueprints 
+when the animation notify happens
+from the player hitting the equip button to start the animation
+*/
+void ASlashCharacter::AttachWeapon(EWeaponSize WeaponSize, bool isEquipping)
+{
+	if (EquippedWeapon)
+	{
+		//socket the weapon
+		FName SocketName = WeaponSizeToSocketFName(WeaponSize, isEquipping);
+		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
+
+		//and then update its itemstate
+		if (isEquipping) 
+		{
+			EquippedWeapon->SetItemState(EItemState::EIS_Held);
+		}
+		else
+		{
+			EquippedWeapon->SetItemState(EItemState::EIS_Sheathed);
+		}
+	}
+
+}
+
+
 
 
 void ASlashCharacter::PlayEquipMontage(FName SectionName)
@@ -333,7 +367,9 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 	
 	if (CanAttack()) 
 	{
-		PlayAttackMontage();
+		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
+
+		PlayAttackMontage(WeaponSize);
 	}
 
 }
@@ -347,12 +383,14 @@ bool ASlashCharacter::CanAttack()
 
 
 
-void ASlashCharacter::PlayAttackMontage()
+void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
 {
+	//NOTE: when working on animations we can type ~ and then slowmo in UE5 PIE to play slowly
 
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-	if (AnimInstance && AttackSwordMontage)
+	//Sword Attacks
+	if (AnimInstance && AttackSwordMontage && WeaponSize == EWeaponSize::EWS_OneHanded)
 	{
 		ActionState = EActionState::EAS_Attacking;
 
@@ -375,7 +413,92 @@ void ASlashCharacter::PlayAttackMontage()
 		AnimInstance->Montage_JumpToSection(SectionName, AttackSwordMontage);
 
 	}
+
+	//Fire Hammer Attacks
+	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponSize::EWS_TwoHanded)
+	{
+		ActionState = EActionState::EAS_Attacking;
+
+		AnimInstance->Montage_Play(AttackHammerMontage);
+
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = FName("HammerLow");
+			break;
+		case 1:
+			SectionName = FName("HammerSwing");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackHammerMontage);
+
+	}
 }
+
+void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
+{
+
+	
+
+	UE_LOG(LogTemp, Warning, TEXT("drop weapon pressed"));
+
+	if (EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("equipped weapon true"));
+
+		if (CanDropWeapon())
+		{
+			EquippedWeapon->DetachMeshFromSocket();
+
+			if (!EquippedWeapon->IsAttachedTo(this)) 
+			{
+				EquippedWeapon = nullptr;
+				EquippedWeapon->SetItemState(EItemState::EIS_Hovering);
+				CharacterState = ECharacterState::ECS_Unarmed;
+				ActionState = EActionState::EAS_Unoccupied;
+			}
+	
+		}
+	}
+}
+
+
+
+bool ASlashCharacter::CanDropWeapon()
+{
+	CharacterState = GetCharacterState();
+
+	if(ActionState == EActionState::EAS_Unoccupied) { UE_LOG(LogTemp, Warning, TEXT("unoccupied is good")); }
+	if (CharacterState == ECharacterState::ECS_Unarmed) { UE_LOG(LogTemp, Warning, TEXT("unarmed")); }
+	if (CharacterState == ECharacterState::ECS_EquippedOneHanded) { UE_LOG(LogTemp, Warning, TEXT("equipped 1h")); }
+	if (CharacterState == ECharacterState::ECS_EquippedTwoHanded) { UE_LOG(LogTemp, Warning, TEXT("equipped 2h")); }
+	if (EquippedWeapon->GetItemState() == EItemState::EIS_Held) { UE_LOG(LogTemp, Warning, TEXT("weapon held is good")); }
+
+	return ActionState == EActionState::EAS_Unoccupied &&
+		CharacterState != ECharacterState::ECS_Unarmed &&
+		EquippedWeapon->GetItemState() == EItemState::EIS_Held;
+}
+
+/*
+TODO: Section 12 challenge
+
+1. ///////Setup the socket for two handed weapon
+
+2. //////Learn how to drop the weapon and add a function for that.. Call that function with a new action key
+
+3. //// Add and setup hammer attacks 
+
+4. Edit the sword and hammer animations to add a low attack animation for each
+
+5. Record a video where you pick up the sword, 
+swing it for the different animations, drop it, and then pick up and swing the hammer
+
+*/
 
 
 
@@ -400,6 +523,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(CharacterDodgeAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Dodge);
 		EnhancedInputComponent->BindAction(CharacterEquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
 		EnhancedInputComponent->BindAction(CharacterAttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
+		EnhancedInputComponent->BindAction(CharacterDropWeaponAction, ETriggerEvent::Triggered, this, &ASlashCharacter::DropWeapon);
 
 		
 	}

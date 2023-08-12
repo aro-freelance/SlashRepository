@@ -12,7 +12,8 @@ enum class EItemState : uint8
 {
 	EIS_Hovering,
 	EIS_Rotating,
-	EIS_Equipped
+	EIS_Held,
+	EIS_Sheathed
 };
 
 UCLASS()
@@ -69,14 +70,16 @@ protected:
 	UStaticMeshComponent* ItemMesh;
 
 	EItemState ItemState = EItemState::EIS_Hovering;
+	
+	UPROPERTY(VisibleAnywhere)
+	USphereComponent* Sphere;
 
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0;
 
-	UPROPERTY(VisibleAnywhere)
-	USphereComponent* Sphere;
+	
 
 };
 
