@@ -9,7 +9,7 @@
 
 
 class USoundBase;
-
+class UBoxComponent;
 
 UCLASS()
 class SLASH_API AWeapon : public AItem
@@ -17,8 +17,9 @@ class SLASH_API AWeapon : public AItem
 	GENERATED_BODY()
 
 public:
-
 	//void Equip(USceneComponent* InParent, FName InSocketName);
+
+	AWeapon();
 
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
@@ -47,6 +48,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	USoundBase* WeaponPickupSound;
 	
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	UBoxComponent* WeaponBox;
 	
 
 //Getters and Setters

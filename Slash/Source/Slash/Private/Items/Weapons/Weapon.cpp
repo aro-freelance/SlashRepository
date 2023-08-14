@@ -5,6 +5,7 @@
 #include "Characters/SlashCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "Components/SphereComponent.h"
+#include "Components/BoxComponent.h"
 
 
 //this has been replaced by AttachMeshToSocket
@@ -15,6 +16,14 @@ void AWeapon::Equip(USceneComponent* InParent, FName InSocketName)
 	ItemState = EItemState::EIS_Held;
 }
 */
+
+
+//make a collisionbox for the weapon
+AWeapon::AWeapon()
+{
+	WeaponBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Weapon Box"));
+	WeaponBox->SetupAttachment(GetRootComponent());
+}
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)
 {
