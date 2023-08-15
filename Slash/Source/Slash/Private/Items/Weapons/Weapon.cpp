@@ -86,38 +86,48 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 //perform a box trace to return information about collisions
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	if(CanDoDamage())
+	{
+	
+		const FVector Start = BoxTraceStart->GetComponentLocation();
+		const FVector End = BoxTraceEnd->GetComponentLocation();
+		const FVector HalfSize = FVector(5.f, 5.f, 5.f);
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(this);
+
+		FHitResult BoxHit;
+
+		UKismetSystemLibrary::BoxTraceSingle(
+			this,
+			Start,
+			End,
+			HalfSize,
+			BoxTraceStart->GetComponentRotation(),
+			ETraceTypeQuery::TraceTypeQuery1,
+			false,
+			ActorsToIgnore,
+			EDrawDebugTrace::ForDuration,
+			BoxHit,
+			true
+		);
+	}	
+}
+
+bool AWeapon::CanDoDamage()
+{
 	//get the character that the weapon is attached to
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
-	if (SlashCharacter) 
+	if (!SlashCharacter)
 	{
-		//if the character is attacking, do a box trace
-		if (SlashCharacter->GetActionState() == EActionState::EAS_Attacking)
-		{
-			const FVector Start = BoxTraceStart->GetComponentLocation();
-			const FVector End = BoxTraceEnd->GetComponentLocation();
-			const FVector HalfSize = FVector(5.f, 5.f, 5.f);
-
-			TArray<AActor*> ActorsToIgnore;
-			ActorsToIgnore.Add(this);
-
-			FHitResult BoxHit;
-
-			UKismetSystemLibrary::BoxTraceSingle(
-				this,
-				Start,
-				End,
-				HalfSize,
-				BoxTraceStart->GetComponentRotation(),
-				ETraceTypeQuery::TraceTypeQuery1,
-				false,
-				ActorsToIgnore,
-				EDrawDebugTrace::ForDuration,
-				BoxHit,
-				true
-			);
-		}
+		return false;
 	}
-	
+	else 
+	{
+		//if the character is attacking and the animation is at a point where damage is possible
+		return SlashCharacter->GetActionState() == EActionState::EAS_Attacking &&
+			GetWeaponCollisionState() == EWeaponCollisionState::EWS_CollisionOn;
+	}
 }
 
 void AWeapon::PlayWeaponPickupSound()

@@ -37,6 +37,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
 	EWeaponSize WeaponSize = EWeaponSize::EWS_OneHanded;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision Box")
+	EWeaponCollisionState WeaponCollisionState = EWeaponCollisionState::EWS_CollisionOff;
+
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult) override;
 
@@ -47,6 +50,8 @@ protected:
 	void OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 	
+
+	bool CanDoDamage();
 
 private:
 
@@ -72,5 +77,7 @@ public:
 	FORCEINLINE void SetItemState(EItemState NewItemState) { ItemState = NewItemState; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 
+
+	FORCEINLINE EWeaponCollisionState GetWeaponCollisionState() const { return WeaponCollisionState; }
 	
 };
