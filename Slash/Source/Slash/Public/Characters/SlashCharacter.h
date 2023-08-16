@@ -85,22 +85,22 @@ protected:
 	* Play montage functions
 	*/
 
-	void PlayAttackMontage(EWeaponSize WeaponSize);
+	void PlayAttackMontage(const EWeaponSize& WeaponSize);
 	bool CanAttack();
 
-	void PlayEquipMontage(FName SectionName);
+	void PlayEquipMontage(const FName& SectionName);
 	bool CanDisarm();
 	bool CanArm();
 	bool HasWeapon();
 
 	bool CanDropWeapon();
 
-	FName WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEquipping);
-	FName WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, bool isEquipping);
-	ECharacterState WeaponSizeToCharacterState(EWeaponSize WeaponSize);
+	FName WeaponSizeToSocketFName(const EWeaponSize& WeaponSize, bool isEquipping);
+	FName WeaponSizeToEquipMontageFName(const EWeaponSize& WeaponSize, bool isEquipping);
+	ECharacterState WeaponSizeToCharacterState(const EWeaponSize& WeaponSize);
 
 	UFUNCTION(BlueprintCallable)
-	void AttachWeapon(EWeaponSize WeaponSize, bool isEquipping);
+	void AttachWeapon(const EWeaponSize& WeaponSize, bool isEquipping);
 
 
 private:

@@ -223,7 +223,7 @@ void ASlashCharacter::UnEquipAnimation()
 	
 }
 
-ECharacterState ASlashCharacter::WeaponSizeToCharacterState(EWeaponSize WeaponSize)
+ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponSize& WeaponSize)
 {
 	ECharacterState NewCharacterState = ECharacterState();
 
@@ -244,7 +244,7 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(EWeaponSize WeaponSi
 	return NewCharacterState;
 }
 
-FName ASlashCharacter::WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEquipping)
+FName ASlashCharacter::WeaponSizeToSocketFName(const EWeaponSize& WeaponSize, bool isEquipping)
 {
 	FName SocketName = FName();
 
@@ -280,7 +280,7 @@ FName ASlashCharacter::WeaponSizeToSocketFName(EWeaponSize WeaponSize, bool isEq
 	return SocketName;
 }
 
-FName ASlashCharacter::WeaponSizeToEquipMontageFName(EWeaponSize WeaponSize, bool isEquipping)
+FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponSize& WeaponSize, bool isEquipping)
 {
 	FName MontageName = FName();
 
@@ -323,7 +323,7 @@ this is called in blueprints
 when the animation notify happens
 from the player hitting the equip button to start the animation
 */
-void ASlashCharacter::AttachWeapon(EWeaponSize WeaponSize, bool isEquipping)
+void ASlashCharacter::AttachWeapon(const EWeaponSize& WeaponSize, bool isEquipping)
 {
 	if (EquippedWeapon)
 	{
@@ -347,7 +347,7 @@ void ASlashCharacter::AttachWeapon(EWeaponSize WeaponSize, bool isEquipping)
 
 
 
-void ASlashCharacter::PlayEquipMontage(FName SectionName)
+void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
@@ -383,7 +383,7 @@ bool ASlashCharacter::CanAttack()
 
 
 
-void ASlashCharacter::PlayAttackMontage(EWeaponSize WeaponSize)
+void ASlashCharacter::PlayAttackMontage(const EWeaponSize& WeaponSize)
 {
 	//NOTE: when working on animations we can type ~ and then slowmo in UE5 PIE to play slowly
 

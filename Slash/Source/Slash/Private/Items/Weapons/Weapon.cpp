@@ -7,6 +7,7 @@
 #include "Components/SphereComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Interfaces/HitInterface.h"
 
 
 //this has been replaced by AttachMeshToSocket
@@ -111,6 +112,19 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			BoxHit,
 			true
 		);
+
+	
+		//if an actor was hit
+		if (BoxHit.GetActor())
+		{
+			//if that actor has the hit interface
+			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
+			if (HitInterface)
+			{
+				//call GetHit on the actor that was hit
+				HitInterface->GetHit(BoxHit.ImpactPoint);
+			}
+		}
 	}	
 }
 
