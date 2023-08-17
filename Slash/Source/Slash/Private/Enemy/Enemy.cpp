@@ -6,6 +6,7 @@
 #include "Components/CapsuleComponent.h"
 #include "Animation/AnimMontage.h"
 #include "Slash/DebugMacros.h"
+#include "Kismet/KismetSystemLibrary.h"
 
 
 AEnemy::AEnemy()
@@ -56,14 +57,65 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void AEnemy::GetHit(const FVector& ImpactPoint)
 {
-	float Radius = 5.f;
-	float Duration = 3.f;
-	DRAW_SPHERE_SET_SIZE_AND_DURATION(ImpactPoint, FColor::Red, Radius, Duration);
 
-	FName SectionName = FName("FromLeft");
+	DirectionalHitReact(ImpactPoint);
 
-	//TODO: change section name based on impact point vector to reflect the correct direction name
+
+	
+
+}
+
+void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
+{
+	//The vector of the direction the actor is facing
+	const FVector Forward = GetActorForwardVector();
+	//Lower the ImpactPoint to the Actor's Height to create a flat line
+	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
+	//AKA ToHit. This is the vector which points from the center of actor location to the point of impact
+	const FVector ImpactPointVector = (ImpactLowered - GetActorLocation()).GetSafeNormal();
+
+	//Forward * ImpactPointVector = |Forward||ImpactPointVector| * cos(theta)... 
+	// |Forward| = 1, |ImpactPointVector| = 1 therefore Forward * ImpactPointVector = cos(theta)
+	const double CosTheta = FVector::DotProduct(Forward, ImpactPointVector);
+	//Inverse cosine to get theta, and convert it from radians to degrees
+	double AngleOfImpact = FMath::RadiansToDegrees(FMath::Acos(CosTheta));
+
+	//this is used to determine the direction of the hit. 
+	//If it is negative the hit was from the left, positive the hit was from the right 
+	const FVector CrossProduct = FVector::CrossProduct(Forward, ImpactPointVector);
+	if (CrossProduct.Z < 0)
+	{
+		//if crossproduct is negative, inverse the angle of impact
+		AngleOfImpact = AngleOfImpact * -1.f;
+	}
+
+
+	FName SectionName = FName("FromBack");
+
+	if (AngleOfImpact >= -45.f && AngleOfImpact < 45.f)
+	{
+		SectionName = FName("FromFront");
+	}
+	else if (AngleOfImpact >= -135.f && AngleOfImpact < -45.f)
+	{
+		SectionName = FName("FromLeft");
+	}
+	else if (AngleOfImpact >= 45 && AngleOfImpact < 135)
+	{
+		SectionName = FName("FromRight");
+	}
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Angle of Impact: %d"), AngleOfImpact);
 
 	PlayHitReactMontage(SectionName);
+
+	////debug arrows for forward and impactpoint vectors
+	////context, start, end vector (multiplied to increase length),  arrow head size, color, duration
+	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + Forward * 60.f, 5.f,
+	//	FColor::Red, 5.f);
+	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ImpactPointVector * 60.f, 5.f,
+	//	FColor::Blue, 5.f);
+
 }
 

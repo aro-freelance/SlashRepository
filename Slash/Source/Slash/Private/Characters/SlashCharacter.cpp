@@ -396,7 +396,11 @@ void ASlashCharacter::PlayAttackMontage(const EWeaponSize& WeaponSize)
 
 		AnimInstance->Montage_Play(AttackSwordMontage);
 
-		const int32 RandomSelection = FMath::RandRange(0, 2);
+		//TODO: fix or remove spin jump
+		//case 2 disabled because spin jump animation has issue jumping back after ending.. 
+		// and its impact point is odd causing the enemy to get knocked towards player rather than away
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+
 		FName SectionName = FName();
 		switch (RandomSelection)
 		{

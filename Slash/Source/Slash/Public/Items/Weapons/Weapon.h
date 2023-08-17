@@ -30,6 +30,9 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rotation")
 	FRotator StartingRotation = FRotator(0 , 0 , 0);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	TArray<AActor*> HitActorsToIgnore;
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -65,6 +68,7 @@ private:
 	USceneComponent* BoxTraceStart;
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* BoxTraceEnd;
+	
 	
 
 //Getters and Setters
