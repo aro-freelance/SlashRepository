@@ -27,6 +27,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
+	FRotator HitParticleRotation = FRotator(0.f, 0.f, 0.f);
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
+	FVector HitParticleScale = FVector(1.f, 1.f, 1.f);
 
 	/*
 	* Play montage functions
@@ -48,5 +53,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Sounds")
 	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category = "Visual Effects")
+	UParticleSystem* HitParticles;
 
 };
