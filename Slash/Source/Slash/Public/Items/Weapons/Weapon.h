@@ -30,6 +30,10 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Rotation")
 	FRotator StartingRotation = FRotator(0 , 0 , 0);
 
+	//this adjusts the size of the boxtracesingle. for many weapons 25.f is good for some, with difficult to hit animations larger is better.
+	UPROPERTY(EditAnywhere, Category = "Collision")
+	FVector HalfSize = FVector(25.f, 25.f, 25.f);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
 	TArray<AActor*> HitActorsToIgnore;
 
@@ -68,6 +72,11 @@ private:
 	USceneComponent* BoxTraceStart;
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* BoxTraceEnd;
+
+
+	//debugging
+	bool CanAttack = true;
+	bool CanCollide = true;
 	
 	
 

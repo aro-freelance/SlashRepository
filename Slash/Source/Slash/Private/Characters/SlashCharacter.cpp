@@ -428,18 +428,20 @@ void ASlashCharacter::PlayAttackMontage(const EWeaponSize& WeaponSize)
 
 		AnimInstance->Montage_Play(AttackHammerMontage);
 
-		const int32 RandomSelection = FMath::RandRange(0, 2);
+
+		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
+		const int32 RandomSelection = FMath::RandRange(0, 1);
 		FName SectionName = FName();
 		switch (RandomSelection)
 		{
 		case 0:
-			SectionName = FName("HammerLow");
+			SectionName = FName("HammerHigh");
 			break;
 		case 1:
 			SectionName = FName("HammerSwing");
 			break;
 		case 2:
-			SectionName = FName("HammerHigh");
+			SectionName = FName("HammerLow");
 			break;
 		default:
 			break;
