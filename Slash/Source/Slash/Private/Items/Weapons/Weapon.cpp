@@ -54,6 +54,7 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+
 }
 
 void AWeapon::DetachMeshFromSocket()
@@ -67,6 +68,7 @@ void AWeapon::DetachMeshFromSocket()
 	{
 		Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
+
 }
 
 
@@ -89,6 +91,8 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 {
 	if(CanDoDamage())
 	{
+
+		
 	
 		const FVector Start = BoxTraceStart->GetComponentLocation();
 		const FVector End = BoxTraceEnd->GetComponentLocation();
@@ -118,55 +122,13 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			true
 		);
 
-		
-		FString Result = BoxHit.ToString();
+
 	
 		//if an actor was hit
 		if (BoxHit.GetActor())
 		{
-
-			UE_LOG(LogTemp, Warning, TEXT("an actor was hit. BoxHit Result = %s"), *Result);
-
-			//BoxHit Result = 
-			// bBlockingHit:True 
-			// bStartPenetrating:False 
-			// Time:0.595645 
-			// Location:X=1325.158 Y=-276.383 Z=159.433 
-			// ImpactPoint:X=1328.139 Y=-268.866 Z=162.533 
-			// Normal:X=-0.492 Y=-0.822 Z=-0.288 
-			// ImpactNormal:X=-0.492 Y=-0.822 Z=-0.288 
-			// TraceStart:X=1266.720 Y=-287.827 Z=144.247 
-			// TraceEnd:X=1364.829 Y=-268.614 Z=169.743 
-			// PenetrationDepth:0.000000 
-			// Item:2 
-			// PhysMaterial:DefaultPhysicalMaterial 
-			// Actor:BP_Enemy_C_1 
-			// Component:CharacterMesh0 
-			// BoneName:Spine1 
-			// FaceIndex:-1
-
-
-			//BoxHit Result = 
-			// bBlockingHit:True 
-			// bStartPenetrating : False 
-			// Time : 0.253133 
-			// Location : X = 1485.689 Y = 1390.236 Z = 118.256 
-			// ImpactPoint : X = 1459.382 Y = 1447.237 Z = 138.700 
-			// Normal : X = -0.098 Y = -0.977 Z = 0.191 
-			// ImpactNormal : X = -0.098 Y = -0.977 Z = 0.191 
-			// TraceStart : X = 1475.293 Y = 1361.287 Z = 123.148 
-			// TraceEnd : X = 1516.364 Y = 1475.647 Z = 103.822 
-			// PenetrationDepth : 0.000000 
-			// Item : 0 
-			// PhysMaterial : DefaultPhysicalMaterial 
-			// Actor : BP_Enemy_C_3 
-			// Component : CharacterMesh0 
-			// BoneName : Hips 
-			// FaceIndex : -1
-
-
-
-			//if that actor has the hit interface
+			UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *BoxHit.GetComponent()->GetName());
+		
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 			if (HitInterface)
 			{
@@ -176,52 +138,44 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
 			HitActorsToIgnore.AddUnique(BoxHit.GetActor());
-		}
-		else
-		{
-			
-			UE_LOG(LogTemp, Warning, TEXT("trace happened. no hit. BoxHit Result = %s"), *Result);
 
-			//BoxHit Result = 
-			// bBlockingHit:False 
-			// bStartPenetrating:False 
-			// Time:1.000000 
-			// Location:X=0.000 Y=0.000 Z=0.000 
-			// ImpactPoint:X=0.000 Y=0.000 Z=0.000 
-			// Normal:X=0.000 Y=0.000 Z=0.000 
-			// ImpactNormal:X=0.000 Y=0.000 Z=0.000 
-			// TraceStart:X=1374.295 Y=397.920 Z=124.403 
-			// TraceEnd:X=1490.013 Y=434.798 Z=104.951 
-			// PenetrationDepth:0.000000 
-			// Item:0
-			// PhysMaterial:None 
-			// Actor:None
-			// Component:None 
-			// BoneName:None 
-			// FaceIndex:0
 
+			///TODO:  I am currently working on a bug involving Fields and Breakable objects. 
+			//
+			// SYMPTOM 1:
+			// The object is breaking but the field is not the cause. 
+			// It seems to be breaking based on impact with weapons. (still issue)
+			// It was also breaking on impact with the character until I made it ignore pawns. 
+			// 
+			// SYMPTOM 2:
+			// However, the fieldsystem object is having no effect. (Still issue)
+			// 
+			// SYMPTOM 3:
+			// And the weapon doesn't seem to be firing a field system. (FIXED)
+			// This is making it impossible to implement in a way that only fires on attack... (FIXED)
+			// 
+			// INFORMATION TO USE :
+			// Relavent BP = BP_Weapon BP_WeaponLarge, BP_BreakablePot ... as well as SM Pot Geometry collection
+			// Additionally, the BP_WeaponLarge does not seem to be causing it to break 
+			// even though it has the same collision settings as BP_Weapon lookk in to this...
+			//
+			// PROGRESS:
+			// added box collision to bp breakable pot 
+			// this is now being reached... but the field is still not doing anything and the mesh of the sword is still breaking the pot. (but not the hammer).
+			//
+			//  TO fix this...
+			//   1. make it so the mesh itself is not breaking the pot. can't solve the other issue until this is done.
+			//        a. when looking in to this i might want to compare to the hammer (which is not breaking the pot)
+			//   2. Once that is fixed I need to solve the field issue.
+			//        a. the weapon field and the freestanding field are both not working to break the pot.
+			//        b. try adjusting the parameters to extremes to see if it breaks
+			//        c. rewatch 143 which is where we set up the fields
+			//
+			///
+			CreateFields(BoxHit.ImpactPoint);
 
 		}
 	}	
-	else
-	{
-		if (CanAttack) 
-		{
-			UE_LOG(LogTemp, Warning, TEXT("cannot do damage but can attack"));
-		}
-		else 
-		{
-			UE_LOG(LogTemp, Warning, TEXT("cannot attack"));
-		}
-		if (CanCollide)
-		{
-			UE_LOG(LogTemp, Warning, TEXT("cannot do damage but can collide"));
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("cannot collide"));
-		}
-	}
 
 
 }
@@ -236,27 +190,6 @@ bool AWeapon::CanDoDamage()
 	}
 	else 
 	{
-		//This is for debugging///////////////
-		
-		if (SlashCharacter->GetActionState() != EActionState::EAS_Attacking)
-		{
-			CanAttack = false;
-			
-		}
-		else
-		{
-			CanAttack = true;
-		}
-		if (GetWeaponCollisionState() != EWeaponCollisionState::EWS_CollisionOn)
-		{
-			CanCollide = false;
-			
-		}
-		else
-		{
-			CanCollide = true;
-		}
-		////////////////////////////////////////////////
 
 		//if the character is attacking and the animation is at a point where damage is possible
 		return SlashCharacter->GetActionState() == EActionState::EAS_Attacking &&
