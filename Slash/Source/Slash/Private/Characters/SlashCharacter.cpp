@@ -367,12 +367,21 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 	
 	if (CanAttack()) 
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Can attack"));
+
 		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
 
 		PlayAttackMontage(WeaponSize);
 	}
+	else
+	{
+		FString StateString = BuildStateString();
 
+		UE_LOG(LogTemp, Warning, TEXT("Can't attack because: %s."), *StateString);
+	}
 }
+
+
 
 bool ASlashCharacter::CanAttack()
 {
@@ -540,5 +549,42 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		
 	}
 
+}
+
+FString ASlashCharacter::BuildStateString()
+{
+	FString StateString = FString();
+
+	switch (GetActionState())
+	{
+	case EActionState::EAS_Unoccupied:
+		StateString = "Unoccupied.";
+		break;
+	case EActionState::EAS_Equipping:
+		StateString = "Equipping.";
+		break;
+	case EActionState::EAS_Attacking:
+		StateString = "Attacking.";
+		break;
+	default:
+		break;
+	}
+
+	switch (GetCharacterState())
+	{
+	case ECharacterState::ECS_Unarmed:
+		StateString = StateString + " Unarmed";
+		break;
+	case ECharacterState::ECS_EquippedOneHanded:
+		StateString = StateString + " Equipped One Handed";
+		break;
+	case ECharacterState::ECS_EquippedTwoHanded:
+		StateString = StateString + " Equipped Two Handed";
+		break;
+	default:
+		break;
+	}
+
+	return StateString;
 }
 

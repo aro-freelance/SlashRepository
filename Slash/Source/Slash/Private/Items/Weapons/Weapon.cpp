@@ -89,46 +89,30 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 //perform a box trace to return information about collisions
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+
+	
+
 	if(CanDoDamage())
 	{
 
-		
-	
-		const FVector Start = BoxTraceStart->GetComponentLocation();
-		const FVector End = BoxTraceEnd->GetComponentLocation();
-		//const FVector HalfSize = FVector(25.f); //5.f
+		UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), 
+			*OtherActor->GetName(), *OtherComp->GetName());
 
-		TArray<AActor*> ActorsToIgnore;
-		ActorsToIgnore.Add(this);
-
-		for (AActor* Actor : HitActorsToIgnore)
-		{
-			ActorsToIgnore.Add(Actor);
-		}
 
 		FHitResult BoxHit;
+		BoxTrace(BoxHit);
 
-		UKismetSystemLibrary::BoxTraceSingle(
-			this,
-			Start,
-			End,
-			HalfSize,
-			BoxTraceStart->GetComponentRotation(),
-			ETraceTypeQuery::TraceTypeQuery1,
-			false,
-			ActorsToIgnore,
-			EDrawDebugTrace::None,
-			BoxHit,
-			true
-		);
+		FString BoxHitString = BoxHit.ToString();
 
-
+		//DEBUG INFO: When this is used here it does not destroy the pot. Tested here to see about not needing actor hit. 
+		//CreateFields(BoxHit.ImpactPoint);
 	
 		//if an actor was hit
 		if (BoxHit.GetActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Hit: %s"), *BoxHit.GetComponent()->GetName());
-		
+			UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), 
+				*BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
+	
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 			if (HitInterface)
 			{
@@ -144,15 +128,32 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			//
 			// SYMPTOM 1:
 			// The object is breaking but the field is not the cause. 
-			// It seems to be breaking based on impact with weapons. (still issue)
+			// It seems to be breaking based on impact with weapons. (FIXED)
 			// It was also breaking on impact with the character until I made it ignore pawns. 
 			// 
 			// SYMPTOM 2:
-			// However, the fieldsystem object is having no effect. (Still issue)
+			// However, the fieldsystem object is having no effect. (FIXED)
 			// 
 			// SYMPTOM 3:
 			// And the weapon doesn't seem to be firing a field system. (FIXED)
 			// This is making it impossible to implement in a way that only fires on attack... (FIXED)
+			// 
+			// SYMPTON 4:
+			// The field is only firing when hitting an actor. Which it is not doing with the breakable pot geometry.
+			// It is firing when hitting the enemy mesh. See the following debug messages:
+			// 
+			// Attack on Enemy
+			// LogTemp: Warning: Can attack
+			// LogTemp: Warning: Can do damage.Overlapped with Actor : BP_Enemy_C_1.Component : CharacterMesh0
+			// LogTemp : Warning: Hit!Actor : BP_Enemy_C_1.Component : CharacterMesh0.
+			// LogTemp: Warning: BoxHit Output : bBlockingHit:True bStartPenetrating : False Time : 0.020287 Location : X = 1304.702 Y = -230.651 Z = 134.774 ImpactPoint : X = 1312.262 Y = -233.074 Z = 131.315 Normal : X = -0.897 Y = 0.389 Z = -0.209 ImpactNormal : X = -0.897 Y = 0.389 Z = -0.209 TraceStart : X = 1302.932 Y = -231.766 Z = 134.712 TraceEnd : X = 1390.192 Y = -176.806 Z = 137.805 PenetrationDepth : 0.000000 Item : 0 PhysMaterial : DefaultPhysicalMaterial Actor : BP_Enemy_C_1 Component : CharacterMesh0 BoneName : Hips FaceIndex : -1
+			// 
+			// Attack on Pot
+			// LogTemp: Warning: Can attack
+			// LogTemp: Warning: Can do damage.Overlapped with Actor : BP_BreakablePot_C_1.Component : Capsule
+			// LogTemp : Warning: Did not hit actor.
+			// LogTemp : Warning : BoxHit Output : bBlockingHit:False bStartPenetrating : False Time : 1.000000 Location : X = 0.000 Y = 0.000 Z = 0.000 ImpactPoint : X = 0.000 Y = 0.000 Z = 0.000 Normal : X = 0.000 Y = 0.000 Z = 0.000 ImpactNormal : X = 0.000 Y = 0.000 Z = 0.000 TraceStart : X = 1230.272 Y = 1.616 Z = 165.484 TraceEnd : X = 1195.764 Y = 23.344 Z = 260.256 PenetrationDepth : 0.000000 Item : 0 PhysMaterial : None Actor : None Component : None BoneName : None FaceIndex : 0
+			//
 			// 
 			// INFORMATION TO USE :
 			// Relavent BP = BP_Weapon BP_WeaponLarge, BP_BreakablePot ... as well as SM Pot Geometry collection
@@ -160,25 +161,61 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			// even though it has the same collision settings as BP_Weapon lookk in to this...
 			//
 			// PROGRESS:
+			// (3... but this is likely still an issue. see symptom 4)
 			// added box collision to bp breakable pot 
 			// this is now being reached... but the field is still not doing anything and the mesh of the sword is still breaking the pot. (but not the hammer).
 			//
+			// (1)
+			// The sword had a simple collision capsule and the hammer did not. This was causing the unintended breaking. 
+			// Removed collision capsule for now. Might be better to find a way to keep it but make it not destroy pot.
+			// But for now not having it and then getting the field to work would be best.
+			// 
+			// (2)
+			// The standalone field system is working again now. 
+			// It needed to be given a delay between the radial force and the linear force. 
+			// Also the linear force needed a dynamic state type meta data filter.
+			// 
+			// Added the working field system to sword. only firing when boxhit is hitting an actor.
+			// 
+			// 
+			// 
 			//  TO fix this...
-			//   1. make it so the mesh itself is not breaking the pot. can't solve the other issue until this is done.
-			//        a. when looking in to this i might want to compare to the hammer (which is not breaking the pot)
-			//   2. Once that is fixed I need to solve the field issue.
-			//        a. the weapon field and the freestanding field are both not working to break the pot.
+			//   1. make it so the mesh itself is not breaking the pot. can't solve the other issue until this is done. (done)
+			//        a. when looking in to this i might want to compare to the hammer (which is not breaking the pot) 
+			//   2. Once that is fixed I need to solve the field issue. (done. Field is working)
+			//        a. the weapon field and the freestanding field are both not working to break the pot. 
 			//        b. try adjusting the parameters to extremes to see if it breaks
 			//        c. rewatch 143 which is where we set up the fields
+			//  3. Make hits register with pot.
+			//      a. currently we are getting overlaps but no hit on actor most of the time. 
+			//      b. capsule was added but is likely part of the issue.
+			//      c. collision with the actual breakable geometry needs to happen.
 			//
 			///
+			
+			
+			
 			CreateFields(BoxHit.ImpactPoint);
 
 		}
+		else 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Did not hit actor."));
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("BoxHit Output: %s"), *BoxHitString);
 	}	
+	else
+	{
+		
+		FString StateString = BuildStateString();
+
+		UE_LOG(LogTemp, Warning, TEXT("Can't do damage: %s."), *StateString);
+	}
 
 
 }
+
 
 bool AWeapon::CanDoDamage()
 {
@@ -197,6 +234,38 @@ bool AWeapon::CanDoDamage()
 	}
 }
 
+void AWeapon::BoxTrace(FHitResult& BoxHit)
+{
+	const FVector Start = BoxTraceStart->GetComponentLocation();
+	const FVector End = BoxTraceEnd->GetComponentLocation();
+	//const FVector HalfSize = FVector(25.f); //5.f
+
+	TArray<AActor*> ActorsToIgnore;
+	ActorsToIgnore.Add(this);
+	ActorsToIgnore.Add(GetOwner());
+
+	for (AActor* Actor : HitActorsToIgnore)
+	{
+		ActorsToIgnore.Add(Actor);
+	}
+
+
+
+	UKismetSystemLibrary::BoxTraceSingle(
+		this,
+		Start,
+		End,
+		HalfSize,
+		BoxTraceStart->GetComponentRotation(),
+		ETraceTypeQuery::TraceTypeQuery1,
+		false,
+		ActorsToIgnore,
+		EDrawDebugTrace::None,
+		BoxHit,
+		true
+	);
+}
+
 void AWeapon::PlayWeaponPickupSound()
 {
 	if (WeaponPickupSound)
@@ -208,4 +277,60 @@ void AWeapon::PlayWeaponPickupSound()
 			GetActorLocation()
 		);
 	}
+}
+
+FString AWeapon::BuildStateString()
+{
+	FString StateString = FString();
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
+
+	if (!SlashCharacter) 
+	{
+		StateString = "Slash Character does not exist";
+		return StateString; 
+	}
+
+	switch (SlashCharacter->GetActionState())
+	{
+	case EActionState::EAS_Unoccupied:
+		StateString = "Unoccupied.";
+		break;
+	case EActionState::EAS_Equipping:
+		StateString = "Equipping.";
+		break;
+	case EActionState::EAS_Attacking:
+		StateString = "Attacking.";
+		break;
+	default:
+		break;
+	}
+
+	switch (SlashCharacter->GetCharacterState())
+	{
+	case ECharacterState::ECS_Unarmed:
+		StateString = StateString + " Unarmed";
+		break;
+	case ECharacterState::ECS_EquippedOneHanded:
+		StateString = StateString + " Equipped One Handed";
+		break;
+	case ECharacterState::ECS_EquippedTwoHanded:
+		StateString = StateString + " Equipped Two Handed";
+		break;
+	default:
+		break;
+	}
+
+	switch (GetWeaponCollisionState())
+	{
+	case EWeaponCollisionState::EWS_CollisionOn:
+		StateString = StateString + " Collision On";
+		break;
+	case EWeaponCollisionState::EWS_CollisionOff:
+		StateString = StateString + " Collision Off";
+		break;
+	default:
+		break;
+	}
+
+	return StateString;
 }

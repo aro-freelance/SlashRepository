@@ -70,6 +70,7 @@ protected:
 
 	void Attack(const FInputActionValue& Value);
 
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* CharacterDropWeaponAction;
 
@@ -101,6 +102,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void AttachWeapon(const EWeaponSize& WeaponSize, bool isEquipping);
+
+
+	FString BuildStateString();
 
 
 private:
