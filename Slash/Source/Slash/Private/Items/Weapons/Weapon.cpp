@@ -154,6 +154,12 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			// LogTemp : Warning: Did not hit actor.
 			// LogTemp : Warning : BoxHit Output : bBlockingHit:False bStartPenetrating : False Time : 1.000000 Location : X = 0.000 Y = 0.000 Z = 0.000 ImpactPoint : X = 0.000 Y = 0.000 Z = 0.000 Normal : X = 0.000 Y = 0.000 Z = 0.000 ImpactNormal : X = 0.000 Y = 0.000 Z = 0.000 TraceStart : X = 1230.272 Y = 1.616 Z = 165.484 TraceEnd : X = 1195.764 Y = 23.344 Z = 260.256 PenetrationDepth : 0.000000 Item : 0 PhysMaterial : None Actor : None Component : None BoneName : None FaceIndex : 0
 			//
+			// Important: Enemy is being hit in CharacterMesh.
+			// 
+			// Note: The field system is working just not firing as proved by putting a pot behind and enemy. 
+			// Attacking an enemy fires the field system and breaks the pot behind the enemy. This is not desired, 
+			// and should be fixed by making the field system smaller or making it fire from the hit actor instead,
+			// and calling it from the pot. ... can only do this once it is registering hit on pot.
 			// 
 			// INFORMATION TO USE :
 			// Relavent BP = BP_Weapon BP_WeaponLarge, BP_BreakablePot ... as well as SM Pot Geometry collection
@@ -177,6 +183,11 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			// 
 			// Added the working field system to sword. only firing when boxhit is hitting an actor.
 			// 
+			// (4)
+			// The pot geometry collection component (the fracture mesh) needed Generate Overlap Events checked.
+			// It is now checked like it was on the mesh for the enemy and is now working. 
+			// Will need to adjust the strength of the field but it is now working.
+			// 
 			// 
 			// 
 			//  TO fix this...
@@ -186,13 +197,15 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			//        a. the weapon field and the freestanding field are both not working to break the pot. 
 			//        b. try adjusting the parameters to extremes to see if it breaks
 			//        c. rewatch 143 which is where we set up the fields
-			//  3. Make hits register with pot.
+			//  3. Make hits register with pot. (done. Generate Overlap Events needed to be checked on the pot)
 			//      a. currently we are getting overlaps but no hit on actor most of the time. 
 			//      b. capsule was added but is likely part of the issue.
 			//      c. collision with the actual breakable geometry needs to happen.
-			//
-			///
-			
+			// 
+			// NEXT: Adjust the Damage thresholds on the pot and the field magnitudes for the sword until the 
+			// breaking affect looks better. 
+			// And then update hammer to match sword or possibly to be stronger than sword at crushing pots.
+			// 
 			
 			
 			CreateFields(BoxHit.ImpactPoint);
