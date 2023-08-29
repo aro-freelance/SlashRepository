@@ -505,24 +505,6 @@ bool ASlashCharacter::CanDropWeapon()
 		EquippedWeapon->GetItemState() == EItemState::EIS_Held;
 }
 
-/*
-TODO: Section 12 challenge
-
-1. ///////Setup the socket for two handed weapon
-
-2. //////Learn how to drop the weapon and add a function for that.. Call that function with a new action key
-
-3. //// Add and setup hammer attacks 
-
-4. Edit the sword and hammer animations to add a low attack animation for each
-
-5. Record a video where you pick up the sword, 
-swing it for the different animations, drop it, and then pick up and swing the hammer
-
-*/
-
-
-
 
 
 void ASlashCharacter::Tick(float DeltaTime)
