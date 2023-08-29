@@ -114,14 +114,13 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			if (HitInterface)
 			{
 				//call GetHit on the actor that was hit
-				HitInterface->GetHit(BoxHit.ImpactPoint);
+				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
 			HitActorsToIgnore.AddUnique(BoxHit.GetActor());
 			
 
-			//TODO call this in breakable actor on hit
 			MakeFieldAfterHit(BoxHit);
 
 		}
