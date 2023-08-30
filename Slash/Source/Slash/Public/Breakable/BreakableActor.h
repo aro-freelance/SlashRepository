@@ -24,10 +24,10 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry Collection")
+	UGeometryCollectionComponent* GeometryCollection;
 
 private:	
 	
-	UPROPERTY(VisibleAnywhere)
-	UGeometryCollectionComponent* GeometryCollection;
+	
 };
