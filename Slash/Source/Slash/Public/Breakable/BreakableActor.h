@@ -27,6 +27,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Geometry Collection")
 	UGeometryCollectionComponent* GeometryCollection;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
+	bool ShouldSpawnTreasureOnBreak;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
+	TSubclassOf<class ATreasure> TreasureToSpawnOnBreak;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	class UCapsuleComponent* Capsule;
+
+
 private:	
 	
 	
