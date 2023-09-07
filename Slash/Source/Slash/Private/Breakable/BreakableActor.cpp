@@ -48,9 +48,16 @@ void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint)
 	if (ShouldSpawnTreasureOnBreak) 
 	{
 		UWorld* World = GetWorld();
-		if (World)
+		if (World && ArrayOfTreasureToSpawnOnBreak.Num() > 0)
 		{
-			World->SpawnActor<ATreasure>(TreasureToSpawnOnBreak, GetActorLocation(), GetActorRotation());
+			const int32 RandomSelection = FMath::RandRange(0, ArrayOfTreasureToSpawnOnBreak.Num() - 1);
+
+			World->SpawnActor<ATreasure>
+			(
+				ArrayOfTreasureToSpawnOnBreak[RandomSelection], 
+				GetActorLocation(), 
+				GetActorRotation()
+			);
 		}
 	}
 	

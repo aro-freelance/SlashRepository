@@ -30,11 +30,18 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
 	bool ShouldSpawnTreasureOnBreak;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
+	//TSubclassOf<class ATreasure> TreasureToSpawnOnBreak;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
-	TSubclassOf<class ATreasure> TreasureToSpawnOnBreak;
+	TArray<TSubclassOf<class ATreasure>> ArrayOfTreasureToSpawnOnBreak;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCapsuleComponent* Capsule;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
+	bool HasBeenHit = false;
 
 
 private:	
