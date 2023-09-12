@@ -5,6 +5,7 @@
 #include "Slash/DebugMacros.h"
 #include "Components/SphereComponent.h"
 #include "Characters/SlashCharacter.h"
+#include "NiagaraComponent.h"
 
 
 AItem::AItem()
@@ -18,6 +19,9 @@ AItem::AItem()
 	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
 	Sphere->SetupAttachment(GetRootComponent());
 
+	NiagaraEmberEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Niagara Embers"));
+	NiagaraEmberEffect->SetupAttachment(GetRootComponent());
+
 }
 
 void AItem::BeginPlay()
@@ -26,6 +30,7 @@ void AItem::BeginPlay()
 
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
 	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
+
 
 }
 
@@ -78,6 +83,31 @@ void AItem::Tick(float DeltaTime)
 	{
 		AddActorWorldRotation(FRotator(
 			(RotationRateX * DeltaTime), (RotationRateY * DeltaTime), (RotationRateZ * DeltaTime)));
+	}
+
+	if (NiagaraEmberEffect)
+	{
+		if (!isParticleOn)
+		{
+			if (ParticleDelayTimer == 0)
+			{
+				NiagaraEmberEffect->Deactivate();
+			}
+
+			float DelayTimeEndDeltaTime = EffectDelayTimeEnd * DeltaTime;
+			float ParticleDelayDeltaTime = ParticleDelayTimer * DeltaTime;
+
+			if (ParticleDelayDeltaTime >= DelayTimeEndDeltaTime)
+			{
+				NiagaraEmberEffect->Activate();
+
+				isParticleOn = true;
+			}
+			
+			ParticleDelayTimer += 1;
+		}
+
+		
 	}
 	
 

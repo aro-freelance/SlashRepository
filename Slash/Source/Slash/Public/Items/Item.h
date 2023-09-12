@@ -74,13 +74,22 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	USphereComponent* Sphere;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara Effects")
+	class UNiagaraComponent* NiagaraEmberEffect;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara Effects")
+	float EffectDelayTimeEnd = 100;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara Effects")
+	bool isParticleOn = false;
+
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	float RunningTime = 0;
 
+	float ParticleDelayTimer = 0;
 	
-
 };
 
 template<typename T>

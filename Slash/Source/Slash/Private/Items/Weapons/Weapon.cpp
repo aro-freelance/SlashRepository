@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Interfaces/HitInterface.h"
+#include "NiagaraComponent.h"
 
 
 //this has been replaced by AttachMeshToSocket
@@ -54,6 +55,10 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	}
 
+	if (NiagaraEmberEffect)
+	{
+		NiagaraEmberEffect->Deactivate();
+	}
 
 }
 
