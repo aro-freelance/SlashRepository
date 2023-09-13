@@ -17,6 +17,7 @@ class UGroomComponent;
 class AItem;
 class UAnimMontage;
 class AWeapon;
+class UAttributeComponent;
 
 
 UCLASS()
@@ -108,6 +109,10 @@ protected:
 
 
 private:
+
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent* Attributes;
+
 	//UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	ECharacterState CharacterState = ECharacterState::ECS_Unarmed;
 

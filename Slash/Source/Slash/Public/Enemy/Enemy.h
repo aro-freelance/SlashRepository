@@ -8,6 +8,8 @@
 #include "Enemy.generated.h"
 
 class UAnimMontage;
+class UAttributeComponent;
+class UWidgetComponent;
 
 UCLASS()
 class SLASH_API AEnemy : public ACharacter, public IHitInterface
@@ -42,7 +44,11 @@ protected:
 
 private:
 
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent* Attributes;
 
+	UPROPERTY(VisibleAnywhere)
+	UWidgetComponent* HealthBarWidget;
 
 	/*
 	* Animation Montages

@@ -13,6 +13,8 @@
 #include "Items/Weapons/Weapon.h"
 #include "Items/Weapons/WeaponTypes.h"
 #include "Animation/AnimMontage.h"
+#include "Components/AttributeComponent.h"
+
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -40,6 +42,10 @@ ASlashCharacter::ASlashCharacter()
 	Eyebrows = CreateDefaultSubobject<UGroomComponent>(TEXT("Eyebrows"));
 	Eyebrows->SetupAttachment(GetMesh());
 	Eyebrows->AttachmentName = FString("head");
+
+	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+
+
 
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
 
