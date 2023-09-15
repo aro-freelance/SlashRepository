@@ -161,4 +161,6 @@ public:
 
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 
+	FORCEINLINE UAttributeComponent* GetAttributes() const { return Attributes; }
+
 };

@@ -116,7 +116,6 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			{
 				//call GetHit on the actor that was hit
 				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
-
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
@@ -125,6 +124,8 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 			MakeFieldAfterHit(BoxHit);
 
+
+			//TODO: Check if the hit was critical. If it was multiply damage by 2.
 			UGameplayStatics::ApplyDamage(
 				BoxHit.GetActor(),
 				Damage,

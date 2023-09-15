@@ -43,6 +43,8 @@ protected:
 
 	void PlayHitReactMontage(const FName& SectionName);
 
+	float CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser);
+
 
 private:
 

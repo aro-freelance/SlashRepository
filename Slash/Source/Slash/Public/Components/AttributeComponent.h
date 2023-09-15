@@ -64,5 +64,10 @@ public:
 
 	void ReceiveDamage(float Damage);
 	float GetHealthPercent();
+
+	float GetStr();
+	float GetVit();
+	float GetDex();
+	float GetAgi();
 		
 };

@@ -11,6 +11,7 @@
 #include "Components/AttributeComponent.h"
 #include "Components/WidgetComponent.h"
 #include "HUD/HealthBarComponent.h"
+#include "Characters/SlashCharacter.h"
 
 
 AEnemy::AEnemy()
@@ -49,6 +50,8 @@ void AEnemy::PlayHitReactMontage(const FName& SectionName)
 
 	}
 }
+
+
 
 void AEnemy::Tick(float DeltaTime)
 {
@@ -146,13 +149,119 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	float FinalDamageAmount = 0.0f;
 
 	if (Attributes && HealthBarWidget)
 	{
-		Attributes->ReceiveDamage(DamageAmount);
+
+		FinalDamageAmount = CalculateFinalDamageAmount(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+
+		Attributes->ReceiveDamage(FinalDamageAmount);
 		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
 	}
 
-	return DamageAmount;
+	return FinalDamageAmount;
+}
+
+
+// This function is modifying the base weapon damage using attacker and defender stats. (DamageAmount is base weapon damage.)
+float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamageAmount = 0.0f;
+
+	float AttackerSTR;
+	float AttackerDEX;
+	float DefenderVIT;
+	float DefenderAGI;
+
+	//TODO: get the player character or better yet get the actor wielding the weapon that dealt damage.. 
+	// This is not currently working. Need to figure out how to get this information here to move forward.
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetController());
+	if (SlashCharacter)
+	{
+		UAttributeComponent* SlashCharacterAttributeComponent = SlashCharacter->GetAttributes();
+		if (SlashCharacterAttributeComponent)
+		{
+			AttackerSTR = SlashCharacterAttributeComponent->GetStr();
+			AttackerDEX = SlashCharacterAttributeComponent->GetDex();
+		}
+	}
+	else 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer"));
+	}
+
+	if (Attributes)
+	{
+		DefenderVIT = Attributes->GetVit();
+		DefenderAGI = Attributes->GetAgi();
+	}
+
+	float StrVitCalc = 1;
+	
+	if (AttackerSTR >= (DefenderVIT * 2))
+	{
+		StrVitCalc = 2;
+	}
+	else if ((AttackerSTR * 2) <= DefenderVIT)
+	{
+		StrVitCalc = 0.5;
+	}
+	else if (AttackerSTR > DefenderVIT)
+	{
+		if (AttackerSTR >= (DefenderVIT * 1.5))
+		{
+			StrVitCalc = 1.5;
+		}
+		else 
+		{
+			StrVitCalc = 1.25;
+		}
+	}
+	else 
+	{
+		if ((AttackerSTR * 1.5) <= DefenderVIT)
+		{
+			StrVitCalc = (2/3);
+		}
+		else
+		{
+			StrVitCalc = (5/6);
+		}
+	}
+
+	if (StrVitCalc <= 0) { StrVitCalc = 0.5; }
+	if (StrVitCalc >= 2) { StrVitCalc = 2; }
+
+	float PDif = DamageAmount * StrVitCalc;
+
+
+	UE_LOG(LogTemp, Warning, TEXT("attackstr: %f, defendervit: %f"), AttackerSTR, DefenderVIT);
+	UE_LOG(LogTemp, Warning, TEXT("attackdex: %f, defenderagi: %f"), AttackerDEX, DefenderAGI);
+	UE_LOG(LogTemp, Warning, TEXT("strvitcalc: %f"), StrVitCalc);
+	UE_LOG(LogTemp, Warning, TEXT("pdif: %f"), PDif);
+	
+	//if the attacker is more accurate than the enemy's evasion they use a more favorable random damage calculation
+	if (AttackerDEX > DefenderAGI)
+	{
+		const int32 RandomSelection = 95; //+ FMath::RandRange(0, 15);
+		FinalDamageAmount = PDif * (RandomSelection / 100);
+
+		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelection);
+		UE_LOG(LogTemp, Warning, TEXT("dex > agi"));
+	}
+	else
+	{
+		const int32 RandomSelection = 90; //+ FMath::RandRange(0, 15);
+		FinalDamageAmount = PDif * (RandomSelection / 100);
+
+		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelection);
+		UE_LOG(LogTemp, Warning, TEXT("agi > dex"));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
+
+	//the final value is then used in TakeDamage to update the HP and set the HPbarwidget
+	return FinalDamageAmount;
 }
 
