@@ -95,13 +95,10 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
-	
-
 	if(CanDoDamage())
 	{
 
-		UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), 
-			*OtherActor->GetName(), *OtherComp->GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
 
 
 		FHitResult BoxHit;
@@ -112,14 +109,14 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		//if an actor was hit
 		if (BoxHit.GetActor())
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), 
-				*BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
+			//UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), *BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
 	
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 			if (HitInterface)
 			{
 				//call GetHit on the actor that was hit
 				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
+
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
@@ -128,20 +125,28 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 			MakeFieldAfterHit(BoxHit);
 
+			UGameplayStatics::ApplyDamage(
+				BoxHit.GetActor(),
+				Damage,
+				GetInstigator()->GetController(),
+				this,
+				UDamageType::StaticClass()
+			);
+
 		}
 		else 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Did not hit actor."));
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("BoxHit Output: %s"), *BoxHitString);
+		//UE_LOG(LogTemp, Warning, TEXT("BoxHit Output: %s"), *BoxHitString);
 	}	
 	else
 	{
 		
 		FString StateString = BuildStateString();
 
-		UE_LOG(LogTemp, Warning, TEXT("Can't do damage: %s."), *StateString);
+		//UE_LOG(LogTemp, Warning, TEXT("Can't do damage: %s."), *StateString);
 	}
 
 

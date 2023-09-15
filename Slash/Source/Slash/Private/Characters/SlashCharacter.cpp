@@ -182,6 +182,9 @@ void ASlashCharacter::EquipNewWeapon()
 
 		EquippedWeapon = OverlappingWeapon;
 
+		EquippedWeapon->SetOwner(this);
+		EquippedWeapon->SetInstigator(this);
+
 		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
 
 		CharacterState = WeaponSizeToCharacterState(WeaponSize);
@@ -222,6 +225,9 @@ void ASlashCharacter::UnEquipAnimation()
 	FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, false);
 
 	CharacterState = ECharacterState::ECS_Unarmed;
+
+	EquippedWeapon->SetOwner(nullptr);
+	EquippedWeapon->SetInstigator(nullptr);
 
 	PlayEquipMontage(MontageName);
 

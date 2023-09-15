@@ -60,7 +60,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character Stats")
 	float CHR = 1;
 	
+public:
 
-
+	void ReceiveDamage(float Damage);
+	float GetHealthPercent();
 		
 };
