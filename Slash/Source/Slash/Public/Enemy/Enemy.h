@@ -22,7 +22,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint) override;
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer) override;
 
 	void DirectionalHitReact(const FVector& ImpactPoint);
 
@@ -47,6 +47,10 @@ protected:
 
 
 private:
+
+	//the most recent character to damage this Enemy
+	UPROPERTY(VisibleAnywhere)
+	ASlashCharacter* CharacterWhoDamagedEnemy;
 
 	UPROPERTY(VisibleAnywhere)
 	UAttributeComponent* Attributes;

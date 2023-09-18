@@ -65,8 +65,10 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer)
 {
+
+	CharacterWhoDamagedEnemy = DamageDealer;
 
 	DirectionalHitReact(ImpactPoint);
 
@@ -174,12 +176,9 @@ float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const&
 	float DefenderVIT;
 	float DefenderAGI;
 
-	//TODO: get the player character or better yet get the actor wielding the weapon that dealt damage.. 
-	// This is not currently working. Need to figure out how to get this information here to move forward.
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetController());
-	if (SlashCharacter)
+	if (CharacterWhoDamagedEnemy != nullptr)
 	{
-		UAttributeComponent* SlashCharacterAttributeComponent = SlashCharacter->GetAttributes();
+		UAttributeComponent* SlashCharacterAttributeComponent = CharacterWhoDamagedEnemy->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
 			AttackerSTR = SlashCharacterAttributeComponent->GetStr();
@@ -244,22 +243,30 @@ float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const&
 	//if the attacker is more accurate than the enemy's evasion they use a more favorable random damage calculation
 	if (AttackerDEX > DefenderAGI)
 	{
-		const int32 RandomSelection = 95; //+ FMath::RandRange(0, 15);
-		FinalDamageAmount = PDif * (RandomSelection / 100);
-
-		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelection);
 		UE_LOG(LogTemp, Warning, TEXT("dex > agi"));
+		
+		int32 RandomSelection = 95 + FMath::RandRange(0, 15);
+		const float RandomSelectionFloat = (float)RandomSelection;
+
+		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
+
+		FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
+		UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
 	}
 	else
 	{
-		const int32 RandomSelection = 90; //+ FMath::RandRange(0, 15);
-		FinalDamageAmount = PDif * (RandomSelection / 100);
-
-		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelection);
 		UE_LOG(LogTemp, Warning, TEXT("agi > dex"));
+
+		int32 RandomSelection = 90 + FMath::RandRange(0, 15);
+		const float RandomSelectionFloat = (float)RandomSelection;
+
+		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
+		
+		FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
+		UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
+	
 
 	//the final value is then used in TakeDamage to update the HP and set the HPbarwidget
 	return FinalDamageAmount;

@@ -112,10 +112,14 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			//UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), *BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
 	
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
-			if (HitInterface)
+
+			//get the character that the weapon is attached to
+			ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
+
+			if (HitInterface && SlashCharacter)
 			{
 				//call GetHit on the actor that was hit
-				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint);
+				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, SlashCharacter);
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
