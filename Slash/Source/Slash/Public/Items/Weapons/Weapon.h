@@ -37,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
 	TArray<AActor*> HitActorsToIgnore;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Name")
+	FString WeaponName = "Default Weapon Name";
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -72,10 +75,10 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere, Category = "Weapon FX")
 	USoundBase* WeaponPickupSound;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Hit Box")
 	UBoxComponent* WeaponBox;
 
 	UPROPERTY(VisibleAnywhere)
@@ -83,17 +86,20 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* BoxTraceEnd;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	float Damage = 20.f;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	int32 PrecisionRange = 15;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	int32 LowAccFloor = 75;
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	int32 HighAccFloor = 95;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
+	float PercentMagicDamage = 0.0f;
 
 	//debugging
 	bool CanAttack = true;

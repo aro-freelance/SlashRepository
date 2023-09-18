@@ -40,7 +40,7 @@ void ABreakableActor::Tick(float DeltaTime)
 
 }
 
-void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor)
+void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor, float PercentMagicDamage, const FString& WeaponName)
 {
 
 	//additional functionality in Blueprints

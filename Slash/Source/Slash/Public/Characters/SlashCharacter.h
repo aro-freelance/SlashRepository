@@ -30,11 +30,16 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	FString GetName();
+
 protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputMappingContext* SlashCharacterContext;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Name")
+	FString CharacterName = "Default Character Name";
 
 	/*
 	* Player Input Callbacks

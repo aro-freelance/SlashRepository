@@ -65,13 +65,16 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor, float PercentMagicDamage, const FString& WeaponName)
 {
 
+	//Store Information about the Attacker and Weapon of Attacker
 	CharacterWhoDamagedEnemy = DamageDealer;
 	DamagerPrecisionRange = PrecisionRange;
 	DamagerLowAccFloor = LowAccFloor;
 	DamagerHighAccFloor = HighAccFloor;
+	DamagerPercentMagicDamage = PercentMagicDamage;
+	DamagerWeaponName = WeaponName;
 
 	DirectionalHitReact(ImpactPoint);
 
@@ -158,51 +161,89 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 
 	if (Attributes && HealthBarWidget)
 	{
+		//Calculate Damage to Deal to HP
+		if (DamagerPercentMagicDamage == 1) 
+		{
+			FinalDamageAmount = CalculateMagicalDamage(DamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("magic damage. %f"), FinalDamageAmount);
+		}
+		else if (DamagerPercentMagicDamage == 0)
+		{
+			FinalDamageAmount = CalculatePhysicalDamage(DamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("physical damage. %f"), FinalDamageAmount);
+		}
+		else
+		{	
+			float MagicDamageAmount = DamageAmount * DamagerPercentMagicDamage;
+			float PhysicalDamageAmount = DamageAmount * (1 - DamagerPercentMagicDamage);
 
-		FinalDamageAmount = CalculateFinalDamageAmount(DamageAmount, DamageEvent, EventInstigator, DamageCauser);
+			FinalDamageAmount = CalculateMagicalDamage(MagicDamageAmount) + CalculatePhysicalDamage(PhysicalDamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
+		}
 
+		//Update HP Amount
 		Attributes->ReceiveDamage(FinalDamageAmount);
-		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
-		//TODO: make a new attribute function to return the health in a different format?
-		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
+
+		//Update Health Bar and other HUD elements
+		DamageTakenUpdateHUD();
+
+
+		if (GEngine)
+		{
+			int32 FinalDamageAmountRounded = FMath::RoundToInt(FinalDamageAmount);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmount);
 	}
+
+
 
 	return FinalDamageAmount;
 }
 
 
 // This function is modifying the base weapon damage using attacker and defender stats. (DamageAmount is base weapon damage.)
-float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+float AEnemy::CalculatePhysicalDamage(float DamageAmount)
 {
 	float FinalDamageAmount = 0.0f;
 
-	float AttackerSTR;
-	float AttackerDEX;
-	float DefenderVIT;
-	float DefenderAGI;
-
-	if (CharacterWhoDamagedEnemy != nullptr)
+	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
 	{
 		UAttributeComponent* SlashCharacterAttributeComponent = CharacterWhoDamagedEnemy->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
-			AttackerSTR = SlashCharacterAttributeComponent->GetStr();
-			AttackerDEX = SlashCharacterAttributeComponent->GetDex();
+			float AttackerSTR = SlashCharacterAttributeComponent->GetStr();
+			float AttackerDEX = SlashCharacterAttributeComponent->GetDex();
+			float DefenderVIT = Attributes->GetVit();
+			float DefenderAGI = Attributes->GetAgi();
+
+			float PDif = DamageAmount * CompareSTRVIT(AttackerSTR, DefenderVIT);
+			int32 Floor = CompareDEXAGI(AttackerDEX, DefenderAGI);
+			int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
+
+			FinalDamageAmount = PDif * ((float)RandomSelection/ 100);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("no slash character attribute component"));
 		}
 	}
 	else 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer"));
+		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer or Attributes"));
 	}
 
-	if (Attributes)
-	{
-		DefenderVIT = Attributes->GetVit();
-		DefenderAGI = Attributes->GetAgi();
-	}
+	//the final value is used in TakeDamage to update the HP and set the HPbarwidget
+	return FinalDamageAmount;
+}
+
+
+float AEnemy::CompareSTRVIT(float AttackerSTR, float DefenderVIT)
+{
 
 	float StrVitCalc = 1;
-	
+
 	if (AttackerSTR >= (DefenderVIT * 2))
 	{
 		StrVitCalc = 2;
@@ -217,36 +258,33 @@ float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const&
 		{
 			StrVitCalc = 1.5;
 		}
-		else 
+		else
 		{
 			StrVitCalc = 1.25;
 		}
 	}
-	else 
+	else
 	{
 		if ((AttackerSTR * 1.5) <= DefenderVIT)
 		{
-			StrVitCalc = (2/3);
+			StrVitCalc = (2 / 3);
 		}
 		else
 		{
-			StrVitCalc = (5/6);
+			StrVitCalc = (5 / 6);
 		}
 	}
 
 	if (StrVitCalc <= 0) { StrVitCalc = 0.5; }
 	if (StrVitCalc >= 2) { StrVitCalc = 2; }
 
-	float PDif = DamageAmount * StrVitCalc;
+	return StrVitCalc;
+}
 
-
-	UE_LOG(LogTemp, Warning, TEXT("attackstr: %f, defendervit: %f"), AttackerSTR, DefenderVIT);
-	UE_LOG(LogTemp, Warning, TEXT("attackdex: %f, defenderagi: %f"), AttackerDEX, DefenderAGI);
-	UE_LOG(LogTemp, Warning, TEXT("strvitcalc: %f"), StrVitCalc);
-	UE_LOG(LogTemp, Warning, TEXT("pdif: %f"), PDif);
-
+int32 AEnemy::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
+{
 	int32 Floor;
-	
+
 	//if the attacker is more accurate than the enemy's evasion they use a more favorable random damage calculation
 	if (AttackerDEX > DefenderAGI)
 	{
@@ -259,14 +297,117 @@ float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const&
 		Floor = DamagerLowAccFloor;
 	}
 
-	int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
-	const float RandomSelectionFloat = (float)RandomSelection;
-	UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
+	return Floor;
+}
 
-	FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
-	UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
+float AEnemy::CalculateMagicalDamage(float DamageAmount)
+{
+	float FinalDamageAmount = 0.0f;
 
-	//the final value is then used in TakeDamage to update the HP and set the HPbarwidget
+	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
+	{
+		UAttributeComponent* SlashCharacterAttributeComponent = CharacterWhoDamagedEnemy->GetAttributes();
+		if (SlashCharacterAttributeComponent)
+		{
+			float AttackerINT = SlashCharacterAttributeComponent->GetInt();
+			float AttackerCHR = SlashCharacterAttributeComponent->GetChr();
+			float DefenderMND = Attributes->GetMnd();
+			float DefenderCHR = Attributes->GetChr();
+
+			float PDif = DamageAmount * CompareINTMND(AttackerINT, DefenderMND);
+			int32 Floor = CompareCHR(AttackerCHR, DefenderCHR);
+			int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
+
+			FinalDamageAmount = PDif * ((float)RandomSelection / 100);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("no slash character attribute component"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer or Attributes"));
+	}
+
+	//the final value is used in TakeDamage to update the HP and set the HPbarwidget
 	return FinalDamageAmount;
 }
 
+float AEnemy::CompareINTMND(float AttackerINT, float DefenderMND)
+{
+	float IntMndCalc = 1;
+
+	if (AttackerINT >= (DefenderMND * 2))
+	{
+		IntMndCalc = 2;
+	}
+	else if ((AttackerINT * 2) <= DefenderMND)
+	{
+		IntMndCalc = 0.5;
+	}
+	else if (AttackerINT > DefenderMND)
+	{
+		if (AttackerINT >= (DefenderMND * 1.5))
+		{
+			IntMndCalc = 1.5;
+		}
+		else
+		{
+			IntMndCalc = 1.25;
+		}
+	}
+	else
+	{
+		if ((AttackerINT * 1.5) <= DefenderMND)
+		{
+			IntMndCalc = (2 / 3);
+		}
+		else
+		{
+			IntMndCalc = (5 / 6);
+		}
+	}
+
+	if (IntMndCalc <= 0) { IntMndCalc = 0.5; }
+	if (IntMndCalc >= 2) { IntMndCalc = 2; }
+
+
+
+	return IntMndCalc;
+}
+
+int32 AEnemy::CompareCHR(float AttackerCHR, float DefenderCHR)
+{
+	int32 Floor;
+
+	//if the attacker is more accurate than the enemy's evasion they use a more favorable random damage calculation
+	if (AttackerCHR > DefenderCHR)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("attacker wins chr"));
+		Floor = DamagerHighAccFloor;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("defender wins chr"));
+		Floor = DamagerLowAccFloor;
+	}
+
+	return Floor;
+}
+
+void AEnemy::DamageTakenUpdateHUD()
+{
+	HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+
+	//TODO: make a new attribute function to return the health in a different format?
+	HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
+
+}
+
+
+//Return the user friendly name of this enemy
+FString AEnemy::GetName()
+{
+	return EnemyName;
+}

@@ -545,6 +545,7 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
+
 FString ASlashCharacter::BuildStateString()
 {
 	FString StateString = FString();
@@ -582,3 +583,8 @@ FString ASlashCharacter::BuildStateString()
 	return StateString;
 }
 
+//Return the user friendly name of this character
+FString ASlashCharacter::GetName()
+{
+	return CharacterName;
+}

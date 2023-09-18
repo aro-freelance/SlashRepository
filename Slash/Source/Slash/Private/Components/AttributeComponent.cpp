@@ -21,21 +21,15 @@ void UAttributeComponent::BeginPlay()
 
 void UAttributeComponent::ReceiveDamage(float Damage)
 {
-	//Damage is modified in cpp for the actor taking damage. i.e. Enemy.cpp CalculateFinalDamageAmount
+	//Damage is modified in cpp for the actor taking damage. i.e. Enemy.cpp TakeDamage
 
 	HP = FMath::Clamp(HP - Damage, 0.f, MaxHP);
-
-	UE_LOG(LogTemp, Warning, TEXT("Receive Damage. HP: %f"), HP);
 
 }
 
 float UAttributeComponent::GetHealthPercent()
 {
-	float HPPercent = (HP / MaxHP);
-
-	UE_LOG(LogTemp, Warning, TEXT("GetHealthPercent. HPPercent: %f"), HPPercent);
-
-	return HPPercent;
+	return (HP / MaxHP);
 }
 
 float UAttributeComponent::GetStr()
@@ -56,6 +50,21 @@ float UAttributeComponent::GetDex()
 float UAttributeComponent::GetAgi()
 {
 	return AGI;
+}
+
+float UAttributeComponent::GetInt()
+{
+	return INT;
+}
+
+float UAttributeComponent::GetMnd()
+{
+	return MND;
+}
+
+float UAttributeComponent::GetChr()
+{
+	return CHR;
 }
 
 

@@ -56,6 +56,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Character Stats")
 	float AGI = 1;
 	UPROPERTY(EditAnywhere, Category = "Character Stats")
+	float INT = 1;
+	UPROPERTY(EditAnywhere, Category = "Character Stats")
 	float MND = 1;
 	UPROPERTY(EditAnywhere, Category = "Character Stats")
 	float CHR = 1;
@@ -69,5 +71,8 @@ public:
 	float GetVit();
 	float GetDex();
 	float GetAgi();
+	float GetInt();
+	float GetMnd();
+	float GetChr();
 		
 };
