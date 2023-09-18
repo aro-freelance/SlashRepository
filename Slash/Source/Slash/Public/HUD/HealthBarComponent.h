@@ -18,6 +18,8 @@ class SLASH_API UHealthBarComponent : public UWidgetComponent
 public:
 	void SetHealthPercent(float Percent);
 
+	void SetHealthText(float Amount);
+
 private:
 	UPROPERTY()
 	class UHealthBar* HealthBarWidget;

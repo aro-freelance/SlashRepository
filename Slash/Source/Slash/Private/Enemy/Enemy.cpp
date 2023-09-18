@@ -65,10 +65,13 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer)
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor)
 {
 
 	CharacterWhoDamagedEnemy = DamageDealer;
+	DamagerPrecisionRange = PrecisionRange;
+	DamagerLowAccFloor = LowAccFloor;
+	DamagerHighAccFloor = HighAccFloor;
 
 	DirectionalHitReact(ImpactPoint);
 
@@ -160,6 +163,8 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 
 		Attributes->ReceiveDamage(FinalDamageAmount);
 		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+		//TODO: make a new attribute function to return the health in a different format?
+		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
 	}
 
 	return FinalDamageAmount;
@@ -239,34 +244,27 @@ float AEnemy::CalculateFinalDamageAmount(float DamageAmount, FDamageEvent const&
 	UE_LOG(LogTemp, Warning, TEXT("attackdex: %f, defenderagi: %f"), AttackerDEX, DefenderAGI);
 	UE_LOG(LogTemp, Warning, TEXT("strvitcalc: %f"), StrVitCalc);
 	UE_LOG(LogTemp, Warning, TEXT("pdif: %f"), PDif);
+
+	int32 Floor;
 	
 	//if the attacker is more accurate than the enemy's evasion they use a more favorable random damage calculation
 	if (AttackerDEX > DefenderAGI)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("dex > agi"));
-		
-		int32 RandomSelection = 95 + FMath::RandRange(0, 15);
-		const float RandomSelectionFloat = (float)RandomSelection;
-
-		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
-
-		FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
-		UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
+		Floor = DamagerHighAccFloor;
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("agi > dex"));
-
-		int32 RandomSelection = 90 + FMath::RandRange(0, 15);
-		const float RandomSelectionFloat = (float)RandomSelection;
-
-		UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
-		
-		FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
-		UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
+		Floor = DamagerLowAccFloor;
 	}
 
-	
+	int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
+	const float RandomSelectionFloat = (float)RandomSelection;
+	UE_LOG(LogTemp, Warning, TEXT("randomselection : %f"), RandomSelectionFloat);
+
+	FinalDamageAmount = PDif * (RandomSelectionFloat / 100);
+	UE_LOG(LogTemp, Warning, TEXT("enemy hp mod calc.  final dmg amount: %f"), FinalDamageAmount);
 
 	//the final value is then used in TakeDamage to update the HP and set the HPbarwidget
 	return FinalDamageAmount;

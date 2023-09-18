@@ -86,6 +86,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	float Damage = 20.f;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	int32 PrecisionRange = 15;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	int32 LowAccFloor = 75;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
+	int32 HighAccFloor = 95;
 
 	//debugging
 	bool CanAttack = true;
