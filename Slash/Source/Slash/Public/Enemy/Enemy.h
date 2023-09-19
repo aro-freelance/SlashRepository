@@ -22,11 +22,11 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage = 20.f, int32 PrecisionRange = 15, int32 LowAccFloor = 75, int32 HighAccFloor = 95, float PercentMagicDamage = 0.0f, const FString& WeaponName = "default") override;
-
-	void DirectionalHitReact(const FVector& ImpactPoint);
-
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon);
+	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+
+	void ThisEnemyIsDefeated();
 
 	FString GetName();
 
@@ -44,14 +44,18 @@ protected:
 	*/
 
 	void PlayHitReactMontage(const FName& SectionName);
+	void PlayDeathMontage(const FName& SectionName);
 
 	float CalculatePhysicalDamage(float DamageAmount);
 	float CalculateMagicalDamage(float DamageAmount);
+
 
 	void DamageTakenUpdateHUD();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Name")
 	FString EnemyName = "Default Enemy Name";
+
+	bool CheckCritical(const FVector& ImpactPoint);
 
 
 private:
@@ -63,24 +67,29 @@ private:
 
 
 	//the most recent character to damage this Enemy
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
+	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
 	ASlashCharacter* CharacterWhoDamagedEnemy;
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
-	int32 DamagerPrecisionRange;
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
-	int32 DamagerLowAccFloor;
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
-	int32 DamagerHighAccFloor;
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
-	float DamagerPercentMagicDamage;
-	UPROPERTY(VisibleAnywhere, Category = "Character Who Damaged Enemy Properties")
-	FString DamagerWeaponName;
+	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
+	AWeapon* WeaponThatDamagedEnemy;
+	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
+	FVector LastHitImpactPoint = FVector();
+	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
+	FName LastHitDirection;
+	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
+	float LastDamageAmount;
+	
 
 	UPROPERTY(VisibleAnywhere)
 	UAttributeComponent* Attributes;
 
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
+
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* HitSound;
+
+	UPROPERTY(EditAnywhere, Category = "Visual Effects")
+	UParticleSystem* HitParticles;
 
 	/*
 	* Animation Montages
@@ -89,10 +98,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* HitReactMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Sounds")
-	USoundBase* HitSound;
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* DeathMontage;
 
-	UPROPERTY(EditAnywhere, Category = "Visual Effects")
-	UParticleSystem* HitParticles;
+	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
+	FName CalculateDeathMontageSectionName();
+	
 
 };

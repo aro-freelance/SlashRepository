@@ -12,6 +12,7 @@
 #include "Components/WidgetComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "Characters/SlashCharacter.h"
+#include "Items/Weapons/Weapon.h"
 
 
 AEnemy::AEnemy()
@@ -38,20 +39,6 @@ void AEnemy::BeginPlay()
 	
 }
 
-void AEnemy::PlayHitReactMontage(const FName& SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && HitReactMontage)
-	{
-
-		AnimInstance->Montage_Play(HitReactMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
-
-	}
-}
-
-
 
 void AEnemy::Tick(float DeltaTime)
 {
@@ -65,44 +52,88 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage, int32 PrecisionRange, int32 LowAccFloor, int32 HighAccFloor, float PercentMagicDamage, const FString& WeaponName)
+void AEnemy::PlayHitReactMontage(const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && HitReactMontage)
+	{
+
+		AnimInstance->Montage_Play(HitReactMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+
+	}
+}
+
+void AEnemy::PlayDeathMontage(const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && DeathMontage)
+	{
+
+		AnimInstance->Montage_Play(DeathMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
+
+	}
+}
+
+
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon)
 {
 
 	//Store Information about the Attacker and Weapon of Attacker
 	CharacterWhoDamagedEnemy = DamageDealer;
-	DamagerPrecisionRange = PrecisionRange;
-	DamagerLowAccFloor = LowAccFloor;
-	DamagerHighAccFloor = HighAccFloor;
-	DamagerPercentMagicDamage = PercentMagicDamage;
-	DamagerWeaponName = WeaponName;
+	WeaponThatDamagedEnemy = Weapon;
+	LastHitImpactPoint = ImpactPoint;
+	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
 
-	DirectionalHitReact(ImpactPoint);
+	//Deal Damage
+	UGameplayStatics::ApplyDamage(
+		this,
+		Weapon->GetWeaponDamage(),
+		DamageDealer->GetController(),
+		Weapon,
+		UDamageType::StaticClass()
+	);
 
-	if (HitSound)
+	//Is Not Alive?
+	if (!Attributes->IsAlive())
 	{
-		UGameplayStatics::PlaySoundAtLocation(
-			this,
-			HitSound,
-			ImpactPoint
-		);
+		ThisEnemyIsDefeated();
 	}
-
-	if (HitParticles && GetWorld())
+	else 
 	{
-		UGameplayStatics::SpawnEmitterAtLocation(
-			GetWorld(),
-			HitParticles,
-			ImpactPoint,
-			HitParticleRotation,
-			HitParticleScale
-		);
+
+		PlayHitReactMontage(LastHitDirection);
+
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				HitSound,
+				ImpactPoint
+			);
+		}
+
+		if (HitParticles && GetWorld())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				HitParticles,
+				ImpactPoint,
+				HitParticleRotation,
+				HitParticleScale
+			);
+		}
 	}
-	
 
 }
 
-void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
+
+FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
 {
+
 	//The vector of the direction the actor is facing
 	const FVector Forward = GetActorForwardVector();
 	//Lower the ImpactPoint to the Actor's Height to create a flat line
@@ -125,7 +156,6 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 		AngleOfImpact = AngleOfImpact * -1.f;
 	}
 
-
 	FName SectionName = FName("FromBack");
 
 	if (AngleOfImpact >= -45.f && AngleOfImpact < 45.f)
@@ -143,9 +173,6 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 
 
 	UE_LOG(LogTemp, Warning, TEXT("Angle of Impact: %d"), AngleOfImpact);
-
-	PlayHitReactMontage(SectionName);
-
 	////debug arrows for forward and impactpoint vectors
 	////context, start, end vector (multiplied to increase length),  arrow head size, color, duration
 	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + Forward * 60.f, 5.f,
@@ -153,33 +180,55 @@ void AEnemy::DirectionalHitReact(const FVector& ImpactPoint)
 	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ImpactPointVector * 60.f, 5.f,
 	//	FColor::Blue, 5.f);
 
+	return SectionName;
 }
+
 
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float FinalDamageAmount = 0.0f;
+	
+	float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
+
+	bool isCritical = CheckCritical(LastHitImpactPoint);
+	if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
+
 
 	if (Attributes && HealthBarWidget)
 	{
 		//Calculate Damage to Deal to HP
-		if (DamagerPercentMagicDamage == 1) 
+		if (PercentMagicDamage == 1) 
 		{
 			FinalDamageAmount = CalculateMagicalDamage(DamageAmount);
 			UE_LOG(LogTemp, Warning, TEXT("magic damage. %f"), FinalDamageAmount);
 		}
-		else if (DamagerPercentMagicDamage == 0)
+		else if (PercentMagicDamage == 0)
 		{
 			FinalDamageAmount = CalculatePhysicalDamage(DamageAmount);
 			UE_LOG(LogTemp, Warning, TEXT("physical damage. %f"), FinalDamageAmount);
 		}
 		else
 		{	
-			float MagicDamageAmount = DamageAmount * DamagerPercentMagicDamage;
-			float PhysicalDamageAmount = DamageAmount * (1 - DamagerPercentMagicDamage);
+			float MagicDamageAmount = DamageAmount * PercentMagicDamage;
+			float PhysicalDamageAmount = DamageAmount * (1 - PercentMagicDamage);
 
 			FinalDamageAmount = CalculateMagicalDamage(MagicDamageAmount) + CalculatePhysicalDamage(PhysicalDamageAmount);
 			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
 		}
+
+		LastDamageAmount = FinalDamageAmount;
+
+		FString DamagerWeaponName = WeaponThatDamagedEnemy->WeaponName;
+
+		//Log Message for Damage Dealt
+		if (GEngine)
+		{
+			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
+			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
+
 
 		//Update HP Amount
 		Attributes->ReceiveDamage(FinalDamageAmount);
@@ -187,26 +236,36 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		//Update Health Bar and other HUD elements
 		DamageTakenUpdateHUD();
 
-
-		if (GEngine)
-		{
-			int32 FinalDamageAmountRounded = FMath::RoundToInt(FinalDamageAmount);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmount);
 	}
-
-
 
 	return FinalDamageAmount;
 }
+
+void AEnemy::ThisEnemyIsDefeated()
+{
+	//Log Message for Defeat
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CharacterWhoDamagedEnemy->GetName(), *EnemyName));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CharacterWhoDamagedEnemy->GetName(), *EnemyName);
+
+	FName SectionName = CalculateDeathMontageSectionName();
+	PlayDeathMontage(SectionName);
+
+	//TODO: delay -> destroy this
+}
+
+
 
 
 // This function is modifying the base weapon damage using attacker and defender stats. (DamageAmount is base weapon damage.)
 float AEnemy::CalculatePhysicalDamage(float DamageAmount)
 {
 	float FinalDamageAmount = 0.0f;
+
+	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
 
 	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
 	{
@@ -220,7 +279,7 @@ float AEnemy::CalculatePhysicalDamage(float DamageAmount)
 
 			float PDif = DamageAmount * CompareSTRVIT(AttackerSTR, DefenderVIT);
 			int32 Floor = CompareDEXAGI(AttackerDEX, DefenderAGI);
-			int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
+			int32 RandomSelection = Floor + FMath::RandRange(0, PrecisionRange);
 
 			FinalDamageAmount = PDif * ((float)RandomSelection/ 100);
 		}
@@ -289,12 +348,12 @@ int32 AEnemy::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
 	if (AttackerDEX > DefenderAGI)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("dex > agi"));
-		Floor = DamagerHighAccFloor;
+		Floor = WeaponThatDamagedEnemy->GetHighAccFloor();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("agi > dex"));
-		Floor = DamagerLowAccFloor;
+		Floor = WeaponThatDamagedEnemy->GetLowAccFloor();
 	}
 
 	return Floor;
@@ -303,6 +362,8 @@ int32 AEnemy::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
 float AEnemy::CalculateMagicalDamage(float DamageAmount)
 {
 	float FinalDamageAmount = 0.0f;
+
+	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
 
 	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
 	{
@@ -316,7 +377,7 @@ float AEnemy::CalculateMagicalDamage(float DamageAmount)
 
 			float PDif = DamageAmount * CompareINTMND(AttackerINT, DefenderMND);
 			int32 Floor = CompareCHR(AttackerCHR, DefenderCHR);
-			int32 RandomSelection = Floor + FMath::RandRange(0, DamagerPrecisionRange);
+			int32 RandomSelection = Floor + FMath::RandRange(0, PrecisionRange);
 
 			FinalDamageAmount = PDif * ((float)RandomSelection / 100);
 		}
@@ -385,12 +446,12 @@ int32 AEnemy::CompareCHR(float AttackerCHR, float DefenderCHR)
 	if (AttackerCHR > DefenderCHR)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("attacker wins chr"));
-		Floor = DamagerHighAccFloor;
+		Floor = WeaponThatDamagedEnemy->GetHighAccFloor();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("defender wins chr"));
-		Floor = DamagerLowAccFloor;
+		Floor = WeaponThatDamagedEnemy->GetLowAccFloor();
 	}
 
 	return Floor;
@@ -402,6 +463,81 @@ void AEnemy::DamageTakenUpdateHUD()
 
 	//TODO: make a new attribute function to return the health in a different format?
 	HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
+
+}
+
+
+//TODO: Calculate if the hit is critical
+bool AEnemy::CheckCritical(const FVector& ImpactPoint)
+{
+	return false;
+}
+
+FName AEnemy::CalculateDeathMontageSectionName()
+{
+	FName SectionName = "DeathSweep";
+
+	if (LastHitDirection == "FromBack")
+	{
+		SectionName = "DeathForward";
+	}
+	else if (LastHitDirection == "FromRight")
+	{
+		const int32 RandomSelection = FMath::RandRange(0, 2);
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = "DeathForward";
+			break;
+		case 1:
+			SectionName = "DeathSweep";
+			break;
+		case 2:
+			SectionName = "DeathBack";
+			break;
+		default:
+			break;
+		}
+	}
+	else if (LastHitDirection == "FromLeft")
+	{
+		const int32 RandomSelection = FMath::RandRange(0, 3);
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = "DeathForward";
+			break;
+		case 1:
+			SectionName = "DeathSweep";
+			break;
+		case 2:
+			SectionName = "DeathBack";
+			break;
+		case 3:
+			SectionName = "DeathShoulder";
+			break;
+		default:
+			break;
+		}
+	}
+	else 
+	{
+		//"FromFront"
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = "DeathSweep";
+			break;
+		case 1:
+			SectionName = "DeathBack";
+			break;
+		default:
+			break;
+		}
+	}
+
+	return SectionName;
 
 }
 

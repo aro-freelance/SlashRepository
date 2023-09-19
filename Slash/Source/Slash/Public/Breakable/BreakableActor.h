@@ -19,8 +19,8 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, float Damage = 20.f, int32 PrecisionRange = 15, int32 LowAccFloor = 90, int32 HighAccFloor = 95, float PercentMagicDamage = 0.0f, const FString& WeaponName = "default") override;
-
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon);
+	
 protected:
 	virtual void BeginPlay() override;
 

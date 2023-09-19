@@ -11,16 +11,6 @@
 #include "NiagaraComponent.h"
 
 
-//this has been replaced by AttachMeshToSocket
-/*
-void AWeapon::Equip(USceneComponent* InParent, FName InSocketName)
-{
-	AttachMeshToSocket(InParent, InSocketName);
-	ItemState = EItemState::EIS_Held;
-}
-*/
-
-
 //constructor
 AWeapon::AWeapon()
 {
@@ -74,6 +64,11 @@ void AWeapon::DetachMeshFromSocket()
 		Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	}
 
+	if (NiagaraEmberEffect)
+	{
+		NiagaraEmberEffect->Activate();
+	}
+
 }
 
 
@@ -97,13 +92,10 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 	if(CanDoDamage())
 	{
-
 		//UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
-
 
 		FHitResult BoxHit;
 		BoxTrace(BoxHit);
-
 		FString BoxHitString = BoxHit.ToString();
 
 		//if an actor was hit
@@ -118,41 +110,23 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 			if (HitInterface && SlashCharacter)
 			{
-
 				//call GetHit on the actor that was hit
-				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, SlashCharacter, Damage, PrecisionRange, LowAccFloor, HighAccFloor, PercentMagicDamage, WeaponName);
+				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, SlashCharacter, this);
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
 			HitActorsToIgnore.AddUnique(BoxHit.GetActor());
-			
-
 			MakeFieldAfterHit(BoxHit);
-
-
-			//TODO: Check if the hit was critical. If it was multiply damage by 2.
-			UGameplayStatics::ApplyDamage(
-				BoxHit.GetActor(),
-				Damage,
-				GetInstigator()->GetController(),
-				this,
-				UDamageType::StaticClass()
-			);
 
 		}
 		else 
 		{
 			UE_LOG(LogTemp, Warning, TEXT("Did not hit actor."));
 		}
-
-		//UE_LOG(LogTemp, Warning, TEXT("BoxHit Output: %s"), *BoxHitString);
 	}	
 	else
-	{
-		
+	{	
 		FString StateString = BuildStateString();
-
-		//UE_LOG(LogTemp, Warning, TEXT("Can't do damage: %s."), *StateString);
 	}
 
 

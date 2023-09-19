@@ -73,18 +73,9 @@ protected:
 
 	FString BuildStateString();
 
-private:
-
-	UPROPERTY(EditAnywhere, Category = "Weapon FX")
-	USoundBase* WeaponPickupSound;
 	
-	UPROPERTY(VisibleAnywhere, Category = "Weapon Hit Box")
-	UBoxComponent* WeaponBox;
 
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* BoxTraceStart;
-	UPROPERTY(VisibleAnywhere)
-	USceneComponent* BoxTraceEnd;
+private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	float Damage = 20.f;
@@ -100,6 +91,25 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
 	float PercentMagicDamage = 0.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
+	UDamageType* DamageType;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
+	float CriticalMultiplier = 2.f;
+
+	UPROPERTY(EditAnywhere, Category = "Weapon FX")
+	USoundBase* WeaponPickupSound;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Weapon Hit Box")
+	UBoxComponent* WeaponBox;
+
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* BoxTraceStart;
+	UPROPERTY(VisibleAnywhere)
+	USceneComponent* BoxTraceEnd;
+
+	
 
 	//debugging
 	bool CanAttack = true;
@@ -119,5 +129,15 @@ public:
 
 
 	FORCEINLINE EWeaponCollisionState GetWeaponCollisionState() const { return WeaponCollisionState; }
-	
+
+	FORCEINLINE float GetWeaponDamage() const { return Damage; }
+	FORCEINLINE int32 GetPrecisionRange() const { return PrecisionRange; }
+	FORCEINLINE int32 GetLowAccFloor() const { return LowAccFloor; }
+	FORCEINLINE int32 GetHighAccFloor() const { return HighAccFloor; }
+	FORCEINLINE float GetPercentMagicDamage() const { return PercentMagicDamage; }
+	FORCEINLINE FString GetName() const { return WeaponName; }
+	FORCEINLINE UDamageType* GetDamageType() const { return DamageType; }
+	FORCEINLINE float GetCriticalMultiplier() const { return CriticalMultiplier; }
+
+
 };

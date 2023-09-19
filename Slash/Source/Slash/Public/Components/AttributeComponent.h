@@ -74,5 +74,14 @@ public:
 	float GetInt();
 	float GetMnd();
 	float GetChr();
+	
+	float GetHP();
+	float GetMaxHP();
+	float GetMP();
+	float GetMaxMP();
+	float GetTP();
+	float GetMaxTP();
 		
+	bool IsAlive();
+
 };

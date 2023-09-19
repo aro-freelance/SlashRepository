@@ -67,6 +67,45 @@ float UAttributeComponent::GetChr()
 	return CHR;
 }
 
+float UAttributeComponent::GetHP()
+{
+	return HP;
+}
+
+float UAttributeComponent::GetMaxHP()
+{
+	return MaxHP;
+}
+float UAttributeComponent::GetMP()
+{
+	return MP;
+}
+
+float UAttributeComponent::GetMaxMP()
+{
+	return MaxMP;
+}
+
+float UAttributeComponent::GetTP()
+{
+	return TP;
+}
+
+float UAttributeComponent::GetMaxTP()
+{
+	return MaxTP;
+}
+
+bool UAttributeComponent::IsAlive()
+{
+	bool HasHP = true;
+	if (HP <= 0) { HasHP = false; }
+
+	return HasHP;
+}
+
+
+
 
 void UAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {

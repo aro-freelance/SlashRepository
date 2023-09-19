@@ -30,9 +30,16 @@ void UHealthBarComponent::SetHealthText(float Amount)
 	}
 	if (HealthBarWidget && HealthBarWidget->HealthBar)
 	{
-
 		Amount = FMath::RoundToInt32(Amount * 100);
 		FString AmountString = FString::SanitizeFloat(Amount) + "%";
+
+		//int32 HPInt = FMath::RoundToInt32(HP);
+		//int32 MaxHPInt = FMath::RoundToInt32(MaxHP);
+
+		//FString AmountString =
+			//FString::SanitizeFloat(FMath::TruncToInt(HP)) + "/" 
+			//+ FString::SanitizeFloat(FMath::TruncToInt(MaxHP));
+
 
 		HealthBarWidget->HPText->SetText(FText::FromString(AmountString));
 	}
