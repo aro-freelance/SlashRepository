@@ -15,6 +15,7 @@
 #include "Items/Weapons/Weapon.h"
 
 
+
 AEnemy::AEnemy()
 {
  	PrimaryActorTick.bCanEverTick = true;
@@ -36,7 +37,11 @@ AEnemy::AEnemy()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
-	
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetVisibility(false);
+		HealthBarWidget->SetNameText(EnemyName);
+	}
 }
 
 
@@ -44,7 +49,37 @@ void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	//check if character is in aggro range
+	if (CharacterWhoDamagedEnemy)
+	{
+		const double DistanceToTarget = (CharacterWhoDamagedEnemy->GetActorLocation() - GetActorLocation()).Size();
+
+		if (DistanceToTarget > CombatRadius)
+		{
+			EndCombat();
+		}
+
+		//TODO: else pursue target
+	}
+
 }
+
+void AEnemy::EndCombat()
+{
+	//hide combat HUD
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetVisibility(false);
+	}
+
+	//clear last target information
+	CharacterWhoDamagedEnemy = nullptr;
+	WeaponThatDamagedEnemy = nullptr;
+	LastHitImpactPoint = FVector();
+	LastHitDirection = FName();
+	LastDamageAmount = 0.f;
+}
+
 
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -97,15 +132,19 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 		UDamageType::StaticClass()
 	);
 
-	//Is Not Alive?
+	//React to the hit with Death or ELSE a normal hit.
 	if (!Attributes->IsAlive())
 	{
-		ThisEnemyIsDefeated();
+		Death();
 	}
 	else 
 	{
-
 		PlayHitReactMontage(LastHitDirection);
+
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetVisibility(true);
+		}
 
 		if (HitSound)
 		{
@@ -171,15 +210,6 @@ FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
 		SectionName = FName("FromRight");
 	}
 
-
-	UE_LOG(LogTemp, Warning, TEXT("Angle of Impact: %d"), AngleOfImpact);
-	////debug arrows for forward and impactpoint vectors
-	////context, start, end vector (multiplied to increase length),  arrow head size, color, duration
-	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + Forward * 60.f, 5.f,
-	//	FColor::Red, 5.f);
-	//UKismetSystemLibrary::DrawDebugArrow(this, GetActorLocation(), GetActorLocation() + ImpactPointVector * 60.f, 5.f,
-	//	FColor::Blue, 5.f);
-
 	return SectionName;
 }
 
@@ -187,15 +217,16 @@ FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
 float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float FinalDamageAmount = 0.0f;
-	
-	float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
 
-	bool isCritical = CheckCritical(LastHitImpactPoint);
-	if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
-
-
-	if (Attributes && HealthBarWidget)
+	if (Attributes && HealthBarWidget && WeaponThatDamagedEnemy)
 	{
+		//get the weapon's magic damage to physical damage ratio
+		float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
+		
+		//handle critical hits
+		bool isCritical = CheckCritical(LastHitImpactPoint);
+		if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
+
 		//Calculate Damage to Deal to HP
 		if (PercentMagicDamage == 1) 
 		{
@@ -216,18 +247,23 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
 		}
 
+		//store the damage amount
 		LastDamageAmount = FinalDamageAmount;
 
+		//get the user friendly name of the weapon
 		FString DamagerWeaponName = WeaponThatDamagedEnemy->WeaponName;
 
 		//Log Message for Damage Dealt
 		if (GEngine)
 		{
 			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
-			GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
+		
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *EnemyName, *DamagerWeaponName, FinalDamageAmountRounded));
+
 		}
 
-		UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
+		//UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
 
 
 		//Update HP Amount
@@ -241,7 +277,7 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 	return FinalDamageAmount;
 }
 
-void AEnemy::ThisEnemyIsDefeated()
+void AEnemy::Death()
 {
 	//Log Message for Defeat
 	if (GEngine)
@@ -254,7 +290,14 @@ void AEnemy::ThisEnemyIsDefeated()
 	FName SectionName = CalculateDeathMontageSectionName();
 	PlayDeathMontage(SectionName);
 
-	//TODO: delay -> destroy this
+	//Turn off this Enemy's HUD info, combat behaviors
+	EndCombat();
+
+	//turn off the collision capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Destroy after delay
+	SetLifeSpan(5.f);
 }
 
 
@@ -473,13 +516,16 @@ bool AEnemy::CheckCritical(const FVector& ImpactPoint)
 	return false;
 }
 
+
 FName AEnemy::CalculateDeathMontageSectionName()
 {
 	FName SectionName = "DeathSweep";
+	DeathPose = EDeathPose::EDP_Sweep;
 
 	if (LastHitDirection == "FromBack")
 	{
 		SectionName = "DeathForward";
+		DeathPose = EDeathPose::EDP_FallForward;
 	}
 	else if (LastHitDirection == "FromRight")
 	{
@@ -488,12 +534,15 @@ FName AEnemy::CalculateDeathMontageSectionName()
 		{
 		case 0:
 			SectionName = "DeathForward";
+			DeathPose = EDeathPose::EDP_FallForward;
 			break;
 		case 1:
 			SectionName = "DeathSweep";
+			DeathPose = EDeathPose::EDP_Sweep;
 			break;
 		case 2:
 			SectionName = "DeathBack";
+			DeathPose = EDeathPose::EDP_FallBack;
 			break;
 		default:
 			break;
@@ -506,15 +555,19 @@ FName AEnemy::CalculateDeathMontageSectionName()
 		{
 		case 0:
 			SectionName = "DeathForward";
+			DeathPose = EDeathPose::EDP_FallForward;
 			break;
 		case 1:
 			SectionName = "DeathSweep";
+			DeathPose = EDeathPose::EDP_Sweep;
 			break;
 		case 2:
 			SectionName = "DeathBack";
+			DeathPose = EDeathPose::EDP_FallBack;
 			break;
 		case 3:
 			SectionName = "DeathShoulder";
+			DeathPose = EDeathPose::EDP_Shoulder;
 			break;
 		default:
 			break;
@@ -528,9 +581,11 @@ FName AEnemy::CalculateDeathMontageSectionName()
 		{
 		case 0:
 			SectionName = "DeathSweep";
+			DeathPose = EDeathPose::EDP_Sweep;
 			break;
 		case 1:
 			SectionName = "DeathBack";
+			DeathPose = EDeathPose::EDP_FallBack;
 			break;
 		default:
 			break;

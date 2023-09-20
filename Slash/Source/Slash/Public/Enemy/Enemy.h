@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Interfaces/HitInterface.h"
+#include "Enemy/EnemyTypes.h"
 #include "Enemy.generated.h"
 
 class UAnimMontage;
@@ -26,9 +27,11 @@ public:
 	
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-	void ThisEnemyIsDefeated();
+	void Death();
 
 	FString GetName();
+
+	double HideDistance();
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,8 +58,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Name")
 	FString EnemyName = "Default Enemy Name";
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aggro")
+	double CombatRadius = 2500.f;
+
 	bool CheckCritical(const FVector& ImpactPoint);
 
+	void EndCombat();
+
+	UPROPERTY(BlueprintReadOnly)
+	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 
 private:
 
@@ -91,6 +101,8 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Visual Effects")
 	UParticleSystem* HitParticles;
 
+	
+
 	/*
 	* Animation Montages
 	*/
@@ -104,5 +116,5 @@ private:
 	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
 	FName CalculateDeathMontageSectionName();
 	
-
+	
 };

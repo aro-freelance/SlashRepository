@@ -20,4 +20,8 @@ public:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* HPText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* NameText;
+
 };

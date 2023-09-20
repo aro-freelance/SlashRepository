@@ -16,3 +16,4 @@ enum class EActionState : uint8
 	EAS_Equipping UMETA(DisplayName = "Equipping")
 };
 
+

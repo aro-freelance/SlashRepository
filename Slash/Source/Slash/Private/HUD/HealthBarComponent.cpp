@@ -45,3 +45,16 @@ void UHealthBarComponent::SetHealthText(float Amount)
 	}
 
 }
+
+void UHealthBarComponent::SetNameText(FString Name)
+{
+	if (HealthBarWidget == nullptr)
+	{
+		HealthBarWidget = Cast<UHealthBar>(GetUserWidgetObject());
+	}
+	if (HealthBarWidget && HealthBarWidget->HealthBar)
+	{
+
+		HealthBarWidget->NameText->SetText(FText::FromString(Name));
+	}
+}

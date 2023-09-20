@@ -20,6 +20,8 @@ public:
 
 	void SetHealthText(float Amount);
 
+	void SetNameText(FString Name);
+
 private:
 	UPROPERTY()
 	class UHealthBar* HealthBarWidget;

@@ -50,6 +50,12 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 		NiagaraEmberEffect->Deactivate();
 	}
 
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, FString::Printf(TEXT("%s equipped."), *WeaponName));
+	}
+		
+
 }
 
 void AWeapon::DetachMeshFromSocket()
