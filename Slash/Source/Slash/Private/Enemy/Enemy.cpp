@@ -78,6 +78,7 @@ void AEnemy::EndCombat()
 	LastHitImpactPoint = FVector();
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
+	IsInCombat = false;
 }
 
 
@@ -122,6 +123,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 	WeaponThatDamagedEnemy = Weapon;
 	LastHitImpactPoint = ImpactPoint;
 	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
+	IsInCombat = true;
 
 	//Deal Damage
 	UGameplayStatics::ApplyDamage(
@@ -250,16 +252,13 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		//store the damage amount
 		LastDamageAmount = FinalDamageAmount;
 
-		//get the user friendly name of the weapon
-		FString DamagerWeaponName = WeaponThatDamagedEnemy->WeaponName;
-
 		//Log Message for Damage Dealt
 		if (GEngine)
 		{
 			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
 			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
 		
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *EnemyName, *DamagerWeaponName, FinalDamageAmountRounded));
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *EnemyName, *WeaponThatDamagedEnemy->WeaponName, FinalDamageAmountRounded));
 
 		}
 

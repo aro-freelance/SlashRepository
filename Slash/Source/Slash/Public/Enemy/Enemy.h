@@ -60,6 +60,8 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aggro")
 	double CombatRadius = 2500.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aggro")
+	bool IsInCombat = false;
 
 	bool CheckCritical(const FVector& ImpactPoint);
 
@@ -67,6 +69,19 @@ protected:
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+
+	//the most recent character to damage this Enemy
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	ASlashCharacter* CharacterWhoDamagedEnemy;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	AWeapon* WeaponThatDamagedEnemy;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	FVector LastHitImpactPoint = FVector();
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	FName LastHitDirection;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	float LastDamageAmount;
+	
 
 private:
 
@@ -76,17 +91,7 @@ private:
 	int32 CompareCHR(float AttackerCHR, float DefenderCHR);
 
 
-	//the most recent character to damage this Enemy
-	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
-	ASlashCharacter* CharacterWhoDamagedEnemy;
-	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
-	AWeapon* WeaponThatDamagedEnemy;
-	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
-	FVector LastHitImpactPoint = FVector();
-	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
-	FName LastHitDirection;
-	UPROPERTY(VisibleAnywhere, Category = "Damaged By Properties")
-	float LastDamageAmount;
+	
 	
 
 	UPROPERTY(VisibleAnywhere)
