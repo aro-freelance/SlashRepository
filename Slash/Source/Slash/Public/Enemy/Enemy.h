@@ -25,6 +25,7 @@ public:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon);
 	
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	void Death();
@@ -66,6 +67,11 @@ protected:
 	bool CheckCritical(const FVector& ImpactPoint);
 
 	void EndCombat();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float HP;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float MaxHP;
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;

@@ -141,6 +141,9 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 	}
 	else 
 	{
+		HP = Attributes->GetHP();
+		MaxHP = Attributes->GetMaxHP();
+
 		PlayHitReactMontage(LastHitDirection);
 
 		if (HealthBarWidget)
@@ -170,6 +173,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 	}
 
 }
+
 
 
 FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)

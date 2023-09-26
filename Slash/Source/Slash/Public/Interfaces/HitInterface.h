@@ -27,5 +27,5 @@ public:
 	//this allows it to be called in c++ as well as blueprints
 	UFUNCTION(BlueprintNativeEvent)
 	void GetHit(const FVector& ImpactPoint, ASlashCharacter* DamagerDealer, AWeapon* Weapon);
-		
+
 };

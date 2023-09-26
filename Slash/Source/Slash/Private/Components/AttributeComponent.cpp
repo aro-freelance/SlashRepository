@@ -19,6 +19,17 @@ void UAttributeComponent::BeginPlay()
 }
 
 
+//void UAttributeComponent::Regen()
+//{
+//	if (HP < MaxHP) 
+//	{
+//		float Amount = MaxHP * RegenPercent;
+//		HP = FMath::Clamp(HP + Amount, 0.0f, MaxHP);
+//	}
+//}
+
+
+
 void UAttributeComponent::ReceiveDamage(float Damage)
 {
 	//Damage is modified in cpp for the actor taking damage. i.e. Enemy.cpp TakeDamage
