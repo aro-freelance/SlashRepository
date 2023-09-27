@@ -125,11 +125,16 @@ void AEnemy::Recover()
 			//change the stat amount
 			Attributes->SetHP(ClampedAmount);
 
+			//Update the Blueprint Accessable Stats
+			HP = Attributes->GetHP();
+			MaxHP = Attributes->GetMaxHP();
+			RegenPercent = Attributes->GetRegenPercent();
+
 			//update the healthbar
 			UpdateCombatHUD();
 
 			//if full hp, end regen
-			if (CurrentHP >= LocalMaxHP)
+			if (Attributes->GetHP() >= Attributes->GetMaxHP())
 			{
 				UE_LOG(LogTemp, Warning, TEXT("regen off"));
 				IsRegening = false;

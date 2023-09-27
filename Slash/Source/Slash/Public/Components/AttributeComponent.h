@@ -63,7 +63,7 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
-	float RegenPercent = 0.025;
+	float RegenPercent = 0.055; //TODO: .025
 	
 	
 

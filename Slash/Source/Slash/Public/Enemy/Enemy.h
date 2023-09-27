@@ -65,6 +65,8 @@ protected:
 	bool IsInCombat = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsRegening = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool IsReturning = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool IsChangingDirection = false;
 
@@ -76,6 +78,8 @@ protected:
 	float HP;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
 	float MaxHP;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float RegenPercent;
 	UFUNCTION(BlueprintCallable)
 	void Recover();
 
