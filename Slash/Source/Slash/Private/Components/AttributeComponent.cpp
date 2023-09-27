@@ -107,6 +107,11 @@ float UAttributeComponent::GetMaxTP()
 	return MaxTP;
 }
 
+float UAttributeComponent::GetRegenPercent()
+{
+	return RegenPercent;
+}
+
 bool UAttributeComponent::IsAlive()
 {
 	bool HasHP = true;

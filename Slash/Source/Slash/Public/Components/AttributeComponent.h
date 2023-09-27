@@ -63,7 +63,7 @@ protected:
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
-	float RegenPercent;
+	float RegenPercent = 0.025;
 	
 	
 
@@ -90,6 +90,7 @@ public:
 	float GetMaxMP();
 	float GetTP();
 	float GetMaxTP();
+	float GetRegenPercent();
 		
 	void SetHP(float NewHP) { HP = NewHP; }
 

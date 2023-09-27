@@ -54,15 +54,19 @@ protected:
 	float CalculateMagicalDamage(float DamageAmount);
 
 
-	void DamageTakenUpdateHUD();
+	void UpdateCombatHUD();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Name")
 	FString EnemyName = "Default Enemy Name";
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aggro")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Aggro")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsInCombat = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool IsRegening = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
+	bool IsChangingDirection = false;
 
 	bool CheckCritical(const FVector& ImpactPoint);
 
@@ -72,6 +76,8 @@ protected:
 	float HP;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
 	float MaxHP;
+	UFUNCTION(BlueprintCallable)
+	void Recover();
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
@@ -89,6 +95,9 @@ protected:
 	float LastDamageAmount;
 	
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
+	float RegenTickLength = 150.0f;
+
 private:
 
 	float CompareSTRVIT(float AttackerSTR, float DefenderVIT);
@@ -97,7 +106,7 @@ private:
 	int32 CompareCHR(float AttackerCHR, float DefenderCHR);
 
 
-	
+	float RegenTickTimer = 0.0f;
 	
 
 	UPROPERTY(VisibleAnywhere)

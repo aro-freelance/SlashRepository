@@ -62,6 +62,30 @@ void AEnemy::Tick(float DeltaTime)
 		//TODO: else pursue target
 	}
 
+
+	if (IsRegening)
+	{
+		float RegenTickTimerDeltaTime = RegenTickTimer * DeltaTime;
+		float RegenTickLengthDeltaTime = RegenTickLength * DeltaTime;
+		
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetVisibility(true);
+		}
+
+		if (RegenTickTimerDeltaTime >= RegenTickLengthDeltaTime)
+		{
+			Recover();
+
+			RegenTickTimer = 0.0f;
+
+		}
+
+		RegenTickTimer += 1;
+
+	}
+
+
 }
 
 void AEnemy::EndCombat()
@@ -79,6 +103,51 @@ void AEnemy::EndCombat()
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
 	IsInCombat = false;
+}
+
+void AEnemy::Recover()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("recover before: %f"), Attributes->GetHP());
+
+	//if less than max hp, recover hp by regen percent
+	if (Attributes->GetHP() && Attributes->GetMaxHP() && Attributes->GetRegenPercent())
+	{
+		float CurrentHP = Attributes->GetHP();
+		float LocalMaxHP = Attributes->GetMaxHP();
+		float CurrentRegenPercent = Attributes->GetRegenPercent();
+
+		if (CurrentHP < LocalMaxHP)
+		{
+			float Amount = LocalMaxHP * CurrentRegenPercent;
+			float ClampedAmount = FMath::Clamp(CurrentHP + Amount, 0.0f, LocalMaxHP);
+
+			//change the stat amount
+			Attributes->SetHP(ClampedAmount);
+
+			//update the healthbar
+			UpdateCombatHUD();
+
+			//if full hp, end regen
+			if (CurrentHP >= LocalMaxHP)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("regen off"));
+				IsRegening = false;
+
+				if (HealthBarWidget)
+				{
+					HealthBarWidget->SetVisibility(false);
+				}
+			}
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("recover after: %f"), Attributes->GetHP());
+	
+	}
+
+
+	//TODO: other recovery aspects? MP? TP?
+
 }
 
 
@@ -273,7 +342,7 @@ float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 		Attributes->ReceiveDamage(FinalDamageAmount);
 
 		//Update Health Bar and other HUD elements
-		DamageTakenUpdateHUD();
+		UpdateCombatHUD();
 
 	}
 
@@ -503,13 +572,17 @@ int32 AEnemy::CompareCHR(float AttackerCHR, float DefenderCHR)
 	return Floor;
 }
 
-void AEnemy::DamageTakenUpdateHUD()
+void AEnemy::UpdateCombatHUD()
 {
-	HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+	
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
 
-	//TODO: make a new attribute function to return the health in a different format?
-	HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
-
+		//TODO: make a new attribute function to return the health in a different format?
+		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
+	}
+	
 }
 
 
