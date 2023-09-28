@@ -197,6 +197,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 	WeaponThatDamagedEnemy = Weapon;
 	LastHitImpactPoint = ImpactPoint;
 	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
+	
 	IsInCombat = true;
 
 	//Deal Damage

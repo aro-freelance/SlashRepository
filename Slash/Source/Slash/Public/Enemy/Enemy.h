@@ -59,6 +59,27 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Name")
 	FString EnemyName = "Default Enemy Name";
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	EPatrolType PatrolType = EPatrolType::EPT_FullRandom;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	TArray<AActor*> ArrayOfPatrolGoals;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	AActor* SpawnPoint;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	bool IsRandomPatrol = true;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	bool IsSetOrderedPatrol = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	bool IsRandomPatrolOfSetTargets = false;*/
+
+	//TODO: create AMovementGoal C++ class in unreal and then use it as the actor for the enemy movement goal.
+	// then use this array to pick a random element in  the set new movement goal function on enemy in blueprints
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	TArray<TSubclassOf<class AMovementGoal>> ArrayOfGoalLocations;*/
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -69,6 +90,7 @@ protected:
 	bool IsReturning = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
 	bool IsChangingDirection = false;
+
 
 	bool CheckCritical(const FVector& ImpactPoint);
 
