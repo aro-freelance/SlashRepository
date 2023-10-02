@@ -13,6 +13,7 @@
 #include "HUD/HealthBarComponent.h"
 #include "Characters/SlashCharacter.h"
 #include "Items/Weapons/Weapon.h"
+#include "AIController.h"
 
 
 
@@ -37,11 +38,22 @@ AEnemy::AEnemy()
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
+
 	if (HealthBarWidget)
 	{
 		HealthBarWidget->SetVisibility(false);
 		HealthBarWidget->SetNameText(EnemyName);
 	}
+
+	//BP: Movement is Currently Handled in Blueprint (refer to 171 4min to implement in C++)
+	/*if (ArrayOfPatrolGoals.Num() > 0)
+	{
+		MovementGoal = ArrayOfPatrolGoals[0];
+		MoveToTarget();
+		GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::MoveToTarget, PatrolPauseLength);
+	}*/
+	
+
 }
 
 
@@ -50,18 +62,22 @@ void AEnemy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//check if character is in aggro range
-	if (CharacterWhoDamagedEnemy)
+	if (CombatTarget)
 	{
-		const double DistanceToTarget = (CharacterWhoDamagedEnemy->GetActorLocation() - GetActorLocation()).Size();
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetVisibility(true);
+		}
 
-		if (DistanceToTarget > CombatRadius)
+		//if out of range, end combat
+		if (!IsInRangeOfTarget(CombatTarget, CombatRadius))
 		{
 			EndCombat();
 		}
 
-		//TODO: else pursue target
+		//BP: Logic for PURUSING COMBAT TARGET is in Blueprints
+		
 	}
-
 
 	if (IsRegening)
 	{
@@ -85,11 +101,15 @@ void AEnemy::Tick(float DeltaTime)
 
 	}
 
+	//BP: Logic for PATROLLING when out of combat is in Blueprints (refer to 171 12min to implement in C++)
+	//Patrol();
+
 
 }
 
 void AEnemy::EndCombat()
 {
+
 	//hide combat HUD
 	if (HealthBarWidget)
 	{
@@ -97,7 +117,7 @@ void AEnemy::EndCombat()
 	}
 
 	//clear last target information
-	CharacterWhoDamagedEnemy = nullptr;
+	CombatTarget = nullptr;
 	WeaponThatDamagedEnemy = nullptr;
 	LastHitImpactPoint = FVector();
 	LastHitDirection = FName();
@@ -119,11 +139,11 @@ void AEnemy::Recover()
 
 		if (CurrentHP < LocalMaxHP)
 		{
-			float Amount = LocalMaxHP * CurrentRegenPercent;
-			float ClampedAmount = FMath::Clamp(CurrentHP + Amount, 0.0f, LocalMaxHP);
+
+			float Amount = FMath::Clamp(CurrentHP + (LocalMaxHP * CurrentRegenPercent), 0.0f, LocalMaxHP);
 
 			//change the stat amount
-			Attributes->SetHP(ClampedAmount);
+			Attributes->SetHP(Amount);
 
 			//Update the Blueprint Accessable Stats
 			HP = Attributes->GetHP();
@@ -193,7 +213,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 {
 
 	//Store Information about the Attacker and Weapon of Attacker
-	CharacterWhoDamagedEnemy = DamageDealer;
+	CombatTarget = DamageDealer;
 	WeaponThatDamagedEnemy = Weapon;
 	LastHitImpactPoint = ImpactPoint;
 	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
@@ -360,10 +380,10 @@ void AEnemy::Death()
 	//Log Message for Defeat
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CharacterWhoDamagedEnemy->GetName(), *EnemyName));
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName));
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CharacterWhoDamagedEnemy->GetName(), *EnemyName);
+	UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName);
 
 	FName SectionName = CalculateDeathMontageSectionName();
 	PlayDeathMontage(SectionName);
@@ -388,9 +408,9 @@ float AEnemy::CalculatePhysicalDamage(float DamageAmount)
 
 	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
 
-	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
+	if (CombatTarget != nullptr && Attributes)
 	{
-		UAttributeComponent* SlashCharacterAttributeComponent = CharacterWhoDamagedEnemy->GetAttributes();
+		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
 			float AttackerSTR = SlashCharacterAttributeComponent->GetStr();
@@ -461,6 +481,151 @@ float AEnemy::CompareSTRVIT(float AttackerSTR, float DefenderVIT)
 	return StrVitCalc;
 }
 
+//BP: This functionality is in blueprints. This function is not currently in use. It is here in case I decide to switch to C++. 
+void AEnemy::Patrol()
+{
+
+	//1. SET TARGET//////////////////////////////////////////////////////
+
+	const int32 NumPatrolTargets = ArrayOfPatrolGoals.Num();
+
+	if (PatrolType == EPatrolType::EPT_FullRandom)
+	{
+		//TODO: move to random location inside of nav
+	}
+
+	//RANDOM IN SET
+	if (MovementGoal && PatrolType == EPatrolType::EPT_RandomInSet)
+	{
+		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
+		{
+			if (NumPatrolTargets > 0)
+			{
+				TargetSelection = FMath::RandRange(0, NumPatrolTargets - 1);
+				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
+
+			}
+		}
+	}
+
+	if (MovementGoal && PatrolType == EPatrolType::EPT_SetOrderLoopEnd)
+	{
+		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
+		{
+
+			if (NumPatrolTargets > 0)
+			{
+				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
+
+				//Go to next target
+				TargetSelection = TargetSelection + 1;
+				//if you reach the end, go to the first target
+				if (!ArrayOfPatrolGoals.IsValidIndex(TargetSelection)) { TargetSelection = 0; }
+				
+			}
+		}
+	}
+
+	if (MovementGoal && PatrolType == EPatrolType::EPT_SetOrderReverseEnd)
+	{
+
+		UE_LOG(LogTemp, Warning, TEXT("order reverse end patrol"));
+
+		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
+		{
+			UE_LOG(LogTemp, Warning, TEXT("goal in range"));
+
+			if (NumPatrolTargets > 0)
+			{
+				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
+
+				UE_LOG(LogTemp, Warning, TEXT("new goal set"));
+
+				//Go to next target
+				if (IsReversePatrol) 
+				{
+					TargetSelection = TargetSelection - 1;
+				}
+				else 
+				{
+					TargetSelection = TargetSelection + 1;
+				}
+
+				//if you reach the end, reverse
+				if (!ArrayOfPatrolGoals.IsValidIndex(TargetSelection)) 
+				{ 
+					if (IsReversePatrol)
+					{
+						TargetSelection = TargetSelection + 2;
+						IsReversePatrol = false;
+					}
+					else
+					{
+						TargetSelection = TargetSelection - 2;
+						IsReversePatrol = true;
+					}
+				}
+
+			}
+		}
+	}
+	////////////////////////////////////////////////////////////////////////////////
+
+	//2. Pause and then Move to Target /////////////
+
+	MoveToTarget();
+	//GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::MoveToTarget, PatrolPauseLength);
+
+	///////////////////////////
+}
+
+
+void AEnemy::MoveToTarget()
+{
+	UE_LOG(LogTemp, Warning, TEXT("move to target called"));
+
+	EnemyController = Cast<AAIController>(GetController());
+
+	if (EnemyController == nullptr || MovementGoal == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("enemy controller or movementgoal are null"));
+		return;
+	}
+	if (EnemyController && MovementGoal)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("enemy controller and goal exist. moving to target"));
+		FAIMoveRequest MoveRequest;
+		MoveRequest.SetGoalActor(MovementGoal);
+		MoveRequest.SetAcceptanceRadius(15.f);
+		FNavPathSharedPtr NavPath;
+		EnemyController->MoveTo(MoveRequest, &NavPath);
+		TArray<FNavPathPoint>& PathPoints = NavPath->GetPathPoints();
+		for (auto& Point : PathPoints)
+		{
+			const FVector& Location = Point.Location;
+			DrawDebugSphere(GetWorld(), Location, 12.f, 12, FColor::Green, false, 10.f);
+		}
+	}
+}
+
+bool AEnemy::IsInRangeOfTarget(AActor* Target, double Radius)
+{
+	if (Target == nullptr) { return false; }
+
+	bool IsInRange = false;
+	const double DistanceToTarget = (Target->GetActorLocation() - GetActorLocation()).Size();
+	
+	//DRAW_SPHERE_SINGLE_FRAME(GetActorLocation(), FColor::Green);
+	//DRAW_SPHERE_SINGLE_FRAME(Target->GetActorLocation(), FColor::Red);
+
+	if (DistanceToTarget <= Radius)
+	{
+		IsInRange = true;
+	}
+
+	return IsInRange;
+}
+
 int32 AEnemy::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
 {
 	int32 Floor;
@@ -486,9 +651,9 @@ float AEnemy::CalculateMagicalDamage(float DamageAmount)
 
 	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
 
-	if (CharacterWhoDamagedEnemy != nullptr && Attributes)
+	if (CombatTarget != nullptr && Attributes)
 	{
-		UAttributeComponent* SlashCharacterAttributeComponent = CharacterWhoDamagedEnemy->GetAttributes();
+		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
 			float AttackerINT = SlashCharacterAttributeComponent->GetInt();

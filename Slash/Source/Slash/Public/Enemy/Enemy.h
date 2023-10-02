@@ -11,6 +11,7 @@
 class UAnimMontage;
 class UAttributeComponent;
 class UHealthBarComponent;
+class AAIController;
 
 UCLASS()
 class SLASH_API AEnemy : public ACharacter, public IHitInterface
@@ -56,30 +57,60 @@ protected:
 
 	void UpdateCombatHUD();
 
+	UPROPERTY()
+	AAIController* EnemyController;
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy Name")
 	FString EnemyName = "Default Enemy Name";
 
+	/*
+	* Navigation
+	* 
+	* AI Movement is implemented in Blueprints. BP_Enemy Tick Function.
+	*  
+	*  If we eventually want to move it to C++: refer to video 171 4 min
+	*  And include AIController.h and use virtual FPathFollowingRequestResult MoveTo
+	* 
+	*/
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	EPatrolType PatrolType = EPatrolType::EPT_FullRandom;
+
+	//TODO: update blueprints to store current goal in this variable for interacting with
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	AActor* MovementGoal;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	TArray<AActor*> ArrayOfPatrolGoals;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	AActor* SpawnPoint;
-
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
-	bool IsRandomPatrol = true;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
-	bool IsSetOrderedPatrol = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
-	bool IsRandomPatrolOfSetTargets = false;*/
-
-	//TODO: create AMovementGoal C++ class in unreal and then use it as the actor for the enemy movement goal.
-	// then use this array to pick a random element in  the set new movement goal function on enemy in blueprints
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
-	TArray<TSubclassOf<class AMovementGoal>> ArrayOfGoalLocations;*/
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	bool IsChangingDirection = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	double PatrolRadius = 2000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	FTimerHandle PatrolTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
+	float PatrolPauseLength = 5.0f; 
+
+	
+	void Patrol();
+
+	void MoveToTarget();
+
+	int32 TargetSelection = 0;
+	bool IsReversePatrol = false;
+
+
+	bool IsInRangeOfTarget(AActor* Target, double Radius);
+
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -88,8 +119,7 @@ protected:
 	bool IsRegening = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Movement")
-	bool IsChangingDirection = false;
+	
 
 
 	bool CheckCritical(const FVector& ImpactPoint);
@@ -102,15 +132,14 @@ protected:
 	float MaxHP;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
 	float RegenPercent;
-	UFUNCTION(BlueprintCallable)
-	void Recover();
+	
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
 
 	//the most recent character to damage this Enemy
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
-	ASlashCharacter* CharacterWhoDamagedEnemy;
+	ASlashCharacter* CombatTarget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	AWeapon* WeaponThatDamagedEnemy;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
@@ -123,6 +152,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
 	float RegenTickLength = 150.0f;
+
+	UFUNCTION(BlueprintCallable)
+	void Recover();
 
 private:
 
