@@ -82,10 +82,13 @@ void AEnemy::Tick(float DeltaTime)
 	//check if character is in aggro range
 	if (CombatTarget)
 	{
+		//TODO: Fully Implement EnemyTypes ECombatMode or remove it. To implement fully I will need to integrate it in blueprints.
+
 		//if out of combat distance, end combat
 		if (!IsInRangeOfTarget(CombatTarget, CombatRadius))
 		{
 			EndCombat();
+			return;
 		}
 
 		//Wait to make a new Combat choice every tick
@@ -235,7 +238,6 @@ void AEnemy::Patrol()
 	///////////////////////////
 }
 
-
 void AEnemy::MoveToTarget()
 {
 	UE_LOG(LogTemp, Warning, TEXT("move to target called"));
@@ -327,6 +329,7 @@ void AEnemy::EndCombat()
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
 	IsInCombat = false;
+	CombatMode = ECombatMode::ECM_OutOfCombat;
 
 	//TODO: Turn off combat music
 }
@@ -339,6 +342,7 @@ void AEnemy::StartCombat()
 	}
 
 	IsInCombat = true;
+	CombatMode = ECombatMode::ECM_Chasing;
 
 	//TODO: Turn on combat music
 }
@@ -346,6 +350,14 @@ void AEnemy::StartCombat()
 void AEnemy::Combat()
 {
 	if (!Attributes) { return; }
+
+	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
+	if (!ReadyForCombatMove) 
+	{
+		IsCombatTickReady = false;
+		GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+		return; 
+	}
 
 	UE_LOG(LogTemp, Warning, TEXT("Combat"));
 
@@ -415,45 +427,82 @@ bool AEnemy::ShouldSpecialMove()
 	return b;
 }
 
+bool AEnemy::ReadyForCombatMove()
+{
+	bool b = false;
+
+
+	//TODO: for this to work, we need to switch the enum in Unreal after the anim ends. back to chasing.
+
+	if (CombatMode != ECombatMode::ECM_MeleeAttacking ||
+		CombatMode != ECombatMode::ECM_RangeAttacking ||
+		CombatMode != ECombatMode::ECM_SnipeAttacking ||
+		CombatMode != ECombatMode::ECM_SpecialAttacking ||
+		CombatMode != ECombatMode::ECM_Defending ||
+		CombatMode != ECombatMode::ECM_Dodging ||
+		CombatMode != ECombatMode::ECM_OutOfCombat) 
+	{
+		b = true;
+	}
+
+
+	return b;
+}
 
 
 void AEnemy::Flee()
 {
-	CombatMode = ECombatMode::ECM_Fleeing;
-	//TODO: 
 	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
+
+	CombatMode = ECombatMode::ECM_Fleeing;
+	//TODO: execute the flee logic
+
+	//TODO: make a check to see if chasing should be turned back on after x time or x percent hp?
+	
 }
 
 void AEnemy::Defend()
 {
-	CombatMode = ECombatMode::ECM_Defending;
-	//TODO: 
 	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
+
+	CombatMode = ECombatMode::ECM_Defending;
+	//TODO: execute the defend logic
+
+	//TODO: turn chasing back on when defend anim is done?
+	
 }
 
 void AEnemy::Dodge()
 {
-	CombatMode = ECombatMode::ECM_Dodging;
-	//TODO: 
 	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
+
+	CombatMode = ECombatMode::ECM_Dodging;
+	//TODO: execute the dodge logic
+
+	//TODO: turn chasing back on when dodge anim is done?
+	
 }
 
 void AEnemy::Hide()
 {
-	CombatMode = ECombatMode::ECM_Hiding;
-	//TODO: 
 	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
+
+	CombatMode = ECombatMode::ECM_Hiding;
+	//TODO: execute the hide logic
+
+	//TODO: make a check to see if can attack from here, flee or stay here
 }
 
 void AEnemy::SpecialAttack()
 {
+	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
+
 	//use the TP
 	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
 
 	CombatMode = ECombatMode::ECM_SpecialAttacking;
 	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
-
+	
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not
 	if (AttackHitTarget)
@@ -461,13 +510,16 @@ void AEnemy::SpecialAttack()
 		IncreaseTP();
 	}
 
+	//TODO: turn chasing back on when attack anim is done?
 }
 
 void AEnemy::MeleeAttack()
 {
+	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method"));
+
 	CombatMode = ECombatMode::ECM_MeleeAttacking;
 	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method"));
+
 
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not
@@ -476,13 +528,16 @@ void AEnemy::MeleeAttack()
 		IncreaseTP();
 	}
 
+	//TODO: turn chasing back on when attack anim is done?
 }
 
 void AEnemy::RangedAttack()
 {
+	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
+
 	CombatMode = ECombatMode::ECM_RangeAttacking;
 	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
+	
 
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not
@@ -491,13 +546,16 @@ void AEnemy::RangedAttack()
 		IncreaseTP();
 	}
 
+	//TODO: turn chasing back on when attack anim is done?
 }
 
 void AEnemy::SnipeAttack()
 {
+	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
+
 	CombatMode = ECombatMode::ECM_SnipeAttacking;
 	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
+	
 
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not
@@ -506,6 +564,7 @@ void AEnemy::SnipeAttack()
 		IncreaseTP();
 	}
 
+	//TODO: turn chasing back on when attack anim is done?
 }
 
 

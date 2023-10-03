@@ -136,6 +136,7 @@ protected:
 	bool ShouldHide();
 	bool ShouldFlee();
 	bool ShouldSpecialMove();
+	bool ReadyForCombatMove();
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn);

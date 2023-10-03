@@ -9,6 +9,7 @@
 
 void UHealthBarComponent::SetHealthPercent(float Percent)
 {
+	//TODO: fix bug. when aggro happens and health bar turns on it is showing 98% rather than 100%.
 
 	if (HealthBarWidget == nullptr)
 	{
