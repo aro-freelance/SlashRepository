@@ -88,8 +88,11 @@ void AEnemy::Tick(float DeltaTime)
 			EndCombat();
 		}
 
-		Combat();
-		
+		//Wait to make a new Combat choice every tick
+		if (!IsCombatTickReady) 
+		{ 
+			Combat();
+		}
 
 		//BP: Logic for PURUSING COMBAT TARGET is in Blueprints
 		
@@ -123,93 +126,6 @@ void AEnemy::Tick(float DeltaTime)
 
 }
 
-void AEnemy::EndCombat()
-{
-
-	//hide combat HUD
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetVisibility(false);
-	}
-
-	//clear last target information
-	CombatTarget = nullptr;
-	WeaponThatDamagedEnemy = nullptr;
-	LastHitImpactPoint = FVector();
-	LastHitDirection = FName();
-	LastDamageAmount = 0.f;
-	IsInCombat = false;
-
-	//TODO: Turn off combat music
-}
-
-void AEnemy::ReadyCombatTick()
-{
-	IsCombatTickReady = true;
-}
-
-void AEnemy::StartCombat()
-{
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetVisibility(true);
-	}
-
-	IsInCombat = true;
-
-	//TODO: Turn on combat music
-}
-
-void AEnemy::Recover()
-{
-
-	UE_LOG(LogTemp, Warning, TEXT("recover before: %f"), Attributes->GetHP());
-
-	//if less than max hp, recover hp by regen percent
-	if (Attributes->GetHP() && Attributes->GetMaxHP() && Attributes->GetRegenPercent())
-	{
-		float CurrentHP = Attributes->GetHP();
-		float LocalMaxHP = Attributes->GetMaxHP();
-		float CurrentRegenPercent = Attributes->GetRegenPercent();
-
-		if (CurrentHP < LocalMaxHP)
-		{
-
-			float Amount = FMath::Clamp(CurrentHP + (LocalMaxHP * CurrentRegenPercent), 0.0f, LocalMaxHP);
-
-			//change the stat amount
-			Attributes->SetHP(Amount);
-
-			//Update the Blueprint Accessable Stats
-			HP = Attributes->GetHP();
-			MaxHP = Attributes->GetMaxHP();
-			RegenPercent = Attributes->GetRegenPercent();
-
-			//update the healthbar
-			UpdateCombatHUD();
-
-			//if full hp, end regen
-			if (Attributes->GetHP() >= Attributes->GetMaxHP())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("regen off"));
-				IsRegening = false;
-
-				if (HealthBarWidget)
-				{
-					HealthBarWidget->SetVisibility(false);
-				}
-			}
-		}
-
-		UE_LOG(LogTemp, Warning, TEXT("recover after: %f"), Attributes->GetHP());
-	
-	}
-
-
-	//TODO: other recovery aspects? MP? TP?
-
-}
-
 
 void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -217,317 +133,9 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-void AEnemy::PlayHitReactMontage(const FName& SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && HitReactMontage)
-	{
-
-		AnimInstance->Montage_Play(HitReactMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
-
-	}
-}
-
-void AEnemy::PlayDeathMontage(const FName& SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && DeathMontage)
-	{
-
-		AnimInstance->Montage_Play(DeathMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
-
-	}
-}
-
-
-void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon)
-{
-
-	//Store Information about the Attacker and Weapon of Attacker
-	CombatTarget = DamageDealer;
-	WeaponThatDamagedEnemy = Weapon;
-	LastHitImpactPoint = ImpactPoint;
-	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
-	
-	StartCombat();
-
-	//Deal Damage
-	UGameplayStatics::ApplyDamage(
-		this,
-		Weapon->GetWeaponDamage(),
-		DamageDealer->GetController(),
-		Weapon,
-		UDamageType::StaticClass()
-	);
-
-	//React to the hit with Death or ELSE a normal hit.
-	if (!Attributes->IsAlive())
-	{
-		Death();
-	}
-	else 
-	{
-		HP = Attributes->GetHP();
-		MaxHP = Attributes->GetMaxHP();
-
-		//Update TP
-		IncreaseTP();
-
-		PlayHitReactMontage(LastHitDirection);
-
-		if (HitSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				HitSound,
-				ImpactPoint
-			);
-		}
-
-		if (HitParticles && GetWorld())
-		{
-			UGameplayStatics::SpawnEmitterAtLocation(
-				GetWorld(),
-				HitParticles,
-				ImpactPoint,
-				HitParticleRotation,
-				HitParticleScale
-			);
-		}
-	}
-
-}
-
-
-
-FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
-{
-
-	//The vector of the direction the actor is facing
-	const FVector Forward = GetActorForwardVector();
-	//Lower the ImpactPoint to the Actor's Height to create a flat line
-	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
-	//AKA ToHit. This is the vector which points from the center of actor location to the point of impact
-	const FVector ImpactPointVector = (ImpactLowered - GetActorLocation()).GetSafeNormal();
-
-	//Forward * ImpactPointVector = |Forward||ImpactPointVector| * cos(theta)... 
-	// |Forward| = 1, |ImpactPointVector| = 1 therefore Forward * ImpactPointVector = cos(theta)
-	const double CosTheta = FVector::DotProduct(Forward, ImpactPointVector);
-	//Inverse cosine to get theta, and convert it from radians to degrees
-	double AngleOfImpact = FMath::RadiansToDegrees(FMath::Acos(CosTheta));
-
-	//this is used to determine the direction of the hit. 
-	//If it is negative the hit was from the left, positive the hit was from the right 
-	const FVector CrossProduct = FVector::CrossProduct(Forward, ImpactPointVector);
-	if (CrossProduct.Z < 0)
-	{
-		//if crossproduct is negative, inverse the angle of impact
-		AngleOfImpact = AngleOfImpact * -1.f;
-	}
-
-	FName SectionName = FName("FromBack");
-
-	if (AngleOfImpact >= -45.f && AngleOfImpact < 45.f)
-	{
-		SectionName = FName("FromFront");
-	}
-	else if (AngleOfImpact >= -135.f && AngleOfImpact < -45.f)
-	{
-		SectionName = FName("FromLeft");
-	}
-	else if (AngleOfImpact >= 45 && AngleOfImpact < 135)
-	{
-		SectionName = FName("FromRight");
-	}
-
-	return SectionName;
-}
-
-bool AEnemy::ShouldSpecialMove()
-{
-	//TODO: Add more logic to when special moves are used?
-
-	bool b = false;
-	
-	//if in range and has tp
-	if (IsInRangeOfTarget(CombatTarget, SpecialAttackRadius) && Attributes->GetTP() >= SpecialAttackTPCost)
-	{
-		b = true;
-	}
-
-	return b;
-}
-
-
-float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
-{
-	float FinalDamageAmount = 0.0f;
-
-	if (Attributes && HealthBarWidget && WeaponThatDamagedEnemy)
-	{
-		//get the weapon's magic damage to physical damage ratio
-		float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
-		
-		//handle critical hits
-		bool isCritical = CheckCritical(LastHitImpactPoint);
-		if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
-
-		//Calculate Damage to Deal to HP
-		if (PercentMagicDamage == 1) 
-		{
-			FinalDamageAmount = CalculateMagicalDamage(DamageAmount);
-			UE_LOG(LogTemp, Warning, TEXT("magic damage. %f"), FinalDamageAmount);
-		}
-		else if (PercentMagicDamage == 0)
-		{
-			FinalDamageAmount = CalculatePhysicalDamage(DamageAmount);
-			UE_LOG(LogTemp, Warning, TEXT("physical damage. %f"), FinalDamageAmount);
-		}
-		else
-		{	
-			float MagicDamageAmount = DamageAmount * PercentMagicDamage;
-			float PhysicalDamageAmount = DamageAmount * (1 - PercentMagicDamage);
-
-			FinalDamageAmount = CalculateMagicalDamage(MagicDamageAmount) + CalculatePhysicalDamage(PhysicalDamageAmount);
-			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
-		}
-
-		//store the damage amount
-		LastDamageAmount = FinalDamageAmount;
-
-		//Log Message for Damage Dealt
-		if (GEngine)
-		{
-			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
-			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
-		
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *EnemyName, *WeaponThatDamagedEnemy->WeaponName, FinalDamageAmountRounded));
-
-		}
-
-		//UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
-
-
-		//Update HP Amount
-		Attributes->ReceiveDamage(FinalDamageAmount);
-
-		//Update Health Bar and other HUD elements
-		UpdateCombatHUD();
-
-	}
-
-	return FinalDamageAmount;
-}
-
-void AEnemy::Death()
-{
-	//Log Message for Defeat
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName));
-	}
-
-	UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName);
-
-	FName SectionName = CalculateDeathMontageSectionName();
-	PlayDeathMontage(SectionName);
-
-	//Turn off this Enemy's HUD info, combat behaviors
-	EndCombat();
-
-	//turn off the collision capsule
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	//Destroy after delay
-	SetLifeSpan(5.f);
-}
-
-
-
-
-// This function is modifying the base weapon damage using attacker and defender stats. (DamageAmount is base weapon damage.)
-float AEnemy::CalculatePhysicalDamage(float DamageAmount)
-{
-	float FinalDamageAmount = 0.0f;
-
-	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
-
-	if (CombatTarget != nullptr && Attributes)
-	{
-		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
-		if (SlashCharacterAttributeComponent)
-		{
-			float AttackerSTR = SlashCharacterAttributeComponent->GetStr();
-			float AttackerDEX = SlashCharacterAttributeComponent->GetDex();
-			float DefenderVIT = Attributes->GetVit();
-			float DefenderAGI = Attributes->GetAgi();
-
-			float PDif = DamageAmount * CompareSTRVIT(AttackerSTR, DefenderVIT);
-			int32 Floor = CompareDEXAGI(AttackerDEX, DefenderAGI);
-			int32 RandomSelection = Floor + FMath::RandRange(0, PrecisionRange);
-
-			FinalDamageAmount = PDif * ((float)RandomSelection/ 100);
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("no slash character attribute component"));
-		}
-	}
-	else 
-	{
-		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer or Attributes"));
-	}
-
-	//the final value is used in TakeDamage to update the HP and set the HPbarwidget
-	return FinalDamageAmount;
-}
-
-
-float AEnemy::CompareSTRVIT(float AttackerSTR, float DefenderVIT)
-{
-
-	float StrVitCalc = 1;
-
-	if (AttackerSTR >= (DefenderVIT * 2))
-	{
-		StrVitCalc = 2;
-	}
-	else if ((AttackerSTR * 2) <= DefenderVIT)
-	{
-		StrVitCalc = 0.5;
-	}
-	else if (AttackerSTR > DefenderVIT)
-	{
-		if (AttackerSTR >= (DefenderVIT * 1.5))
-		{
-			StrVitCalc = 1.5;
-		}
-		else
-		{
-			StrVitCalc = 1.25;
-		}
-	}
-	else
-	{
-		if ((AttackerSTR * 1.5) <= DefenderVIT)
-		{
-			StrVitCalc = (2 / 3);
-		}
-		else
-		{
-			StrVitCalc = (5 / 6);
-		}
-	}
-
-	if (StrVitCalc <= 0) { StrVitCalc = 0.5; }
-	if (StrVitCalc >= 2) { StrVitCalc = 2; }
-
-	return StrVitCalc;
-}
+/*
+* MOVEMENT FUNCTIONS
+*/
 
 //BP: This functionality is in blueprints. This function is not currently in use. It is here in case I decide to switch to C++. 
 void AEnemy::Patrol()
@@ -675,6 +283,517 @@ bool AEnemy::IsInRangeOfTarget(AActor* Target, double Radius)
 	return IsInRange;
 }
 
+
+/*
+* COMBAT FUNCTIONS
+*/
+
+
+void AEnemy::ReadyCombatTick()
+{
+	IsCombatTickReady = true;
+}
+
+void AEnemy::PawnSeen(APawn* SeenPawn)
+{
+
+	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
+
+	if (CharacterSeen && !IsInCombat)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
+
+		CombatTarget = CharacterSeen;
+
+		StartCombat();
+
+	}
+
+}
+
+void AEnemy::EndCombat()
+{
+
+	//hide combat HUD
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetVisibility(false);
+	}
+
+	//clear last target information
+	CombatTarget = nullptr;
+	WeaponThatDamagedEnemy = nullptr;
+	LastHitImpactPoint = FVector();
+	LastHitDirection = FName();
+	LastDamageAmount = 0.f;
+	IsInCombat = false;
+
+	//TODO: Turn off combat music
+}
+
+void AEnemy::StartCombat()
+{
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetVisibility(true);
+	}
+
+	IsInCombat = true;
+
+	//TODO: Turn on combat music
+}
+
+void AEnemy::Combat()
+{
+	if (!Attributes) { return; }
+
+	UE_LOG(LogTemp, Warning, TEXT("Combat"));
+
+	if (ShouldFlee()){ Flee(); }
+
+	if (ShouldHide()){ Hide(); }
+
+	if (ShouldDefend()){ Defend(); }
+
+	if (ShouldDodge()) { Dodge(); }
+
+	if (ShouldSpecialMove()){ SpecialAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
+
+	IsCombatTickReady = false;
+	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+
+}
+
+bool AEnemy::ShouldDefend()
+{
+	//TODO: build this logic
+	return false;
+}
+
+bool AEnemy::ShouldDodge()
+{
+	//TODO: build this logic
+	return false;
+}
+
+bool AEnemy::ShouldHide()
+{
+	//TODO: build this logic. should include distance threshold and hp to hide threshold?
+	return false;
+}
+
+bool AEnemy::ShouldFlee()
+{
+	bool b = false;
+	if (Attributes->GetHealthPercent() <= FleeHPPercent
+		&& CombatMode != ECombatMode::ECM_Hiding && CombatMode != ECombatMode::ECM_OutOfCombat)
+	{
+		b = true;
+	}
+
+	return b;
+}
+
+bool AEnemy::ShouldSpecialMove()
+{
+	//TODO: Add more logic to when special moves are used?
+
+	bool b = false;
+
+	//if in range and has tp
+	if (IsInRangeOfTarget(CombatTarget, SpecialAttackRadius) && Attributes->GetTP() >= SpecialAttackTPCost)
+	{
+		b = true;
+	}
+
+	return b;
+}
+
+
+
+void AEnemy::Flee()
+{
+	CombatMode = ECombatMode::ECM_Fleeing;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
+}
+
+void AEnemy::Defend()
+{
+	CombatMode = ECombatMode::ECM_Defending;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
+}
+
+void AEnemy::Dodge()
+{
+	CombatMode = ECombatMode::ECM_Dodging;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
+}
+
+void AEnemy::Hide()
+{
+	CombatMode = ECombatMode::ECM_Hiding;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
+}
+
+void AEnemy::SpecialAttack()
+{
+	//use the TP
+	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
+
+	CombatMode = ECombatMode::ECM_SpecialAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::MeleeAttack()
+{
+	CombatMode = ECombatMode::ECM_MeleeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::RangedAttack()
+{
+	CombatMode = ECombatMode::ECM_RangeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::SnipeAttack()
+{
+	CombatMode = ECombatMode::ECM_SnipeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+
+
+void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon)
+{
+
+	//Store Information about the Attacker and Weapon of Attacker
+	CombatTarget = DamageDealer;
+	WeaponThatDamagedEnemy = Weapon;
+	LastHitImpactPoint = ImpactPoint;
+	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
+
+	StartCombat();
+
+	//Deal Damage
+	UGameplayStatics::ApplyDamage(
+		this,
+		Weapon->GetWeaponDamage(),
+		DamageDealer->GetController(),
+		Weapon,
+		UDamageType::StaticClass()
+	);
+
+	//React to the hit with Death or ELSE a normal hit.
+	if (!Attributes->IsAlive())
+	{
+		Death();
+	}
+	else
+	{
+		HP = Attributes->GetHP();
+		MaxHP = Attributes->GetMaxHP();
+
+		//Update TP
+		IncreaseTP();
+
+		PlayHitReactMontage(LastHitDirection);
+
+		if (HitSound)
+		{
+			UGameplayStatics::PlaySoundAtLocation(
+				this,
+				HitSound,
+				ImpactPoint
+			);
+		}
+
+		if (HitParticles && GetWorld())
+		{
+			UGameplayStatics::SpawnEmitterAtLocation(
+				GetWorld(),
+				HitParticles,
+				ImpactPoint,
+				HitParticleRotation,
+				HitParticleScale
+			);
+		}
+	}
+
+}
+
+void AEnemy::Recover()
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("recover before: %f"), Attributes->GetHP());
+
+	//if less than max hp, recover hp by regen percent
+	if (Attributes->GetHP() && Attributes->GetMaxHP() && Attributes->GetRegenPercent())
+	{
+		float CurrentHP = Attributes->GetHP();
+		float LocalMaxHP = Attributes->GetMaxHP();
+		float CurrentRegenPercent = Attributes->GetRegenPercent();
+
+		if (CurrentHP < LocalMaxHP)
+		{
+
+			float Amount = FMath::Clamp(CurrentHP + (LocalMaxHP * CurrentRegenPercent), 0.0f, LocalMaxHP);
+
+			//change the stat amount
+			Attributes->SetHP(Amount);
+
+			//Update the Blueprint Accessable Stats
+			HP = Attributes->GetHP();
+			MaxHP = Attributes->GetMaxHP();
+			RegenPercent = Attributes->GetRegenPercent();
+
+			//update the healthbar
+			UpdateCombatHUD();
+
+			//if full hp, end regen
+			if (Attributes->GetHP() >= Attributes->GetMaxHP())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("regen off"));
+				IsRegening = false;
+
+				if (HealthBarWidget)
+				{
+					HealthBarWidget->SetVisibility(false);
+				}
+			}
+		}
+
+		UE_LOG(LogTemp, Warning, TEXT("recover after: %f"), Attributes->GetHP());
+
+	}
+
+
+	//TODO: other recovery aspects? MP? TP?
+
+}
+
+void AEnemy::IncreaseTP()
+{
+	float TP = Attributes->GetTP();
+	float MaxTP = Attributes->GetMaxTP();
+	float Amount = FMath::Clamp(TP + (MaxTP * TPGainPercent), 0.0f, MaxTP);
+	Attributes->SetTP(Amount);
+}
+
+float AEnemy::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+	float FinalDamageAmount = 0.0f;
+
+	if (Attributes && HealthBarWidget && WeaponThatDamagedEnemy)
+	{
+		//get the weapon's magic damage to physical damage ratio
+		float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
+
+		//handle critical hits
+		bool isCritical = CheckCritical(LastHitImpactPoint);
+		if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
+
+		//Calculate Damage to Deal to HP
+		if (PercentMagicDamage == 1)
+		{
+			FinalDamageAmount = CalculateMagicalDamage(DamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("magic damage. %f"), FinalDamageAmount);
+		}
+		else if (PercentMagicDamage == 0)
+		{
+			FinalDamageAmount = CalculatePhysicalDamage(DamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("physical damage. %f"), FinalDamageAmount);
+		}
+		else
+		{
+			float MagicDamageAmount = DamageAmount * PercentMagicDamage;
+			float PhysicalDamageAmount = DamageAmount * (1 - PercentMagicDamage);
+
+			FinalDamageAmount = CalculateMagicalDamage(MagicDamageAmount) + CalculatePhysicalDamage(PhysicalDamageAmount);
+			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
+		}
+
+		//store the damage amount
+		LastDamageAmount = FinalDamageAmount;
+
+		//Log Message for Damage Dealt
+		if (GEngine)
+		{
+			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
+			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
+
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *EnemyName, *WeaponThatDamagedEnemy->WeaponName, FinalDamageAmountRounded));
+
+		}
+
+		//UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
+
+
+		//Update HP Amount
+		Attributes->ReceiveDamage(FinalDamageAmount);
+
+		//Update Health Bar and other HUD elements
+		UpdateCombatHUD();
+
+	}
+
+	return FinalDamageAmount;
+}
+
+void AEnemy::Death()
+{
+	//Log Message for Defeat
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName));
+	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName);
+
+	FName SectionName = CalculateDeathMontageSectionName();
+	PlayDeathMontage(SectionName);
+
+	//Turn off this Enemy's HUD info, combat behaviors
+	EndCombat();
+
+	//turn off the collision capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Destroy after delay
+	SetLifeSpan(5.f);
+}
+
+
+
+/*
+* COMBAT MATH FUNCTIONS
+*/
+
+// This function is modifying the base weapon damage using attacker and defender stats. (DamageAmount is base weapon damage.)
+float AEnemy::CalculatePhysicalDamage(float DamageAmount)
+{
+	float FinalDamageAmount = 0.0f;
+
+	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
+
+	if (CombatTarget != nullptr && Attributes)
+	{
+		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
+		if (SlashCharacterAttributeComponent)
+		{
+			float AttackerSTR = SlashCharacterAttributeComponent->GetStr();
+			float AttackerDEX = SlashCharacterAttributeComponent->GetDex();
+			float DefenderVIT = Attributes->GetVit();
+			float DefenderAGI = Attributes->GetAgi();
+
+			float PDif = DamageAmount * CompareSTRVIT(AttackerSTR, DefenderVIT);
+			int32 Floor = CompareDEXAGI(AttackerDEX, DefenderAGI);
+			int32 RandomSelection = Floor + FMath::RandRange(0, PrecisionRange);
+
+			FinalDamageAmount = PDif * ((float)RandomSelection / 100);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("no slash character attribute component"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no slash character damager causer or Attributes"));
+	}
+
+	//the final value is used in TakeDamage to update the HP and set the HPbarwidget
+	return FinalDamageAmount;
+}
+
+float AEnemy::CompareSTRVIT(float AttackerSTR, float DefenderVIT)
+{
+
+	float StrVitCalc = 1;
+
+	if (AttackerSTR >= (DefenderVIT * 2))
+	{
+		StrVitCalc = 2;
+	}
+	else if ((AttackerSTR * 2) <= DefenderVIT)
+	{
+		StrVitCalc = 0.5;
+	}
+	else if (AttackerSTR > DefenderVIT)
+	{
+		if (AttackerSTR >= (DefenderVIT * 1.5))
+		{
+			StrVitCalc = 1.5;
+		}
+		else
+		{
+			StrVitCalc = 1.25;
+		}
+	}
+	else
+	{
+		if ((AttackerSTR * 1.5) <= DefenderVIT)
+		{
+			StrVitCalc = (2 / 3);
+		}
+		else
+		{
+			StrVitCalc = (5 / 6);
+		}
+	}
+
+	if (StrVitCalc <= 0) { StrVitCalc = 0.5; }
+	if (StrVitCalc >= 2) { StrVitCalc = 2; }
+
+	return StrVitCalc;
+}
+
 int32 AEnemy::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
 {
 	int32 Floor;
@@ -792,9 +911,24 @@ int32 AEnemy::CompareCHR(float AttackerCHR, float DefenderCHR)
 	return Floor;
 }
 
+//TODO: Calculate if the hit is critical
+bool AEnemy::CheckCritical(const FVector& ImpactPoint)
+{
+	return false;
+}
+
+
+
+
+
+
+/*
+* UI FUNCTIONS
+*/
+
 void AEnemy::UpdateCombatHUD()
 {
-	
+
 	if (HealthBarWidget)
 	{
 		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
@@ -802,72 +936,83 @@ void AEnemy::UpdateCombatHUD()
 		//TODO: make a new attribute function to return the health in a different format?
 		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
 	}
-	
+
 }
 
 
-bool AEnemy::ShouldDefend()
-{
-	//TODO: build this logic
-	return false;
-}
+/*
+* MONTAGE FUNCTIONS
+*/
 
-bool AEnemy::ShouldDodge()
-{
-	//TODO: build this logic
-	return false;
-}
 
-bool AEnemy::ShouldHide()
+void AEnemy::PlayHitReactMontage(const FName& SectionName)
 {
-	//TODO: build this logic. should include distance threshold and hp to hide threshold?
-	return false;
-}
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-bool AEnemy::ShouldFlee()
-{
-	bool b = false;
-	if (Attributes->GetHealthPercent() <= FleeHPPercent 
-		&& CombatMode != ECombatMode::ECM_Hiding && CombatMode != ECombatMode::ECM_OutOfCombat)
+	if (AnimInstance && HitReactMontage)
 	{
-		b = true;
+
+		AnimInstance->Montage_Play(HitReactMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
+
+	}
+}
+
+void AEnemy::PlayDeathMontage(const FName& SectionName)
+{
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+
+	if (AnimInstance && DeathMontage)
+	{
+
+		AnimInstance->Montage_Play(DeathMontage);
+		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
+
+	}
+}
+
+FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
+{
+
+	//The vector of the direction the actor is facing
+	const FVector Forward = GetActorForwardVector();
+	//Lower the ImpactPoint to the Actor's Height to create a flat line
+	const FVector ImpactLowered(ImpactPoint.X, ImpactPoint.Y, GetActorLocation().Z);
+	//AKA ToHit. This is the vector which points from the center of actor location to the point of impact
+	const FVector ImpactPointVector = (ImpactLowered - GetActorLocation()).GetSafeNormal();
+
+	//Forward * ImpactPointVector = |Forward||ImpactPointVector| * cos(theta)... 
+	// |Forward| = 1, |ImpactPointVector| = 1 therefore Forward * ImpactPointVector = cos(theta)
+	const double CosTheta = FVector::DotProduct(Forward, ImpactPointVector);
+	//Inverse cosine to get theta, and convert it from radians to degrees
+	double AngleOfImpact = FMath::RadiansToDegrees(FMath::Acos(CosTheta));
+
+	//this is used to determine the direction of the hit. 
+	//If it is negative the hit was from the left, positive the hit was from the right 
+	const FVector CrossProduct = FVector::CrossProduct(Forward, ImpactPointVector);
+	if (CrossProduct.Z < 0)
+	{
+		//if crossproduct is negative, inverse the angle of impact
+		AngleOfImpact = AngleOfImpact * -1.f;
 	}
 
-	return b;
-}
+	FName SectionName = FName("FromBack");
 
-void AEnemy::PawnSeen(APawn* SeenPawn)
-{
-
-	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
-
-	if (CharacterSeen && !IsInCombat)
+	if (AngleOfImpact >= -45.f && AngleOfImpact < 45.f)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
-
-		StartCombat();
-		CombatTarget = CharacterSeen;
+		SectionName = FName("FromFront");
+	}
+	else if (AngleOfImpact >= -135.f && AngleOfImpact < -45.f)
+	{
+		SectionName = FName("FromLeft");
+	}
+	else if (AngleOfImpact >= 45 && AngleOfImpact < 135)
+	{
+		SectionName = FName("FromRight");
 	}
 
-	
+	return SectionName;
 }
-
-
-
-void AEnemy::IncreaseTP()
-{
-	float TP = Attributes->GetTP();
-	float MaxTP = Attributes->GetMaxTP();
-	float Amount = FMath::Clamp(TP + (MaxTP * TPGainPercent), 0.0f, MaxTP);
-	Attributes->SetTP(Amount);
-}
-
-//TODO: Calculate if the hit is critical
-bool AEnemy::CheckCritical(const FVector& ImpactPoint)
-{
-	return false;
-}
-
 
 FName AEnemy::CalculateDeathMontageSectionName()
 {
@@ -925,7 +1070,7 @@ FName AEnemy::CalculateDeathMontageSectionName()
 			break;
 		}
 	}
-	else 
+	else
 	{
 		//"FromFront"
 		const int32 RandomSelection = FMath::RandRange(0, 1);
@@ -949,135 +1094,12 @@ FName AEnemy::CalculateDeathMontageSectionName()
 }
 
 
+/*
+* UTILITY FUNCTIONS
+*/
+
 //Return the user friendly name of this enemy
 FString AEnemy::GetName()
 {
 	return EnemyName;
-}
-
-
-/*
-* COMBAT METHODS
-*/
-
-
-void AEnemy::Combat()
-{
-	if (!Attributes) { return; }
-
-	//Wait to make a new Combat choice every tick
-	if (!IsCombatTickReady) { return; }
-
-	UE_LOG(LogTemp, Warning, TEXT("Combat"));
-
-	if (ShouldFlee()){ Flee(); }
-
-	if (ShouldHide()){ Hide(); }
-
-	if (ShouldDefend()){ Defend(); }
-
-	if (ShouldDodge()) { Dodge(); }
-
-	if (ShouldSpecialMove()){ SpecialAttack(); }
-
-	if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
-
-	if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
-
-	if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
-
-	IsCombatTickReady = false;
-	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
-
-}
-
-void AEnemy::Flee()
-{
-	CombatMode = ECombatMode::ECM_Fleeing;
-	//TODO: 
-	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
-}
-
-void AEnemy::Defend()
-{
-	CombatMode = ECombatMode::ECM_Defending;
-	//TODO: 
-	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
-}
-
-void AEnemy::Dodge()
-{
-	CombatMode = ECombatMode::ECM_Dodging;
-	//TODO: 
-	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
-}
-
-void AEnemy::Hide()
-{
-	CombatMode = ECombatMode::ECM_Hiding;
-	//TODO: 
-	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
-}
-
-void AEnemy::SpecialAttack()
-{
-	//use the TP
-	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
-
-	CombatMode = ECombatMode::ECM_SpecialAttacking;
-	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
-
-	bool AttackHitTarget = true;
-	//TODO: update this based on the attack hitting or not
-	if (AttackHitTarget)
-	{
-		IncreaseTP();
-	}
-
-}
-
-void AEnemy::MeleeAttack()
-{
-	CombatMode = ECombatMode::ECM_MeleeAttacking;
-	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method"));
-
-	bool AttackHitTarget = true;
-	//TODO: update this based on the attack hitting or not
-	if (AttackHitTarget)
-	{
-		IncreaseTP();
-	}
-
-}
-
-void AEnemy::RangedAttack()
-{
-	CombatMode = ECombatMode::ECM_RangeAttacking;
-	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
-
-	bool AttackHitTarget = true;
-	//TODO: update this based on the attack hitting or not
-	if (AttackHitTarget)
-	{
-		IncreaseTP();
-	}
-
-}
-
-void AEnemy::SnipeAttack()
-{
-	CombatMode = ECombatMode::ECM_SnipeAttacking;
-	//TODO: do the attack
-	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
-
-	bool AttackHitTarget = true;
-	//TODO: update this based on the attack hitting or not
-	if (AttackHitTarget)
-	{
-		IncreaseTP();
-	}
-
 }
