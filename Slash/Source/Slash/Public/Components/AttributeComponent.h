@@ -94,6 +94,8 @@ public:
 		
 	void SetHP(float NewHP) { HP = NewHP; }
 
+	void SetTP(float NewTP) { TP = NewTP; }
+
 	bool IsAlive();
 
 };

@@ -8,10 +8,13 @@
 #include "Enemy/EnemyTypes.h"
 #include "Enemy.generated.h"
 
+
 class UAnimMontage;
 class UAttributeComponent;
 class UHealthBarComponent;
 class AAIController;
+class UPawnSensingComponent;
+
 
 UCLASS()
 class SLASH_API AEnemy : public ACharacter, public IHitInterface
@@ -77,7 +80,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	EPatrolType PatrolType = EPatrolType::EPT_FullRandom;
 
-	//TODO: update blueprints to store current goal in this variable for interacting with
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	AActor* MovementGoal;
 
@@ -111,19 +113,70 @@ protected:
 	bool IsInRangeOfTarget(AActor* Target, double Radius);
 
 
+
+	/* **********
+	* Combat ****
+	* ***********
+	*/
+
+	
+	void ReadyCombatTick();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool IsCombatTickReady;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	FTimerHandle CombatTickTimer;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	float CombatTickLength = 2.0f;
+
+	bool ShouldDefend();
+	bool ShouldDodge();
+	bool ShouldHide();
+	bool ShouldFlee();
+	bool ShouldSpecialMove();
+
+	UFUNCTION()
+	void PawnSeen(APawn* SeenPawn);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool HasRangedWeapon = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool HasSnipeWeapon = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsInCombat = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsRegening = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double MeleeAttackRadius = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double RangedAttackRadius = 1000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double SnipeAttackRadius = 2000.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double SpecialAttackRadius = 200.f;
 	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	ECombatMode CombatMode = ECombatMode::ECM_OutOfCombat;
 
+	void MeleeAttack();
+	void RangedAttack();
+	void SnipeAttack();
+	void SpecialAttack();
+	void Defend();
+	void Dodge();
+	void Flee();
+	void Hide();
+	
+	void Combat();
 
-	bool CheckCritical(const FVector& ImpactPoint);
-
+	void StartCombat();
 	void EndCombat();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
@@ -132,7 +185,14 @@ protected:
 	float MaxHP;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
 	float RegenPercent;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float TPGainPercent = 0.05;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float SpecialAttackTPCost = 100.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
+	float FleeHPPercent = 0.15f;
 	
+	void IncreaseTP();
 
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose = EDeathPose::EDP_Alive;
@@ -149,6 +209,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	float LastDamageAmount;
 	
+	bool CheckCritical(const FVector& ImpactPoint);
+	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
 	float RegenTickLength = 150.0f;
@@ -158,6 +220,19 @@ protected:
 
 private:
 
+	/*
+	* Components
+	*/
+
+	UPROPERTY(VisibleAnywhere)
+	UAttributeComponent* Attributes;
+
+	UPROPERTY(VisibleAnywhere)
+	UHealthBarComponent* HealthBarWidget;
+
+	UPROPERTY(VisibleAnywhere)
+	UPawnSensingComponent* PawnSensing;
+
 	float CompareSTRVIT(float AttackerSTR, float DefenderVIT);
 	int32 CompareDEXAGI(float AttackerDEX, float DefenderAGI);
 	float CompareINTMND(float AttackerINT, float DefenderMND);
@@ -165,13 +240,6 @@ private:
 
 
 	float RegenTickTimer = 0.0f;
-	
-
-	UPROPERTY(VisibleAnywhere)
-	UAttributeComponent* Attributes;
-
-	UPROPERTY(VisibleAnywhere)
-	UHealthBarComponent* HealthBarWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Sounds")
 	USoundBase* HitSound;

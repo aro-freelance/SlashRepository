@@ -2,18 +2,23 @@
 
 
 #include "Enemy/Enemy.h"
+#include "Characters/SlashCharacter.h"
+#include "AIController.h"
+
+#include "Slash/DebugMacros.h"
+
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
-#include "Animation/AnimMontage.h"
-#include "Slash/DebugMacros.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "Components/AttributeComponent.h"
 #include "Components/WidgetComponent.h"
 #include "HUD/HealthBarComponent.h"
-#include "Characters/SlashCharacter.h"
+#include "Perception/PawnSensingComponent.h"
+
+#include "Animation/AnimMontage.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
 #include "Items/Weapons/Weapon.h"
-#include "AIController.h"
+
 
 
 
@@ -32,6 +37,10 @@ AEnemy::AEnemy()
 	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
 	HealthBarWidget->SetupAttachment(GetRootComponent());
 
+	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
+	PawnSensing->SightRadius = 2500.f;
+	PawnSensing->SetPeripheralVisionAngle(50.f);
+
 
 }
 
@@ -44,6 +53,15 @@ void AEnemy::BeginPlay()
 		HealthBarWidget->SetVisibility(false);
 		HealthBarWidget->SetNameText(EnemyName);
 	}
+
+	if (PawnSensing)
+	{
+		PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
+
+	}
+
+
+	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
 
 	//BP: Movement is Currently Handled in Blueprint (refer to 171 4min to implement in C++)
 	/*if (ArrayOfPatrolGoals.Num() > 0)
@@ -64,16 +82,14 @@ void AEnemy::Tick(float DeltaTime)
 	//check if character is in aggro range
 	if (CombatTarget)
 	{
-		if (HealthBarWidget)
-		{
-			HealthBarWidget->SetVisibility(true);
-		}
-
-		//if out of range, end combat
+		//if out of combat distance, end combat
 		if (!IsInRangeOfTarget(CombatTarget, CombatRadius))
 		{
 			EndCombat();
 		}
+
+		Combat();
+		
 
 		//BP: Logic for PURUSING COMBAT TARGET is in Blueprints
 		
@@ -123,6 +139,25 @@ void AEnemy::EndCombat()
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
 	IsInCombat = false;
+
+	//TODO: Turn off combat music
+}
+
+void AEnemy::ReadyCombatTick()
+{
+	IsCombatTickReady = true;
+}
+
+void AEnemy::StartCombat()
+{
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetVisibility(true);
+	}
+
+	IsInCombat = true;
+
+	//TODO: Turn on combat music
 }
 
 void AEnemy::Recover()
@@ -218,7 +253,7 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 	LastHitImpactPoint = ImpactPoint;
 	LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
 	
-	IsInCombat = true;
+	StartCombat();
 
 	//Deal Damage
 	UGameplayStatics::ApplyDamage(
@@ -239,12 +274,10 @@ void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* 
 		HP = Attributes->GetHP();
 		MaxHP = Attributes->GetMaxHP();
 
-		PlayHitReactMontage(LastHitDirection);
+		//Update TP
+		IncreaseTP();
 
-		if (HealthBarWidget)
-		{
-			HealthBarWidget->SetVisibility(true);
-		}
+		PlayHitReactMontage(LastHitDirection);
 
 		if (HitSound)
 		{
@@ -312,6 +345,21 @@ FName AEnemy::CalculateHitReactSectionName(const FVector& ImpactPoint)
 	}
 
 	return SectionName;
+}
+
+bool AEnemy::ShouldSpecialMove()
+{
+	//TODO: Add more logic to when special moves are used?
+
+	bool b = false;
+	
+	//if in range and has tp
+	if (IsInRangeOfTarget(CombatTarget, SpecialAttackRadius) && Attributes->GetTP() >= SpecialAttackTPCost)
+	{
+		b = true;
+	}
+
+	return b;
 }
 
 
@@ -588,9 +636,10 @@ void AEnemy::MoveToTarget()
 
 	if (EnemyController == nullptr || MovementGoal == nullptr)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("enemy controller or movementgoal are null"));
+		UE_LOG(LogTemp, Warning, TEXT("enemy controller or movementgoal null"));
 		return;
 	}
+
 	if (EnemyController && MovementGoal)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("enemy controller and goal exist. moving to target"));
@@ -757,6 +806,62 @@ void AEnemy::UpdateCombatHUD()
 }
 
 
+bool AEnemy::ShouldDefend()
+{
+	//TODO: build this logic
+	return false;
+}
+
+bool AEnemy::ShouldDodge()
+{
+	//TODO: build this logic
+	return false;
+}
+
+bool AEnemy::ShouldHide()
+{
+	//TODO: build this logic. should include distance threshold and hp to hide threshold?
+	return false;
+}
+
+bool AEnemy::ShouldFlee()
+{
+	bool b = false;
+	if (Attributes->GetHealthPercent() <= FleeHPPercent 
+		&& CombatMode != ECombatMode::ECM_Hiding && CombatMode != ECombatMode::ECM_OutOfCombat)
+	{
+		b = true;
+	}
+
+	return b;
+}
+
+void AEnemy::PawnSeen(APawn* SeenPawn)
+{
+
+	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
+
+	if (CharacterSeen && !IsInCombat)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
+
+		StartCombat();
+		CombatTarget = CharacterSeen;
+	}
+
+	
+}
+
+
+
+void AEnemy::IncreaseTP()
+{
+	float TP = Attributes->GetTP();
+	float MaxTP = Attributes->GetMaxTP();
+	float Amount = FMath::Clamp(TP + (MaxTP * TPGainPercent), 0.0f, MaxTP);
+	Attributes->SetTP(Amount);
+}
+
 //TODO: Calculate if the hit is critical
 bool AEnemy::CheckCritical(const FVector& ImpactPoint)
 {
@@ -848,4 +953,131 @@ FName AEnemy::CalculateDeathMontageSectionName()
 FString AEnemy::GetName()
 {
 	return EnemyName;
+}
+
+
+/*
+* COMBAT METHODS
+*/
+
+
+void AEnemy::Combat()
+{
+	if (!Attributes) { return; }
+
+	//Wait to make a new Combat choice every tick
+	if (!IsCombatTickReady) { return; }
+
+	UE_LOG(LogTemp, Warning, TEXT("Combat"));
+
+	if (ShouldFlee()){ Flee(); }
+
+	if (ShouldHide()){ Hide(); }
+
+	if (ShouldDefend()){ Defend(); }
+
+	if (ShouldDodge()) { Dodge(); }
+
+	if (ShouldSpecialMove()){ SpecialAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
+
+	if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
+
+	IsCombatTickReady = false;
+	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+
+}
+
+void AEnemy::Flee()
+{
+	CombatMode = ECombatMode::ECM_Fleeing;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
+}
+
+void AEnemy::Defend()
+{
+	CombatMode = ECombatMode::ECM_Defending;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
+}
+
+void AEnemy::Dodge()
+{
+	CombatMode = ECombatMode::ECM_Dodging;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
+}
+
+void AEnemy::Hide()
+{
+	CombatMode = ECombatMode::ECM_Hiding;
+	//TODO: 
+	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
+}
+
+void AEnemy::SpecialAttack()
+{
+	//use the TP
+	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
+
+	CombatMode = ECombatMode::ECM_SpecialAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::MeleeAttack()
+{
+	CombatMode = ECombatMode::ECM_MeleeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::RangedAttack()
+{
+	CombatMode = ECombatMode::ECM_RangeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
+}
+
+void AEnemy::SnipeAttack()
+{
+	CombatMode = ECombatMode::ECM_SnipeAttacking;
+	//TODO: do the attack
+	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
+
+	bool AttackHitTarget = true;
+	//TODO: update this based on the attack hitting or not
+	if (AttackHitTarget)
+	{
+		IncreaseTP();
+	}
+
 }

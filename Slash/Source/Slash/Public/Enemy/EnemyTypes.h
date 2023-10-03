@@ -18,3 +18,18 @@ enum class EPatrolType : uint8
 	EPT_SetOrderLoopEnd UMETA(DisplayName = "Set Order Loop End"),
 	EPT_SetOrderReverseEnd UMETA(DisplayName = "Set Order Reverse End")
 };
+
+UENUM(BlueprintType)
+enum class ECombatMode : uint8
+{
+	ECM_MeleeAttacking UMETA(DisplayName = "Melee Attacking"),
+	ECM_RangeAttacking UMETA(DisplayName = "Range Attacking"),
+	ECM_SnipeAttacking UMETA(DisplayName = "Snipe Attacking"),
+	ECM_SpecialAttacking UMETA(DisplayName = "Special Attacking"),
+	ECM_Defending UMETA(DisplayName = "Defending"),
+	ECM_Dodging UMETA(DisplayName = "Dodging"),
+	ECM_Chasing UMETA(DisplayName = "Chasing"),
+	ECM_Fleeing UMETA(DisplayName = "Fleeing"),
+	ECM_Hiding UMETA(DisplayName = "Hiding"),
+	ECM_OutOfCombat UMETA(DisplayName = "OutOfCombat")
+};
