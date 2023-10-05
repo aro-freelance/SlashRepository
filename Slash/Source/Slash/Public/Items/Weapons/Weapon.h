@@ -4,8 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "Items/Item.h"
+#include "Items/Weapons/Projectile.h"
 #include "Items/Weapons/WeaponTypes.h"
 #include "Weapon.generated.h"
+
 
 
 class USoundBase;
@@ -39,6 +41,36 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Name")
 	FString WeaponName = "Default Weapon Name";
+
+
+	/*
+	* PROJECTILES
+	*/
+
+	/** Projectile class to spawn */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	AActor* Projectile;
+
+	/** Sound to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	USoundBase* FireSound;
+
+	/** AnimMontage to play each time we fire */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	UAnimMontage* FireAnimation;
+
+	/** Gun muzzle's offset from the characters location */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	FVector MuzzleOffset;
+
+	/** Make the weapon Fire a Projectile */
+	UFUNCTION(BlueprintCallable, Category = Projectile)
+	void Fire();
+
+	bool CanFire();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	bool OverrideCanFire = false;
 
 protected:
 

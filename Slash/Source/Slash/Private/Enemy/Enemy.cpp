@@ -351,14 +351,15 @@ void AEnemy::Combat()
 {
 
 	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
-	if (!ReadyForCombatMove) 
-	{
-		IsCombatTickReady = false;
-		GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
-		return; 
-	}
+	//if (!ReadyForCombatMove) 
+	//{
+	//	IsCombatTickReady = false;
+	//	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+	//	return; 
+	//}
 
-	else if (ShouldFlee()){ Flee(); }
+	//else 
+	if (ShouldFlee()){ Flee(); }
 
 	else if (ShouldHide()){ Hide(); }
 

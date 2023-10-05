@@ -28,11 +28,76 @@ AWeapon::AWeapon()
 	BoxTraceEnd->SetupAttachment(GetRootComponent());
 }
 
+
+
 void AWeapon::BeginPlay()
 {
 	Super::BeginPlay();
 
 	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
+}
+
+void AWeapon::Fire()
+{
+	//get the character that the weapon is attached to
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
+
+	if (SlashCharacter == nullptr || SlashCharacter->GetController() == nullptr)
+	{
+		return;
+	}
+
+	// Try and fire a projectile
+	if (Projectile != nullptr)
+	{
+		AProjectile* LocalProjectile = Cast<AProjectile>(Projectile);
+
+		UWorld* const World = GetWorld();
+		if (World != nullptr)
+		{
+			APlayerController* PlayerController = Cast<APlayerController>(SlashCharacter->GetController());
+			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
+
+			//Set Spawn Collision Handling Override
+			FActorSpawnParameters ActorSpawnParams;
+			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+			//TODO: fix this Spawn Actor Method
+			// Spawn the projectile at the muzzle
+			//World->SpawnActor<AProjectile>(LocalProjectile, SpawnLocation, SpawnRotation, ActorSpawnParams);
+			UE_LOG(LogTemp, Warning, TEXT("Fire! Pew Pew."));
+		}
+	}
+
+	// Try and play the sound if specified
+	if (FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, FireSound, SlashCharacter->GetActorLocation());
+	}
+
+	// Try and play a firing animation if specified
+	if (FireAnimation != nullptr)
+	{
+		//TODO: play fire anim
+	}
+
+}
+
+bool AWeapon::CanFire()
+{
+	bool b = false;
+	
+	if (WeaponSize == EWeaponSize::EWS_Rifle  ||
+		WeaponSize == EWeaponSize::EWS_Pistol ||
+		WeaponSize == EWeaponSize::EWS_Bow    ||
+		OverrideCanFire)
+	{
+		b = true;
+	}
+	
+	return b;
 }
 
 void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName)

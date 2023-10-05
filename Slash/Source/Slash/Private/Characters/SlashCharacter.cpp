@@ -383,6 +383,11 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 
 		EWeaponSize WeaponSize = EquippedWeapon->GetWeaponSize();
 
+		if (EquippedWeapon->CanFire())
+		{
+			EquippedWeapon->Fire();
+		}
+
 		PlayAttackMontage(WeaponSize);
 	}
 	else
