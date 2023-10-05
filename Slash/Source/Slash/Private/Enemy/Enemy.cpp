@@ -5,8 +5,6 @@
 #include "Characters/SlashCharacter.h"
 #include "AIController.h"
 
-#include "Slash/DebugMacros.h"
-
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/AttributeComponent.h"
@@ -19,8 +17,12 @@
 #include "Kismet/GameplayStatics.h"
 #include "Items/Weapons/Weapon.h"
 
+#include "Slash/DebugMacros.h"
 
 
+//TODO: @Yelsa next step is to set up the enemy with weapon(s). Follow the video. 
+// But on top of the video we have plans for ranged weapons. 
+// Once video is done we may want to implement ranged weapons.
 
 AEnemy::AEnemy()
 {
@@ -80,7 +82,7 @@ void AEnemy::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	//check if character is in aggro range
-	if (CombatTarget)
+	if (CombatTarget && Attributes)
 	{
 		//TODO: Fully Implement EnemyTypes ECombatMode or remove it. To implement fully I will need to integrate it in blueprints.
 
@@ -88,11 +90,9 @@ void AEnemy::Tick(float DeltaTime)
 		if (!IsInRangeOfTarget(CombatTarget, CombatRadius))
 		{
 			EndCombat();
-			return;
 		}
-
 		//Wait to make a new Combat choice every tick
-		if (!IsCombatTickReady) 
+		else if (IsCombatTickReady) 
 		{ 
 			Combat();
 		}
@@ -349,7 +349,6 @@ void AEnemy::StartCombat()
 
 void AEnemy::Combat()
 {
-	if (!Attributes) { return; }
 
 	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
 	if (!ReadyForCombatMove) 
@@ -359,23 +358,21 @@ void AEnemy::Combat()
 		return; 
 	}
 
-	UE_LOG(LogTemp, Warning, TEXT("Combat"));
+	else if (ShouldFlee()){ Flee(); }
 
-	if (ShouldFlee()){ Flee(); }
+	else if (ShouldHide()){ Hide(); }
 
-	if (ShouldHide()){ Hide(); }
+	else if (ShouldDefend()){ Defend(); }
 
-	if (ShouldDefend()){ Defend(); }
+	else if (ShouldDodge()) { Dodge(); }
 
-	if (ShouldDodge()) { Dodge(); }
+	else if (ShouldSpecialMove()){ SpecialAttack(); }
 
-	if (ShouldSpecialMove()){ SpecialAttack(); }
+	else if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
 
-	if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
+	else if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
 
-	if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
-
-	if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
+	else if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
 
 	IsCombatTickReady = false;
 	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
@@ -977,10 +974,6 @@ bool AEnemy::CheckCritical(const FVector& ImpactPoint)
 }
 
 
-
-
-
-
 /*
 * UI FUNCTIONS
 */
@@ -1162,3 +1155,4 @@ FString AEnemy::GetName()
 {
 	return EnemyName;
 }
+
