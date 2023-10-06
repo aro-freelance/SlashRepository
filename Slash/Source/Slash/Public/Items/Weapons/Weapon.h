@@ -49,7 +49,7 @@ public:
 
 	/** Projectile class to spawn */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
-	AActor* Projectile;
+	TSubclassOf<AActor> Projectile;
 
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
@@ -68,6 +68,8 @@ public:
 	void Fire();
 
 	bool CanFire();
+	bool CanDoDamage();
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	bool OverrideCanFire = false;
@@ -94,7 +96,7 @@ protected:
 
 	
 
-	bool CanDoDamage();
+	
 
 	void BoxTrace(FHitResult& BoxHit);
 

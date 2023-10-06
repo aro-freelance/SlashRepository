@@ -47,29 +47,35 @@ void AWeapon::Fire()
 		return;
 	}
 
-	// Try and fire a projectile
-	if (Projectile != nullptr)
+	UWorld* const World = GetWorld();
+	if (World != nullptr)
 	{
-		AProjectile* LocalProjectile = Cast<AProjectile>(Projectile);
+		APlayerController* PlayerController = Cast<APlayerController>(SlashCharacter->GetController());
+		const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
+		// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
+		const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset) + 100.f;
 
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
+		const FVector CharacterLocation = SlashCharacter->GetActorLocation();
+
+		//Set Spawn Collision Handling Override
+		FActorSpawnParameters ActorSpawnParams;
+		ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
+
+		const FActorSpawnParameters cActorSpawnParams = ActorSpawnParams;
+
+		AActor* A = World->SpawnActor(Projectile);
+		A->SetActorLocation(CharacterLocation + FVector(100, 0, 10));
+
+		//store the character who fired the projectile, so we can retrieve information about the weapon and character
+		AProjectile* ProjectileClass = Cast<AProjectile>(Projectile);
+		if (ProjectileClass)
 		{
-			APlayerController* PlayerController = Cast<APlayerController>(SlashCharacter->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-
-			//TODO: fix this Spawn Actor Method
-			// Spawn the projectile at the muzzle
-			//World->SpawnActor<AProjectile>(LocalProjectile, SpawnLocation, SpawnRotation, ActorSpawnParams);
-			UE_LOG(LogTemp, Warning, TEXT("Fire! Pew Pew."));
+			ProjectileClass->SetCharacterWhoFired(SlashCharacter);
 		}
+		
+
 	}
+		
 
 	// Try and play the sound if specified
 	if (FireSound != nullptr)

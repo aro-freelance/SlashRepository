@@ -4,7 +4,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Characters/SlashCharacter.h"
 #include "Projectile.generated.h"
+
+
 
 class USphereComponent;
 class UProjectileMovementComponent;
@@ -13,25 +16,32 @@ UCLASS()
 class SLASH_API AProjectile : public AActor
 {
 	GENERATED_BODY()
-	
-	/** Sphere collision component */
-	UPROPERTY(VisibleDefaultsOnly, Category = Projectile)
-	USphereComponent* CollisionComp;
-
-	/** Projectile movement component */
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
-	UProjectileMovementComponent* ProjectileMovement;
 
 public:
+
 	AProjectile();
 
-	/** called when projectile hits something */
+	void SetCharacterWhoFired(ASlashCharacter* Character) { CharacterWhoFiredThis = Character; }
+
+
+	//TODO: this is not currently detecting hits. Fix this.
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
-	/** Returns CollisionComp subobject **/
-	USphereComponent* GetCollisionComp() const { return CollisionComp; }
-	/** Returns ProjectileMovement subobject **/
-	UProjectileMovementComponent* GetProjectileMovement() const { return ProjectileMovement; }
+
+protected:
+	virtual void BeginPlay() override;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
+	UStaticMeshComponent* ItemMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
+	UStaticMesh* DefaultMesh;
+
+private:
+
+	ASlashCharacter* CharacterWhoFiredThis;
+
+
 };
 

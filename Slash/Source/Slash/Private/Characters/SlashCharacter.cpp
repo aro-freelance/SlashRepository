@@ -249,6 +249,15 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponSize& W
 	case EWeaponSize::EWS_TwoHanded:
 		NewCharacterState = ECharacterState::ECS_EquippedTwoHanded;
 		break;
+	case EWeaponSize::EWS_Rifle:
+		NewCharacterState = ECharacterState::ECS_EquippedOneHanded;
+		break;
+	case EWeaponSize::EWS_Pistol:
+		NewCharacterState = ECharacterState::ECS_EquippedOneHanded;
+		break;
+	case EWeaponSize::EWS_Bow:
+		NewCharacterState = ECharacterState::ECS_EquippedOneHanded;
+		break;
 	default:
 		break;
 	}
@@ -282,6 +291,36 @@ FName ASlashCharacter::WeaponSizeToSocketFName(const EWeaponSize& WeaponSize, bo
 		else
 		{
 			SocketName = FName("TwoHandedSheathSocket");
+		}
+		break;
+	case EWeaponSize::EWS_Rifle:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponSize::EWS_Pistol:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponSize::EWS_Bow:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
 		}
 		break;
 	default:
@@ -319,6 +358,39 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponSize& WeaponSi
 		else
 		{
 			MontageName = FName("UnequipTwoHanded");
+		}
+
+		break;
+	case EWeaponSize::EWS_Rifle:
+		if (isEquipping)
+		{
+			MontageName = FName("EquipRifle");
+		}
+		else
+		{
+			MontageName = FName("UnequipRifle");
+		}
+
+		break;
+	case EWeaponSize::EWS_Pistol:
+		if (isEquipping)
+		{
+			MontageName = FName("EquipPistol");
+		}
+		else
+		{
+			MontageName = FName("UnequipPistol");
+		}
+
+		break;
+	case EWeaponSize::EWS_Bow:
+		if (isEquipping)
+		{
+			MontageName = FName("EquipBow");
+		}
+		else
+		{
+			MontageName = FName("UnequipBow");
 		}
 
 		break;
@@ -476,12 +548,92 @@ void ASlashCharacter::PlayAttackMontage(const EWeaponSize& WeaponSize)
 		AnimInstance->Montage_JumpToSection(SectionName, AttackHammerMontage);
 
 	}
+
+	//Rifle Attacks
+	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponSize::EWS_Rifle)
+	{
+		ActionState = EActionState::EAS_Attacking;
+
+		AnimInstance->Montage_Play(AttackRifleMontage);
+
+
+		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = FName("RifleAttack1");
+			break;
+		case 1:
+			SectionName = FName("RifleAttack2");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackRifleMontage);
+
+	}
+
+	//Pistol Attacks
+	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponSize::EWS_Pistol)
+	{
+		ActionState = EActionState::EAS_Attacking;
+
+		AnimInstance->Montage_Play(AttackPistolMontage);
+
+
+		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = FName("PistolAttack1");
+			break;
+		case 1:
+			SectionName = FName("PistolAttack2");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackPistolMontage);
+
+	}
+
+	//Bow Attacks
+	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponSize::EWS_Bow)
+	{
+		ActionState = EActionState::EAS_Attacking;
+
+		AnimInstance->Montage_Play(AttackBowMontage);
+
+
+		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
+		const int32 RandomSelection = FMath::RandRange(0, 1);
+		FName SectionName = FName();
+		switch (RandomSelection)
+		{
+		case 0:
+			SectionName = FName("BowAttack1");
+			break;
+		case 1:
+			//TODO: get more bow attacks?
+			SectionName = FName("BowAttack2");
+			break;
+		default:
+			break;
+		}
+
+		AnimInstance->Montage_JumpToSection(SectionName, AttackBowMontage);
+
+	}
 }
 
 void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 {
-
-	
 
 	UE_LOG(LogTemp, Warning, TEXT("drop weapon pressed"));
 
@@ -509,16 +661,9 @@ void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 
 bool ASlashCharacter::CanDropWeapon()
 {
-	CharacterState = GetCharacterState();
-
-	if(ActionState == EActionState::EAS_Unoccupied) { UE_LOG(LogTemp, Warning, TEXT("unoccupied is good")); }
-	if (CharacterState == ECharacterState::ECS_Unarmed) { UE_LOG(LogTemp, Warning, TEXT("unarmed")); }
-	if (CharacterState == ECharacterState::ECS_EquippedOneHanded) { UE_LOG(LogTemp, Warning, TEXT("equipped 1h")); }
-	if (CharacterState == ECharacterState::ECS_EquippedTwoHanded) { UE_LOG(LogTemp, Warning, TEXT("equipped 2h")); }
-	if (EquippedWeapon->GetItemState() == EItemState::EIS_Held) { UE_LOG(LogTemp, Warning, TEXT("weapon held is good")); }
 
 	return ActionState == EActionState::EAS_Unoccupied &&
-		CharacterState != ECharacterState::ECS_Unarmed &&
+		GetCharacterState() != ECharacterState::ECS_Unarmed &&
 		EquippedWeapon->GetItemState() == EItemState::EIS_Held;
 }
 

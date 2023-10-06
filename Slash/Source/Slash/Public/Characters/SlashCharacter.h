@@ -152,6 +152,14 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackHammerMontage;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackRifleMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackPistolMontage;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackBowMontage;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* EquipSwordMontage;
@@ -167,5 +175,7 @@ public:
 	FORCEINLINE EActionState GetActionState() const { return ActionState; }
 
 	FORCEINLINE UAttributeComponent* GetAttributes() const { return Attributes; }
+
+	FORCEINLINE AWeapon* GetWeapon() const { return EquippedWeapon; }
 
 };

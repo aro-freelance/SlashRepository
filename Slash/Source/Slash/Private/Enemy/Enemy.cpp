@@ -570,6 +570,8 @@ void AEnemy::SnipeAttack()
 void AEnemy::GetHit_Implementation(const FVector& ImpactPoint, ASlashCharacter* DamageDealer, AWeapon* Weapon)
 {
 
+	UE_LOG(LogTemp, Warning, TEXT("Get Hit."));
+
 	//Store Information about the Attacker and Weapon of Attacker
 	CombatTarget = DamageDealer;
 	WeaponThatDamagedEnemy = Weapon;
