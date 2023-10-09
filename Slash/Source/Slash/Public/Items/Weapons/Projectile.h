@@ -8,8 +8,6 @@
 #include "Projectile.generated.h"
 
 
-
-class USphereComponent;
 class UProjectileMovementComponent;
 
 UCLASS()
@@ -23,8 +21,9 @@ public:
 
 	void SetCharacterWhoFired(ASlashCharacter* Character) { CharacterWhoFiredThis = Character; }
 
+	void SetWeaponThatFired(AWeapon* Weapon) { WeaponThatFiredThis = Weapon; }
 
-	//TODO: this is not currently detecting hits. Fix this.
+
 	UFUNCTION()
 	void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit);
 
@@ -32,15 +31,19 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	void InitializeShooterInfo();
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* ItemMesh;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Mesh)
 	UStaticMesh* DefaultMesh;
 
+
 private:
 
 	ASlashCharacter* CharacterWhoFiredThis;
+	AWeapon* WeaponThatFiredThis;
 
 
 };

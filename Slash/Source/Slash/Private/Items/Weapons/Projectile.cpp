@@ -3,7 +3,6 @@
 
 #include "Items/Weapons/Projectile.h"
 #include "Items/Weapons/Weapon.h"
-#include "Components/SphereComponent.h"
 #include "Interfaces/HitInterface.h"
 
 // Sets default values
@@ -18,7 +17,7 @@ AProjectile::AProjectile()
 	// Players can't walk on it
 	ItemMesh->SetWalkableSlopeOverride(FWalkableSlopeOverride(WalkableSlope_Unwalkable, 0.f));
 	ItemMesh->CanCharacterStepUpOn = ECB_No;
-
+	
 }
 
 
@@ -27,14 +26,50 @@ void AProjectile::BeginPlay()
 	Super::BeginPlay();
 
 	UE_LOG(LogTemp, Warning, TEXT("Projectile. BeginPlayC++."));
+
+
 }
+
+void AProjectile::InitializeShooterInfo()
+{
+	AActor* ProjectileOwner = this->GetOwner();
+
+	if (ProjectileOwner)
+	{
+		FString OwnerName = ProjectileOwner->GetName();
+		UE_LOG(LogTemp, Warning, TEXT("weapon projectile spawned. ownername = %s"), *OwnerName);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ProjectileOwner null"));
+	}
+
+	WeaponThatFiredThis = Cast<AWeapon>(this->GetOwner());
+	if (WeaponThatFiredThis != nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("initialize shooter on projectile: weapon cast succeed"));
+		CharacterWhoFiredThis = Cast<ASlashCharacter>(WeaponThatFiredThis->GetAttachParentActor());
+		if (CharacterWhoFiredThis != nullptr)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("initialize shooter on projectile: slash character cast succeed"));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("initialize shooter on projectile: slash character cast failed"));
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("initialize shooter on projectile: weapon cast failed."));
+	}
+}
+
 
 
 //TODO: this is not currently detecting hits. Fix this.
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
-
-	UE_LOG(LogTemp, Warning, TEXT("On Hit. Projectile."));
+	
 
 	if (OtherActor == nullptr) 
 	{
@@ -63,41 +98,48 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	////add physics to hit actor
 	//OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-	if (CharacterWhoFiredThis) 
+	InitializeShooterInfo();
+
+	if (CharacterWhoFiredThis && WeaponThatFiredThis) 
 	{
-		//call get hit and deal damage
-		AWeapon* WeaponFired = CharacterWhoFiredThis->GetWeapon();
-		if (WeaponFired)
+		/*if (WeaponThatFiredThis->CanDoDamage())
 		{
 
-			UE_LOG(LogTemp, Warning, TEXT("have weapon"));
-			if (WeaponFired->CanDoDamage())
-			{
+			UE_LOG(LogTemp, Warning, TEXT("Onhit. can do damage."));
+			
 
-				UE_LOG(LogTemp, Warning, TEXT("Onhit. can do damage."));
-				//get the hit interface of the actor who was hit
-				IHitInterface* HitInterface = Cast<IHitInterface>(OtherActor);
-
-				if (HitInterface)
-				{
-
-					UE_LOG(LogTemp, Warning, TEXT("calling get hit."));
-					//call GetHit on the actor that was hit
-					HitInterface->Execute_GetHit(OtherActor, Hit.ImpactPoint, CharacterWhoFiredThis, WeaponFired);
-				}
-
-				//ignore the hit actor so it cannot be hit multiple times by the same swing
-				WeaponFired->HitActorsToIgnore.AddUnique(OtherActor);
-
-			}
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("weapon fired cannot do damage"));
+		}*/
+
+
+		//get the hit interface of the actor who was hit
+		IHitInterface* HitInterface = Cast<IHitInterface>(OtherActor);
+
+		if (HitInterface)
+		{
+
+			UE_LOG(LogTemp, Warning, TEXT("calling get hit."));
+			//call GetHit on the actor that was hit
+			HitInterface->Execute_GetHit(OtherActor, Hit.ImpactPoint, CharacterWhoFiredThis, WeaponThatFiredThis);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("projectile call to hitinterface failed"));
+		}
+
+		//ignore the hit actor so it cannot be hit multiple times by the same swing
+		WeaponThatFiredThis->HitActorsToIgnore.AddUnique(OtherActor);
+
 
 		Destroy();
 	}
 	else
 	{
 		//TODO: this is currently the issue.  keep working on this from here. Weapon.cpp 70. 
-		UE_LOG(LogTemp, Warning, TEXT("no slash character"));
+		UE_LOG(LogTemp, Warning, TEXT("failed to initialize shooter info"));
 	}
 
 

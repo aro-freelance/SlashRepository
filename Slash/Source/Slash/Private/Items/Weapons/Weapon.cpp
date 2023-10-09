@@ -63,15 +63,50 @@ void AWeapon::Fire()
 
 		const FActorSpawnParameters cActorSpawnParams = ActorSpawnParams;
 
+
 		AActor* A = World->SpawnActor(Projectile);
 		A->SetActorLocation(CharacterLocation + FVector(100, 0, 10));
+		A->SetOwner(this);
+
+		AActor* ProjOwner = A->GetOwner();
+		
+		/*if (ProjOwner) 
+		{
+			FString OwnerName = ProjOwner->GetName();
+
+			UE_LOG(LogTemp, Warning, TEXT("weapon projectile spawned. ownername = %s"), *OwnerName);
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("weapon projectile spawned. get owner failed"));
+		}*/
+		
 
 		//store the character who fired the projectile, so we can retrieve information about the weapon and character
-		AProjectile* ProjectileClass = Cast<AProjectile>(Projectile);
+	/*	AProjectile* ProjectileClass = Cast<AProjectile>(Projectile);
 		if (ProjectileClass)
 		{
+			UE_LOG(LogTemp, Warning, TEXT("stored slashcharacter on projectile."));
 			ProjectileClass->SetCharacterWhoFired(SlashCharacter);
 		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Did not hit set character who fired because projectile cast failed."));
+		}*/
+
+
+		ProjectileClass = Cast<AProjectile>(Projectile);
+
+		if (ProjectileClass)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("projectile cast success."));
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("projectile cast failed."));
+		}
+
+		
 		
 
 	}
@@ -213,8 +248,16 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 bool AWeapon::CanDoDamage()
 {
+
 	//get the character that the weapon is attached to
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
+
+
+	UE_LOG(LogTemp, Warning, TEXT("Weapon Can Do Damage Method: ActionState: %s . Weapon Collision State %s.")
+		, *UEnum::GetValueAsString(SlashCharacter->GetActionState())
+		, *UEnum::GetValueAsString(GetWeaponCollisionState()));
+
+
 	if (!SlashCharacter)
 	{
 		return false;

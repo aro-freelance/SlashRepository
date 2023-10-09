@@ -51,6 +51,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	TSubclassOf<AActor> Projectile;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
+	AProjectile* ProjectileClass;
+
 	/** Sound to play each time we fire */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	USoundBase* FireSound;
