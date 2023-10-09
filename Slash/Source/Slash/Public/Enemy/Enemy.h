@@ -154,6 +154,16 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;
 
+
+	//TODO: You are here. Use this enum in blueprints to set the correct animation type. 
+	// Also make functions in C++ to socket a weapon based on this enum.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+	EWeaponType WeaponType = EWeaponType::EWT_Unarmed;
+
+	//TODO: set this up to be the weapon blueprint that is being held by the enemy 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+	TSubclassOf<AActor> EnemyWeapon;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double MeleeAttackRadius = 200.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")

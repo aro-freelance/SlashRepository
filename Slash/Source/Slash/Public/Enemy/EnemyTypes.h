@@ -33,3 +33,14 @@ enum class ECombatMode : uint8
 	ECM_Hiding UMETA(DisplayName = "Hiding"),
 	ECM_OutOfCombat UMETA(DisplayName = "OutOfCombat")
 };
+
+UENUM(BlueprintType)
+enum class EWeaponType : uint8
+{
+	EWT_Unarmed UMETA(DisplayName = "Unarmed"),
+	EWT_Sword UMETA(DisplayName = "Sword"),
+	EWT_GreatHammer UMETA(DisplayName = "Great Hammer"),
+	EWT_Rifle UMETA(DisplayName = "Rifle"),
+	EWT_Pistol UMETA(DisplayName = "Pistol"),
+	EWT_Bow UMETA(DisplayName = "Bow")
+};
