@@ -110,34 +110,38 @@ protected:
 
 	FString BuildStateString();
 
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	float Damage = 20.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	int32 PrecisionRange = 15;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	int32 LowAccFloor = 75;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	int32 HighAccFloor = 95;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	float PercentMagicDamage = 0.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	UDamageType* DamageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	float CriticalMultiplier = 2.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	float ProjectileSpeedMultiplier = 5000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon FX")
+	USoundBase* WeaponPickupSound;
+
 	
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	float Damage = 20.f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	int32 PrecisionRange = 15;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	int32 LowAccFloor = 75;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	int32 HighAccFloor = 95;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	float PercentMagicDamage = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	UDamageType* DamageType;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Stats")
-	float CriticalMultiplier = 2.f;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon FX")
-	USoundBase* WeaponPickupSound;
-	
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Hit Box")
 	UBoxComponent* WeaponBox;
 
@@ -175,6 +179,7 @@ public:
 	FORCEINLINE FString GetName() const { return WeaponName; }
 	FORCEINLINE UDamageType* GetDamageType() const { return DamageType; }
 	FORCEINLINE float GetCriticalMultiplier() const { return CriticalMultiplier; }
+	FORCEINLINE float GetProjectileSpeedMultiplier() const { return ProjectileSpeedMultiplier; }
 
 
 };

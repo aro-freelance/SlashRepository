@@ -20,6 +20,35 @@ AProjectile::AProjectile()
 	
 }
 
+void AProjectile::Tick(float DeltaTime)
+{
+	if (!CharacterWhoFiredThis || !WeaponThatFiredThis)
+	{
+		InitializeShooterInfo();
+	}
+
+	//if it hasn't been added yet, but we have the character and weapon, then add an impulse to the projectile
+	if (!HasInitialImpulse && CharacterWhoFiredThis && WeaponThatFiredThis)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("C++ add initial impulse"));
+		HasInitialImpulse = true;
+
+		
+
+		FVector ShooterForwardVector = CharacterWhoFiredThis->GetActorForwardVector();
+		float Speed = WeaponThatFiredThis->GetProjectileSpeedMultiplier();
+		//FVector Offset = (ShooterForwardVector * OffsetAmount);
+
+		////set the projectile in front of the player first
+		//this->SetActorLocation(CharacterWhoFiredThis->GetActorLocation() + Offset);
+
+		//shoot the projectile forward in the direction the character is facing
+		ItemMesh->AddImpulse(FVector(ShooterForwardVector * Speed));
+
+	}
+
+}
+
 
 void AProjectile::BeginPlay()
 {
@@ -98,7 +127,15 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	////add physics to hit actor
 	//OtherComp->AddImpulseAtLocation(GetVelocity() * 100.0f, GetActorLocation());
 
-	InitializeShooterInfo();
+	if (!CharacterWhoFiredThis || !WeaponThatFiredThis)
+	{
+		InitializeShooterInfo();
+
+		if (!CharacterWhoFiredThis || !WeaponThatFiredThis)
+		{
+			return;
+		}
+	}
 
 	if (CharacterWhoFiredThis && WeaponThatFiredThis) 
 	{
