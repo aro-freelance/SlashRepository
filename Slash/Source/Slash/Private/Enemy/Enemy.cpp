@@ -20,9 +20,6 @@
 #include "Slash/DebugMacros.h"
 
 
-//TODO: @Yelsa next step is to set up the enemy with weapon(s). Follow the video. 
-// But on top of the video we have plans for ranged weapons. 
-// Once video is done we may want to implement ranged weapons.
 
 AEnemy::AEnemy()
 {
@@ -84,6 +81,7 @@ void AEnemy::Tick(float DeltaTime)
 	//check if character is in aggro range
 	if (CombatTarget && Attributes)
 	{
+
 		//TODO: Fully Implement EnemyTypes ECombatMode or remove it. To implement fully I will need to integrate it in blueprints.
 
 		//if out of combat distance, end combat
@@ -141,8 +139,9 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 */
 
 //BP: This functionality is in blueprints. This function is not currently in use. It is here in case I decide to switch to C++. 
-void AEnemy::Patrol()
+/*void AEnemy::Patrol()
 {
+	UE_LOG(LogTemp, Warning, TEXT("c++ patrol "));
 
 	//1. SET TARGET//////////////////////////////////////////////////////
 
@@ -237,7 +236,9 @@ void AEnemy::Patrol()
 
 	///////////////////////////
 }
+*/
 
+/*
 void AEnemy::MoveToTarget()
 {
 	UE_LOG(LogTemp, Warning, TEXT("move to target called"));
@@ -266,6 +267,7 @@ void AEnemy::MoveToTarget()
 		}
 	}
 }
+*/
 
 bool AEnemy::IsInRangeOfTarget(AActor* Target, double Radius)
 {
@@ -349,6 +351,8 @@ void AEnemy::StartCombat()
 
 void AEnemy::Combat()
 {
+
+	UE_LOG(LogTemp, Warning, TEXT("c++ combat method"));
 
 	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
 	//if (!ReadyForCombatMove) 
@@ -976,6 +980,40 @@ bool AEnemy::CheckCritical(const FVector& ImpactPoint)
 	return false;
 }
 
+FString AEnemy::BuildWeaponSocketString()
+{
+	//TODO: update these when there are new sockets added
+
+	FString SocketString = FString();
+
+	switch (WeaponType)
+	{
+	case EWeaponType::EWT_Unarmed:
+		SocketString = "RightHandSocket";
+		break;
+	case EWeaponType::EWT_Sword:
+		SocketString = "RightHandSocket";
+		break;
+	case EWeaponType::EWT_GreatHammer:
+		SocketString = "RightHandSocket";
+		break;
+	case EWeaponType::EWT_Rifle:
+		SocketString = "RightHandSocket";
+		break;
+	case EWeaponType::EWT_Pistol:
+		SocketString = "RightHandSocket";
+		break;
+	case EWeaponType::EWT_Bow:
+		SocketString = "RightHandSocket";
+		break;
+	default:
+		break;
+	}
+
+
+	return SocketString;
+}
+
 
 /*
 * UI FUNCTIONS
@@ -1158,4 +1196,19 @@ FString AEnemy::GetName()
 {
 	return EnemyName;
 }
+
+AWeapon* AEnemy::GetEnemyWeapon()
+{
+
+	AWeapon* WeaponRef = Cast<AWeapon>(EnemyWeapon);
+
+	return WeaponRef;
+
+}
+
+
+
+
+
+
 

@@ -23,6 +23,7 @@ public:
 
 	AWeapon();
 
+	UFUNCTION(BlueprintCallable)
 	void AttachMeshToSocket(USceneComponent* InParent, const FName& InSocketName);
 
 	void DetachMeshFromSocket();

@@ -164,6 +164,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	TSubclassOf<AActor> EnemyWeapon;
 
+	UFUNCTION(BlueprintCallable)
+	AWeapon* GetEnemyWeapon();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double MeleeAttackRadius = 200.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
@@ -202,6 +205,10 @@ protected:
 	float SpecialAttackTPCost = 100.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat Stats")
 	float FleeHPPercent = 0.15f;
+
+	//Montages
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* AttackMontage;
 	
 	void IncreaseTP();
 
@@ -228,6 +235,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void Recover();
+
+	UFUNCTION(BlueprintCallable)
+	FString BuildWeaponSocketString();
 
 private:
 
@@ -269,6 +279,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* DeathMontage;
+
+	
 
 	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
 	FName CalculateDeathMontageSectionName();

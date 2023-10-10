@@ -215,9 +215,6 @@ bool AWeapon::CanDoDamage()
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
 
 
-	UE_LOG(LogTemp, Warning, TEXT("Weapon Can Do Damage Method: ActionState: %s . Weapon Collision State %s.")
-		, *UEnum::GetValueAsString(SlashCharacter->GetActionState())
-		, *UEnum::GetValueAsString(GetWeaponCollisionState()));
 
 
 	if (!SlashCharacter)
@@ -226,6 +223,11 @@ bool AWeapon::CanDoDamage()
 	}
 	else 
 	{
+
+
+		UE_LOG(LogTemp, Warning, TEXT("Weapon Can Do Damage Method: ActionState: %s . Weapon Collision State %s.")
+			, *UEnum::GetValueAsString(SlashCharacter->GetActionState())
+			, *UEnum::GetValueAsString(GetWeaponCollisionState()));
 
 		//if the character is attacking and the animation is at a point where damage is possible
 		return SlashCharacter->GetActionState() == EActionState::EAS_Attacking &&
