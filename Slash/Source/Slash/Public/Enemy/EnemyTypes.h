@@ -1,16 +1,6 @@
 #pragma once
 
 UENUM(BlueprintType)
-enum class EDeathPose : uint8
-{
-	EDP_Alive UMETA(DisplayName = "Alive"),
-	EDP_FallBack UMETA(DisplayName = "Death Fall Back"),
-	EDP_FallForward UMETA(DisplayName = "Death Fall Forward"),
-	EDP_Shoulder UMETA(DisplayName = "Death Shoulder"),
-	EDP_Sweep UMETA(DisplayName = "Death Sweep")
-};
-
-UENUM(BlueprintType)
 enum class EPatrolType : uint8
 {
 	EPT_FullRandom UMETA(DisplayName = "Full Random Patrol"),
@@ -35,12 +25,12 @@ enum class ECombatMode : uint8
 };
 
 UENUM(BlueprintType)
-enum class EWeaponType : uint8
+enum class EEnemyWeapon : uint8
 {
-	EWT_Unarmed UMETA(DisplayName = "Unarmed"),
-	EWT_Sword UMETA(DisplayName = "Sword"),
-	EWT_GreatHammer UMETA(DisplayName = "Great Hammer"),
-	EWT_Rifle UMETA(DisplayName = "Rifle"),
-	EWT_Pistol UMETA(DisplayName = "Pistol"),
-	EWT_Bow UMETA(DisplayName = "Bow")
+	EEW_Unarmed UMETA(DisplayName = "Unarmed"),
+	EEW_Sword UMETA(DisplayName = "Sword"),
+	EEW_GreatHammer UMETA(DisplayName = "Great Hammer"),
+	EEW_Rifle UMETA(DisplayName = "Rifle"),
+	EEW_Pistol UMETA(DisplayName = "Pistol"),
+	EEW_Bow UMETA(DisplayName = "Bow")
 };

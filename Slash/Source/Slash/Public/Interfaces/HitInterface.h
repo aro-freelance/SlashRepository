@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
-#include "Characters/SlashCharacter.h"
 #include "HitInterface.generated.h"
 
 // This class does not need to be modified.
@@ -26,6 +25,6 @@ public:
 
 	//this allows it to be called in c++ as well as blueprints
 	UFUNCTION(BlueprintNativeEvent)
-	void GetHit(const FVector& ImpactPoint, ASlashCharacter* DamagerDealer, AWeapon* Weapon);
+	void GetHit(const FVector& ImpactPoint, ACharacter* DamagerDealer, AWeapon* Weapon);
 
 };

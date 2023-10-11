@@ -92,9 +92,9 @@ bool AWeapon::CanFire()
 {
 	bool b = false;
 	
-	if (WeaponSize == EWeaponSize::EWS_Rifle  ||
-		WeaponSize == EWeaponSize::EWS_Pistol ||
-		WeaponSize == EWeaponSize::EWS_Bow    ||
+	if (WeaponType == EWeaponType::EWT_Rifle  ||
+		WeaponType == EWeaponType::EWT_Pistol ||
+		WeaponType == EWeaponType::EWT_Bow    ||
 		OverrideCanFire)
 	{
 		b = true;
@@ -164,6 +164,7 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 
+
 	if(CanDoDamage())
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
@@ -180,12 +181,13 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 
 			//get the character that the weapon is attached to
-			ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
+			ABaseCharacter* Character = Cast<ABaseCharacter>(GetAttachParentActor());
 
-			if (HitInterface && SlashCharacter)
+			if (HitInterface && Character)
 			{
+
 				//call GetHit on the actor that was hit
-				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, SlashCharacter, this);
+				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, Character, this);
 			}
 
 			//ignore the hit actor so it cannot be hit multiple times by the same swing
@@ -214,21 +216,12 @@ bool AWeapon::CanDoDamage()
 	//get the character that the weapon is attached to
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
 
-
-
-
 	if (!SlashCharacter)
 	{
 		return false;
 	}
 	else 
 	{
-
-
-		UE_LOG(LogTemp, Warning, TEXT("Weapon Can Do Damage Method: ActionState: %s . Weapon Collision State %s.")
-			, *UEnum::GetValueAsString(SlashCharacter->GetActionState())
-			, *UEnum::GetValueAsString(GetWeaponCollisionState()));
-
 		//if the character is attacking and the animation is at a point where damage is possible
 		return SlashCharacter->GetActionState() == EActionState::EAS_Attacking &&
 			GetWeaponCollisionState() == EWeaponCollisionState::EWS_CollisionOn;

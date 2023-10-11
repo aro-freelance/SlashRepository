@@ -83,7 +83,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Properties")
-	EWeaponSize WeaponSize = EWeaponSize::EWS_OneHanded;
+	EWeaponType WeaponType = EWeaponType::EWT_OneHanded;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision Box")
 	EWeaponCollisionState WeaponCollisionState = EWeaponCollisionState::EWS_CollisionOff;
@@ -164,7 +164,7 @@ public:
 	
 	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 	
-	FORCEINLINE EWeaponSize GetWeaponSize() const { return WeaponSize; }
+	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
 
 	FORCEINLINE void SetItemState(EItemState NewItemState) { ItemState = NewItemState; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
