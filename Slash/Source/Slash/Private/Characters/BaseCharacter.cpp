@@ -48,7 +48,7 @@ void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 
 		AnimInstance->Montage_Play(AttackSwordMontage);
 
-		//TODO: fix or remove spin jump (renamed swordattack3)
+		//TODO: fix or remove spin jump (renamed swordattack3) @Yelsa Fix sword attack 1
 		//case 2 disabled because spin jump animation has issue jumping back after ending.. 
 		// and its impact point is odd causing the enemy to get knocked towards player rather than away
 		const int32 RandomSelection = FMath::RandRange(0, 1);
@@ -110,7 +110,6 @@ void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 		AnimInstance->Montage_Play(AttackRifleMontage);
 
 
-		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
 		const int32 RandomSelection = FMath::RandRange(0, 1);
 		FName SectionName = FName();
 		switch (RandomSelection)
@@ -137,7 +136,6 @@ void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 		AnimInstance->Montage_Play(AttackPistolMontage);
 
 
-		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
 		const int32 RandomSelection = FMath::RandRange(0, 1);
 		FName SectionName = FName();
 		switch (RandomSelection)
@@ -164,7 +162,7 @@ void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 		AnimInstance->Montage_Play(AttackBowMontage);
 
 
-		//TODO: hammer low is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
+		//TODO: add more bow attacks. NOTE THAT THEY ARE THE SAME ATM 
 		const int32 RandomSelection = FMath::RandRange(0, 1);
 		FName SectionName = FName();
 		switch (RandomSelection)
@@ -174,7 +172,7 @@ void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 			break;
 		case 1:
 			//TODO: get more bow attacks?
-			SectionName = FName("BowAttack2");
+			SectionName = FName("BowAttack1");
 			break;
 		default:
 			break;
@@ -640,11 +638,12 @@ FName ABaseCharacter::CalculateDeathMontageSectionName()
 
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Get Hit."));
+	UE_LOG(LogTemp, Warning, TEXT("Get Hit called by %s."), *GetName());
 
 	ABaseCharacter* Attacker = Cast<ABaseCharacter>(DamageDealer);
 	if (Attacker) 
 	{
+
 		//Store Information about the Attacker and Weapon of Attacker
 		CombatTarget = Attacker;
 		WeaponThatDamagedEnemy = Weapon;
@@ -698,6 +697,10 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 			}
 		}
 
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DamageDealer cast to BaseCharacter failed."));
 	}
 
 
@@ -793,6 +796,14 @@ void ABaseCharacter::MeleeAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method called by %s"), *GetName());
 
+	if (!EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no equipped weapon"));
+		return;
+	}
+
+	ActionState = EActionState::EAS_Attacking;
+
 	//TODO: do the attack
 	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
 	PlayAttackMontage(WeaponType);
@@ -815,6 +826,14 @@ void ABaseCharacter::MeleeAttack()
 void ABaseCharacter::RangedAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
+
+	if (!EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no equipped weapon"));
+		return;
+	}
+
+	ActionState = EActionState::EAS_Attacking;
 
 	//TODO: do the attack
 	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
@@ -844,8 +863,21 @@ void ABaseCharacter::SnipeAttack()
 
 	UE_LOG(LogTemp, Warning, TEXT("SnipeAttack Method"));
 
-	//TODO: do the attack
+	if (!EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no equipped weapon"));
+		return;
+	}
 
+	ActionState = EActionState::EAS_Attacking;
+
+	//TODO: do the attack
+	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
+	PlayAttackMontage(WeaponType);
+	if (EquippedWeapon->CanFire())
+	{
+		EquippedWeapon->Fire();
+	}
 
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not
@@ -861,10 +893,24 @@ void ABaseCharacter::SpecialAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("SpecialAttack Method"));
 
+	if (!EquippedWeapon)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("no equipped weapon"));
+		return;
+	}
+
 	//use the TP
 	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
 
+	ActionState = EActionState::EAS_Attacking;
+
 	//TODO: do the attack
+	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
+	PlayAttackMontage(WeaponType);
+	if (EquippedWeapon->CanFire())
+	{
+		EquippedWeapon->Fire();
+	}
 
 	bool AttackHitTarget = true;
 	//TODO: update this based on the attack hitting or not

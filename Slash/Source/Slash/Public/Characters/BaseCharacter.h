@@ -56,7 +56,7 @@ protected:
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unarmed;
 
-	UPROPERTY(BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Action State")
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")

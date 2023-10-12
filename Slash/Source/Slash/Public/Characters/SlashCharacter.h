@@ -92,11 +92,6 @@ protected:
 	FName WeaponSizeToSocketFName(const EWeaponType& WeaponSize, bool isEquipping);
 	
 
-	
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Name")
-	FString CharacterName = "Default Character Name";
-
 
 private:
 

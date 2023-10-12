@@ -316,6 +316,7 @@ void AEnemy::StartCombat()
 	}
 
 	CombatMode = ECombatMode::ECM_Chasing;
+	IsCombatTickReady = true;
 
 }
 

@@ -96,7 +96,7 @@ protected:
 	FTimerHandle CombatTickTimer;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	float CombatTickLength = 2.0f;
+	float CombatTickLength = 50.0f;
 
 	bool ShouldDefend();
 	bool ShouldDodge();
@@ -110,6 +110,12 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
+
+	//How close should the enemy get to the player? 
+	// Minimum should be 50+ (maybe more...) so the enemy doesn't stand right on player
+	// ranged focused enemies could be 500+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double FollowDistance = 100.f;
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;

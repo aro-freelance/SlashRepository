@@ -40,6 +40,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
 	TArray<AActor*> HitActorsToIgnore;
 
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Collision")
+	bool ActorIsSameType(AActor* OtherActor);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Name")
 	FString WeaponName = "Default Weapon Name";
 

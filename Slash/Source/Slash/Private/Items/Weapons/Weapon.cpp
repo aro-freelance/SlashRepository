@@ -163,20 +163,35 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 //perform a box trace to return information about collisions
 void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-
-
+	
+	if (ActorIsSameType(OtherActor)) return;
+	
 	if(CanDoDamage())
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Can do damage. Overlapped with Actor: %s . Component: %s"), *OtherActor->GetName(), *OtherComp->GetName());
+		UE_LOG(LogTemp, Warning, 
+			TEXT("Can do damage. Weapon Component: %s . Overlapped with Actor: %s . Their Component: %s"), 
+			*OverlappedComponent->GetName(), *OtherActor->GetName(), *OtherComp->GetName());
 
 		FHitResult BoxHit;
 		BoxTrace(BoxHit);
 		FString BoxHitString = BoxHit.ToString();
 
+		if (ActorIsSameType(BoxHit.GetActor())) return;
+
+		//TODO: stop weapon from hitting weapon
+
+	/*	if (OtherComp->GetName() == "Weapon Box")
+		{
+			UE_LOG(LogTemp, Warning, TEXT("hit other weapon. return from box overlap"));
+			HitActorsToIgnore.AddUnique(BoxHit.GetActor());
+			return;
+		}*/
+
+
 		//if an actor was hit
 		if (BoxHit.GetActor())
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), *BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
+			UE_LOG(LogTemp, Warning, TEXT("Hit! Actor: %s. Component: %s."), *BoxHit.GetActor()->GetName(), *BoxHit.GetComponent()->GetName());
 	
 			IHitInterface* HitInterface = Cast<IHitInterface>(BoxHit.GetActor());
 
@@ -185,7 +200,6 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 			if (HitInterface && Character)
 			{
-
 				//call GetHit on the actor that was hit
 				HitInterface->Execute_GetHit(BoxHit.GetActor(), BoxHit.ImpactPoint, Character, this);
 			}
@@ -202,10 +216,48 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 	}	
 	else
 	{	
+
 		FString StateString = BuildStateString();
 	}
 
 
+}
+
+bool AWeapon::ActorIsSameType(AActor* OtherActor)
+{
+	bool b = false;
+
+	//if a character hit another character, check that they are not the same type, or the same character
+	ABaseCharacter* Character = Cast<ABaseCharacter>(GetAttachParentActor());
+	ABaseCharacter* OtherCharacter = Cast<ABaseCharacter>(OtherActor);
+	if (Character && OtherCharacter)
+	{
+		if (Character != OtherCharacter)
+		{
+			if (Character->ActorHasTag(TEXT("Enemy")) && OtherCharacter->ActorHasTag(TEXT("Enemy")))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("enemy hit enemy"));
+				b = true;
+			}
+
+			if (Character->ActorHasTag(TEXT("Player")) && OtherCharacter->ActorHasTag(TEXT("Player")))
+			{
+				UE_LOG(LogTemp, Warning, TEXT("player hit player"));
+				b = true;
+			}
+		}
+		else
+		{
+			TEXT("hit self.");
+			b = true;
+		}
+	}
+	else 
+	{
+		TEXT("hit non character.");
+	}
+
+	return b;
 }
 
 
@@ -213,17 +265,37 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 bool AWeapon::CanDoDamage()
 {
 
-	//get the character that the weapon is attached to
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
 
-	if (!SlashCharacter)
+
+	//get the character that the weapon is attached to
+	ABaseCharacter* Character = Cast<ABaseCharacter>(GetAttachParentActor());
+
+	if (!Character)
 	{
 		return false;
 	}
 	else 
 	{
+		
+
+		//EActionState ActionState = Character->GetActionState();
+		//if (ActionState == EActionState::EAS_Unoccupied)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("%s cannot do damage. ActionState unoccupied"), *Character->GetName());
+		//}
+		//if (ActionState == EActionState::EAS_Equipping)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("%s cannot do damage. ActionState equipping"), *Character->GetName());
+		//}
+		//EWeaponCollisionState CollisionState = GetWeaponCollisionState();
+		//if (CollisionState == EWeaponCollisionState::EWS_CollisionOff)
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("%s cannot do damage. Weapon Collision off"), *Character->GetName());
+		//}
+
+
 		//if the character is attacking and the animation is at a point where damage is possible
-		return SlashCharacter->GetActionState() == EActionState::EAS_Attacking &&
+		return Character->GetActionState() == EActionState::EAS_Attacking &&
 			GetWeaponCollisionState() == EWeaponCollisionState::EWS_CollisionOn;
 	}
 }
