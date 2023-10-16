@@ -13,7 +13,10 @@ class AWeapon;
 class UAttributeComponent;
 class UHealthBarComponent;
 
-
+//@Yelsa : Bug - If a either character is interrupted mid-attack,
+//  their actionstate never goes from attacking to unoccupied. This results in the character locking up.
+// TODO: fix this by setting unoccupied actionstate when animation is interrupted 
+//  OR Set it when hit?
 
 
 UCLASS()
@@ -65,6 +68,8 @@ protected:
 	EActionState ActionState = EActionState::EAS_Unoccupied;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool HasMeleeWeapon = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool HasRangedWeapon = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool HasSnipeWeapon = false;
@@ -106,6 +111,10 @@ protected:
 	float RegenTickLength = 150.0f;
 	UFUNCTION(BlueprintCallable)
 	void Recover(float DeltaTime);
+
+	//when animations don't complete, end attack state
+	UFUNCTION(BlueprintCallable)
+	virtual void AbortAttack();
 
 	UFUNCTION(BlueprintCallable)
 	void UnequipWeapon();
@@ -157,7 +166,7 @@ protected:
 	UAnimMontage* AttackMontage;
 
 	UPROPERTY(BlueprintReadOnly)
-	EDeathPose DeathPose = EDeathPose::EDP_Alive;
+	EDeathPose DeathPose;
 
 	virtual void PlayAttackMontage(const EWeaponType& WeaponSize);
 	virtual void PlayHitReactMontage(const FName& SectionName);

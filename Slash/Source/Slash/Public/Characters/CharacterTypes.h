@@ -19,10 +19,24 @@ enum class EActionState : uint8
 UENUM(BlueprintType)
 enum class EDeathPose : uint8
 {
-	EDP_Alive UMETA(DisplayName = "Alive"),
 	EDP_FallBack UMETA(DisplayName = "Death Fall Back"),
 	EDP_FallForward UMETA(DisplayName = "Death Fall Forward"),
 	EDP_Shoulder UMETA(DisplayName = "Death Shoulder"),
 	EDP_Sweep UMETA(DisplayName = "Death Sweep")
 };
 
+UENUM(BlueprintType)
+enum class ECombatMode : uint8
+{
+	ECM_OutOfCombat UMETA(DisplayName = "OutOfCombat"),
+	ECM_Chasing UMETA(DisplayName = "Chasing"),
+	ECM_MeleeAttacking UMETA(DisplayName = "Melee Attacking"),
+	ECM_RangeAttacking UMETA(DisplayName = "Range Attacking"),
+	ECM_SnipeAttacking UMETA(DisplayName = "Snipe Attacking"),
+	ECM_SpecialAttacking UMETA(DisplayName = "Special Attacking"),
+	ECM_Defending UMETA(DisplayName = "Defending"),
+	ECM_Dodging UMETA(DisplayName = "Dodging"),
+	ECM_Fleeing UMETA(DisplayName = "Fleeing"),
+	ECM_Hiding UMETA(DisplayName = "Hiding"),
+	ECM_Dead UMETA(DisplayName = "Dead")
+};

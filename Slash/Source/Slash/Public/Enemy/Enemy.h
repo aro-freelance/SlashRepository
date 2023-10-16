@@ -106,6 +106,9 @@ protected:
 	bool ShouldHide();
 	bool ShouldFlee();
 	bool ShouldSpecialMove();
+	bool ShouldMeleeAttack();
+	bool ShouldRangedAttack();
+	bool ShouldSnipeAttack();
 	bool ReadyForCombatMove();
 
 	UFUNCTION()
@@ -119,6 +122,8 @@ protected:
 	// ranged focused enemies could be 500+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double FollowDistance = 100.f;
+	UFUNCTION(BlueprintCallable)
+	void SetFollowDistance();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;
@@ -163,7 +168,7 @@ protected:
 	virtual void StartCombat() override;
 	virtual void EndCombat() override;
 
-	
+	virtual void AbortAttack() override;
 
 	//Montages
 	//TODO remove. this is in basecharacter

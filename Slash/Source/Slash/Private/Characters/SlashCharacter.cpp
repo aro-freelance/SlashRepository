@@ -23,16 +23,6 @@ ASlashCharacter::ASlashCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
-	//TODO: @Yelsa You are here
-	// Working on GetHit for character.. not sure if this is needed
-	/*
-	GetMesh()->SetCollisionObjectType(ECollisionChannel::ECC_WorldDynamic);
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	GetMesh()->SetGenerateOverlapEvents(true);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
-	*/
-
 	//don't rotate the character when the camera moves. in editor set use pawn rotation on camera boom to move camera instead.
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationRoll = false;
@@ -467,5 +457,3 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 
 }
-
-

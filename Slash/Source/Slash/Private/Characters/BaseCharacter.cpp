@@ -11,9 +11,6 @@
 #include "Items/Weapons/Weapon.h"
 
 
-
-
-
 ABaseCharacter::ABaseCharacter()
 {
  	
@@ -357,16 +354,6 @@ void ABaseCharacter::StartCombat()
 
 	//TODO: Turn on combat music
 
-	/*
-	* DO THIS IN ENEMY OVERRIDE OF THIS FUNCTION
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetVisibility(true);
-	}
-	CombatMode = ECombatMode::ECM_Chasing;
-
-	*/
-
 }
 
 void ABaseCharacter::EndCombat()
@@ -384,16 +371,6 @@ void ABaseCharacter::EndCombat()
 	
 
 	//TODO: Turn off combat music
-
-	/* DO THIS IN ENEMY OVERRIDE OF THIS FUNCTION
-	
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetVisibility(false);
-	}
-	CombatMode = ECombatMode::ECM_OutOfCombat;
-	
-	*/
 
 }
 
@@ -732,10 +709,6 @@ FName ABaseCharacter::CalculateDeathMontageSectionName()
 
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Get Hit called by %s."), *GetName());
-
-	//TODO: fix this for player. 
-	// one of the bugs we have atm  is that when player is hit they can no longer move or respond. figure out why and fix.
 
 	ABaseCharacter* Attacker = Cast<ABaseCharacter>(DamageDealer);
 	if (Attacker) 
@@ -773,6 +746,9 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 
 			PlayHitReactMontage(LastHitDirection);
 
+			//end attack states
+			AbortAttack();
+
 			if (HitSound)
 			{
 				UGameplayStatics::PlaySoundAtLocation(
@@ -800,21 +776,14 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		UE_LOG(LogTemp, Warning, TEXT("DamageDealer cast to BaseCharacter failed."));
 	}
 
-
 }
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	float FinalDamageAmount = 0.0f;
 
-	if (!Attributes) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !Attributes")); }
-	//if (!HealthBarWidget) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !HealthBarWidget")); }
-	if (!LastHitWeapon) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !LastHitWeapon")); }
-
-	if (Attributes && LastHitWeapon) //&& HealthBarWidget 
+	if (Attributes && LastHitWeapon) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Take Damage called by %s"), *GetName());
-
 		//get the weapon's magic damage to physical damage ratio
 		float PercentMagicDamage = LastHitWeapon->GetPercentMagicDamage();
 
@@ -1098,7 +1067,6 @@ void ABaseCharacter::Recover(float DeltaTime)
 
 		}
 
-
 		//TODO: other recovery aspects? MP? TP?
 
 		RegenTickTimer = 0.0f;
@@ -1106,8 +1074,12 @@ void ABaseCharacter::Recover(float DeltaTime)
 	}
 
 	RegenTickTimer += 1;
-
 	
+}
+
+void ABaseCharacter::AbortAttack()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ABaseCharacter::UnequipWeapon()

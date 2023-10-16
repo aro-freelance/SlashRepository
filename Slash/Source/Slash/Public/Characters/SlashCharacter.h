@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -83,14 +81,7 @@ protected:
 	void PlayEquipMontage(const FName& SectionName);
 	FName WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping);
 	
-	
-
-
-	
 	ECharacterState WeaponSizeToCharacterState(const EWeaponType& WeaponSize);
-
-	
-
 
 private:
 

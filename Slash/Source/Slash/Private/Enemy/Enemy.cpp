@@ -84,6 +84,8 @@ void AEnemy::Tick(float DeltaTime)
 	//check if character is in aggro range
 	if (CombatTarget && Attributes)
 	{
+		
+		SetFollowDistance();
 
 		//TODO: Fully Implement EnemyTypes ECombatMode or remove it. To implement fully I will need to integrate it in blueprints.
 
@@ -313,6 +315,14 @@ void AEnemy::PawnSeen(APawn* SeenPawn)
 
 }
 
+void AEnemy::SetFollowDistance()
+{
+	if (EquippedWeapon) 
+	{
+		FollowDistance = EquippedWeapon->GetFollowDistance();
+	}
+}
+
 void AEnemy::StartCombat()
 {
 	Super::StartCombat();
@@ -345,14 +355,6 @@ void AEnemy::EndCombat()
 void AEnemy::Combat()
 {
 
-	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
-	//if (!ReadyForCombatMove) 
-	//{
-	//	ResetCombatTick();
-	//	return; 
-	//}
-
-	//else 
 	if (ShouldFlee()){ Flee(); }
 
 	else if (ShouldHide()){ Hide(); }
@@ -363,20 +365,23 @@ void AEnemy::Combat()
 
 	else if (ShouldSpecialMove()){ SpecialAttack(); }
 
-	else if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius)){ MeleeAttack(); }
+	else if (ShouldMeleeAttack()){ MeleeAttack(); }
 
-	else if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon){ RangedAttack(); }
+	else if (ShouldRangedAttack()){ RangedAttack(); }
 
-	else if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
+	else if (ShouldSnipeAttack()){ SnipeAttack(); }
 
-	
+	else { ResetCombatTick(); }
 
 }
+
 
 
 void AEnemy::Death()
 {
 	Super::Death();
+
+	CombatMode = ECombatMode::ECM_Dead;
 
 	//turn off the collision capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -410,7 +415,9 @@ bool AEnemy::ShouldFlee()
 {
 	bool b = false;
 	if (Attributes->GetHealthPercent() <= FleeHPPercent
-		&& CombatMode != ECombatMode::ECM_Hiding && CombatMode != ECombatMode::ECM_OutOfCombat)
+		&& CombatMode != ECombatMode::ECM_Dead
+		&& CombatMode != ECombatMode::ECM_Hiding 
+		&& CombatMode != ECombatMode::ECM_OutOfCombat)
 	{
 		b = true;
 	}
@@ -425,7 +432,9 @@ bool AEnemy::ShouldSpecialMove()
 	bool b = false;
 
 	//if in range and has tp
-	if (IsInRangeOfTarget(CombatTarget, SpecialAttackRadius) && Attributes->GetTP() >= SpecialAttackTPCost)
+	if (IsInRangeOfTarget(CombatTarget, SpecialAttackRadius) 
+		&& Attributes->GetTP() >= SpecialAttackTPCost 
+		&& CombatMode == ECombatMode::ECM_Chasing)
 	{
 		b = true;
 	}
@@ -433,20 +442,35 @@ bool AEnemy::ShouldSpecialMove()
 	return b;
 }
 
-//this is a check on whether the Enemy AI should allow the enemy to attack
-bool AEnemy::ReadyForCombatMove()
+bool AEnemy::ShouldMeleeAttack()
 {
 	bool b = false;
 
-	//TODO: for this to work, we need to switch the enum in Unreal after the anim ends. back to chasing.
+	if (IsInRangeOfTarget(CombatTarget, MeleeAttackRadius) && HasMeleeWeapon && CombatMode == ECombatMode::ECM_Chasing)
+	{
+		b = true;
+	}
 
-	if (CombatMode != ECombatMode::ECM_MeleeAttacking ||
-		CombatMode != ECombatMode::ECM_RangeAttacking ||
-		CombatMode != ECombatMode::ECM_SnipeAttacking ||
-		CombatMode != ECombatMode::ECM_SpecialAttacking ||
-		CombatMode != ECombatMode::ECM_Defending ||
-		CombatMode != ECombatMode::ECM_Dodging ||
-		CombatMode != ECombatMode::ECM_OutOfCombat) 
+	return b;
+}
+
+bool AEnemy::ShouldRangedAttack()
+{
+	bool b = false;
+
+	if (IsInRangeOfTarget(CombatTarget, RangedAttackRadius) && HasRangedWeapon && CombatMode == ECombatMode::ECM_Chasing)
+	{
+		b = true;
+	}
+
+	return b;
+}
+
+bool AEnemy::ShouldSnipeAttack()
+{
+	bool b = false;
+
+	if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon && CombatMode == ECombatMode::ECM_Chasing)
 	{
 		b = true;
 	}
@@ -473,12 +497,16 @@ void AEnemy::MeleeAttack()
 {
 	Super::MeleeAttack();
 
+	CombatMode = ECombatMode::ECM_MeleeAttacking;
+
 	ResetCombatTick();
 }
 
 void AEnemy::RangedAttack()
 {
 	Super::RangedAttack();
+
+	CombatMode = ECombatMode::ECM_RangeAttacking;
 
 	ResetCombatTick();
 }
@@ -487,12 +515,16 @@ void AEnemy::SnipeAttack()
 {
 	Super::SnipeAttack();
 
+	CombatMode = ECombatMode::ECM_SnipeAttacking;
+
 	ResetCombatTick();
 }
 
 void AEnemy::SpecialAttack()
 {
 	Super::SpecialAttack();
+
+	CombatMode = ECombatMode::ECM_SpecialAttacking;
 
 	ResetCombatTick();
 }
@@ -501,12 +533,16 @@ void AEnemy::Defend()
 {
 	Super::Defend();
 
+	CombatMode = ECombatMode::ECM_Defending;
+
 	ResetCombatTick();
 }
 
 void AEnemy::Dodge()
 {
 	Super::Dodge();
+
+	CombatMode = ECombatMode::ECM_Dodging;
 
 	ResetCombatTick();
 }
@@ -515,7 +551,17 @@ void AEnemy::Hide()
 {
 	Super::Hide();
 
+	CombatMode = ECombatMode::ECM_Hiding;
+
 	ResetCombatTick();
+}
+
+
+void AEnemy::AbortAttack()
+{
+	Super::AbortAttack();
+
+	CombatMode = ECombatMode::ECM_Chasing;
 }
 
 

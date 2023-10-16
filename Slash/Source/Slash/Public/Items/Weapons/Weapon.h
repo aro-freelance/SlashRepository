@@ -139,6 +139,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
 	float ProjectileSpeedMultiplier = 5000.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	double FollowDistance = 100.f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon FX")
 	USoundBase* WeaponPickupSound;
 
@@ -168,6 +171,8 @@ public:
 	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 	
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+
+	FORCEINLINE double GetFollowDistance() const { return FollowDistance; }
 
 	FORCEINLINE void SetItemState(EItemState NewItemState) { ItemState = NewItemState; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
