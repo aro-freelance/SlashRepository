@@ -31,9 +31,14 @@ public:
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-	void Death();
+	virtual void Death();
 
 	FString GetName();
+
+	UFUNCTION(BlueprintCallable)
+	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping);
+
+	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping);
 
 protected:
 
@@ -101,6 +106,9 @@ protected:
 	float RegenTickLength = 150.0f;
 	UFUNCTION(BlueprintCallable)
 	void Recover(float DeltaTime);
+
+	UFUNCTION(BlueprintCallable)
+	void UnequipWeapon();
 
 	/*
 	* Combat FXs and UI
@@ -178,7 +186,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	ABaseCharacter* CombatTarget;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
-	AWeapon* WeaponThatDamagedEnemy;
+	AWeapon* LastHitWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	FVector LastHitImpactPoint = FVector();
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")

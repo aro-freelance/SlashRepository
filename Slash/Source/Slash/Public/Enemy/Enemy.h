@@ -26,6 +26,8 @@ public:
 	//the distance from combattarget enemy should reach before trying to hide
 	double HideDistance();
 
+	virtual void Death() override;
+
 protected:
 	virtual void BeginPlay() override;
 	
@@ -88,6 +90,7 @@ protected:
 
 	
 	void ReadyCombatTick();
+	void ResetCombatTick();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsCombatTickReady;
@@ -145,6 +148,13 @@ protected:
 	ECombatMode CombatMode = ECombatMode::ECM_OutOfCombat;
 
 	void Flee();
+	virtual void MeleeAttack() override;
+	virtual void RangedAttack() override;
+	virtual void SnipeAttack() override;
+	virtual void SpecialAttack() override;
+	virtual void Defend() override;
+	virtual void Dodge() override;
+	virtual void Hide() override;
 
 	
 	//used for Enemy AI Combat decisions

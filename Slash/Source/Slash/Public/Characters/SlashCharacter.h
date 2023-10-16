@@ -27,7 +27,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	
+	virtual void Death() override;
 
 protected:
 	virtual void BeginPlay() override;
@@ -83,13 +83,12 @@ protected:
 	void PlayEquipMontage(const FName& SectionName);
 	FName WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping);
 	
-	UFUNCTION(BlueprintCallable)
-	void AttachWeapon(const EWeaponType& WeaponSize, bool isEquipping);
+	
 
 
 	
 	ECharacterState WeaponSizeToCharacterState(const EWeaponType& WeaponSize);
-	FName WeaponSizeToSocketFName(const EWeaponType& WeaponSize, bool isEquipping);
+
 	
 
 

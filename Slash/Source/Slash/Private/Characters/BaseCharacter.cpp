@@ -34,6 +34,100 @@ void ABaseCharacter::Tick(float DeltaTime)
 
 }
 
+
+/*
+this is called in blueprints
+when the animation notify happens
+from the player hitting the equip button to start the animation
+*/
+void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquipping)
+{
+	if (EquippedWeapon)
+	{
+		//socket the weapon
+		FName SocketName = WeaponTypeToSocketFName(WeaponType, isEquipping);
+		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
+
+		//and then update its itemstate
+		if (isEquipping)
+		{
+			EquippedWeapon->SetItemState(EItemState::EIS_Held);
+		}
+		else
+		{
+			EquippedWeapon->SetItemState(EItemState::EIS_Sheathed);
+		}
+	}
+
+}
+
+FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping)
+{
+	FName SocketName = FName();
+
+	//TODO: add cases for other weapon types
+
+	switch (WeaponType)
+	{
+	case EWeaponType::EWT_OneHanded:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_TwoHanded:
+		if (isEquipping)
+		{
+			SocketName = FName("TwoHandedHammerSocket");
+		}
+		else
+		{
+			SocketName = FName("TwoHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_Rifle:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_Pistol:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_Bow:
+		if (isEquipping)
+		{
+			SocketName = FName("RightHandSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	default:
+		break;
+
+	}
+
+	return SocketName;
+
+}
+
 void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
 {
 
@@ -282,7 +376,7 @@ void ABaseCharacter::EndCombat()
 
 	//clear last target information
 	CombatTarget = nullptr;
-	WeaponThatDamagedEnemy = nullptr;
+	LastHitWeapon = nullptr;
 	LastHitImpactPoint = FVector();
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
@@ -315,7 +409,7 @@ float ABaseCharacter::CalculatePhysicalDamage(float DamageAmount)
 {
 	float FinalDamageAmount = 0.0f;
 
-	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
+	int32 PrecisionRange = LastHitWeapon->GetPrecisionRange();
 
 	if (CombatTarget != nullptr && Attributes)
 	{
@@ -351,7 +445,7 @@ float ABaseCharacter::CalculateMagicalDamage(float DamageAmount)
 {
 	float FinalDamageAmount = 0.0f;
 
-	int32 PrecisionRange = WeaponThatDamagedEnemy->GetPrecisionRange();
+	int32 PrecisionRange = LastHitWeapon->GetPrecisionRange();
 
 	if (CombatTarget != nullptr && Attributes)
 	{
@@ -432,12 +526,12 @@ int32 ABaseCharacter::CompareDEXAGI(float AttackerDEX, float DefenderAGI)
 	if (AttackerDEX > DefenderAGI)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("dex > agi"));
-		Floor = WeaponThatDamagedEnemy->GetHighAccFloor();
+		Floor = LastHitWeapon->GetHighAccFloor();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("agi > dex"));
-		Floor = WeaponThatDamagedEnemy->GetLowAccFloor();
+		Floor = LastHitWeapon->GetLowAccFloor();
 	}
 
 	return Floor;
@@ -494,12 +588,12 @@ int32 ABaseCharacter::CompareCHR(float AttackerCHR, float DefenderCHR)
 	if (AttackerCHR > DefenderCHR)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("attacker wins chr"));
-		Floor = WeaponThatDamagedEnemy->GetHighAccFloor();
+		Floor = LastHitWeapon->GetHighAccFloor();
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("defender wins chr"));
-		Floor = WeaponThatDamagedEnemy->GetLowAccFloor();
+		Floor = LastHitWeapon->GetLowAccFloor();
 	}
 
 	return Floor;
@@ -640,18 +734,21 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 {
 	UE_LOG(LogTemp, Warning, TEXT("Get Hit called by %s."), *GetName());
 
+	//TODO: fix this for player. 
+	// one of the bugs we have atm  is that when player is hit they can no longer move or respond. figure out why and fix.
+
 	ABaseCharacter* Attacker = Cast<ABaseCharacter>(DamageDealer);
 	if (Attacker) 
 	{
 
 		//Store Information about the Attacker and Weapon of Attacker
 		CombatTarget = Attacker;
-		WeaponThatDamagedEnemy = Weapon;
+		LastHitWeapon = Weapon;
 		LastHitImpactPoint = ImpactPoint;
 		LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
 
-		StartCombat();
-
+		if(!IsInCombat){ StartCombat(); }
+		
 		//Deal Damage
 		UGameplayStatics::ApplyDamage(
 			this,
@@ -710,14 +807,20 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 {
 	float FinalDamageAmount = 0.0f;
 
-	if (Attributes && HealthBarWidget && WeaponThatDamagedEnemy)
+	if (!Attributes) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !Attributes")); }
+	//if (!HealthBarWidget) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !HealthBarWidget")); }
+	if (!LastHitWeapon) { UE_LOG(LogTemp, Warning, TEXT("Take Damage: !LastHitWeapon")); }
+
+	if (Attributes && LastHitWeapon) //&& HealthBarWidget 
 	{
+		UE_LOG(LogTemp, Warning, TEXT("Take Damage called by %s"), *GetName());
+
 		//get the weapon's magic damage to physical damage ratio
-		float PercentMagicDamage = WeaponThatDamagedEnemy->GetPercentMagicDamage();
+		float PercentMagicDamage = LastHitWeapon->GetPercentMagicDamage();
 
 		//handle critical hits
 		bool isCritical = CheckCritical(LastHitImpactPoint);
-		if (isCritical) { DamageAmount = (DamageAmount * WeaponThatDamagedEnemy->GetCriticalMultiplier()); }
+		if (isCritical) { DamageAmount = (DamageAmount * LastHitWeapon->GetCriticalMultiplier()); }
 
 		//Calculate Damage to Deal to HP
 		if (PercentMagicDamage == 1)
@@ -748,12 +851,11 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 			int32 FinalDamageAmountRounded = FMath::RoundToInt(LastDamageAmount);
 			//GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Cyan, FString::Printf(TEXT("%s was hit by %s using %s for %i damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, FinalDamageAmountRounded));
 
-			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *Name, *WeaponThatDamagedEnemy->WeaponName, FinalDamageAmountRounded));
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString::Printf(TEXT("%s was hit by %s for %i damage"), *Name, *LastHitWeapon->WeaponName, FinalDamageAmountRounded));
 
 		}
 
-		//UE_LOG(LogTemp, Warning, TEXT("%s was hit by %s using %s for %f damage"), *EnemyName, *CharacterWhoDamagedEnemy->GetName(), *DamagerWeaponName, LastDamageAmount);
-
+		UE_LOG(LogTemp, Warning, TEXT("final damage: %f"), FinalDamageAmount);
 
 		//Update HP Amount
 		Attributes->ReceiveDamage(FinalDamageAmount);
@@ -783,11 +885,6 @@ void ABaseCharacter::Death()
 	//Turn off this Enemy's HUD info, combat behaviors
 	EndCombat();
 
-	//turn off the collision capsule
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-
-	//Destroy after delay
-	SetLifeSpan(5.f);
 
 }
 
@@ -1013,6 +1110,17 @@ void ABaseCharacter::Recover(float DeltaTime)
 	
 }
 
+void ABaseCharacter::UnequipWeapon()
+{
+	EquippedWeapon->DetachMeshFromSocket();
+
+	EquippedWeapon = nullptr;
+	CharacterState = ECharacterState::ECS_Unarmed;
+	ActionState = EActionState::EAS_Unoccupied;
+
+	//TODO: set height from ground. when the weapon is dropping from dead enemy it is fairly high.
+}
+
 void ABaseCharacter::UpdateCombatHUD()
 {
 	if (HealthBarWidget)
@@ -1029,5 +1137,7 @@ FString ABaseCharacter::GetName()
 {
 	return Name;
 }
+
+
 
 

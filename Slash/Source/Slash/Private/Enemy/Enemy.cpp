@@ -45,6 +45,7 @@ AEnemy::AEnemy()
 
 }
 
+
 void AEnemy::BeginPlay()
 {
 	Super::BeginPlay();
@@ -284,6 +285,12 @@ bool AEnemy::IsInRangeOfTarget(AActor* Target, double Radius)
 */
 
 
+void AEnemy::ResetCombatTick()
+{
+	IsCombatTickReady = false;
+	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+}
+
 void AEnemy::ReadyCombatTick()
 {
 	IsCombatTickReady = true;
@@ -338,13 +345,10 @@ void AEnemy::EndCombat()
 void AEnemy::Combat()
 {
 
-	UE_LOG(LogTemp, Warning, TEXT("enemy C++ combat method"));
-
 	//if mid-attack/defend/dodge or out of combat, reset the combat tick and end this function
 	//if (!ReadyForCombatMove) 
 	//{
-	//	IsCombatTickReady = false;
-	//	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+	//	ResetCombatTick();
 	//	return; 
 	//}
 
@@ -365,8 +369,22 @@ void AEnemy::Combat()
 
 	else if (IsInRangeOfTarget(CombatTarget, SnipeAttackRadius) && HasSnipeWeapon){ SnipeAttack(); }
 
-	IsCombatTickReady = false;
-	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
+	
+
+}
+
+
+void AEnemy::Death()
+{
+	Super::Death();
+
+	//turn off the collision capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	//Destroy after delay
+	SetLifeSpan(5.f);
+
+	UnequipWeapon();
 
 }
 
@@ -439,13 +457,65 @@ bool AEnemy::ReadyForCombatMove()
 
 void AEnemy::Flee()
 {
+
 	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
 
 	CombatMode = ECombatMode::ECM_Fleeing;
 	//TODO: execute the flee logic
 
 	//TODO: make a check to see if chasing should be turned back on after x time or x percent hp?
-	
+
+
+	ResetCombatTick();
+}
+
+void AEnemy::MeleeAttack()
+{
+	Super::MeleeAttack();
+
+	ResetCombatTick();
+}
+
+void AEnemy::RangedAttack()
+{
+	Super::RangedAttack();
+
+	ResetCombatTick();
+}
+
+void AEnemy::SnipeAttack()
+{
+	Super::SnipeAttack();
+
+	ResetCombatTick();
+}
+
+void AEnemy::SpecialAttack()
+{
+	Super::SpecialAttack();
+
+	ResetCombatTick();
+}
+
+void AEnemy::Defend()
+{
+	Super::Defend();
+
+	ResetCombatTick();
+}
+
+void AEnemy::Dodge()
+{
+	Super::Dodge();
+
+	ResetCombatTick();
+}
+
+void AEnemy::Hide()
+{
+	Super::Hide();
+
+	ResetCombatTick();
 }
 
 

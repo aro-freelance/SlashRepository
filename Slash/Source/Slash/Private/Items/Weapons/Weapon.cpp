@@ -132,6 +132,7 @@ void AWeapon::DetachMeshFromSocket()
 	ItemMesh->DetachFromComponent(DeTransformRules);
 
 	ItemMesh->SetWorldRotation(StartingRotation);
+	SetItemState(EItemState::EIS_Hovering);
 
 	if (Sphere)
 	{

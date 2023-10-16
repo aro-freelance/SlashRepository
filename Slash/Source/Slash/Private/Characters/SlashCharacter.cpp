@@ -155,6 +155,14 @@ void ASlashCharacter::Equip(const FInputActionValue& Value)
 
 }
 
+void ASlashCharacter::Death()
+{
+	Super::Death();
+
+	//TODO: Handle Player Character Death with GameOver or with some sort of downed mechanic
+
+}
+
 
 
 bool ASlashCharacter::CanDisarm()
@@ -275,71 +283,7 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponType& W
 	return NewCharacterState;
 }
 
-FName ASlashCharacter::WeaponSizeToSocketFName(const EWeaponType& WeaponSize, bool isEquipping)
-{
-	FName SocketName = FName();
 
-	//TODO: add cases for other weapon types
-
-	switch (WeaponSize)
-	{
-	case EWeaponType::EWT_OneHanded: 
-		if (isEquipping)
-		{
-			SocketName = FName("RightHandSocket");
-		}
-		else
-		{
-			SocketName = FName("OneHandedSheathSocket");
-		}
-		break;
-	case EWeaponType::EWT_TwoHanded:
-		if (isEquipping)
-		{
-			SocketName = FName("TwoHandedHammerSocket");
-		}
-		else
-		{
-			SocketName = FName("TwoHandedSheathSocket");
-		}
-		break;
-	case EWeaponType::EWT_Rifle:
-		if (isEquipping)
-		{
-			SocketName = FName("RightHandSocket");
-		}
-		else
-		{
-			SocketName = FName("OneHandedSheathSocket");
-		}
-		break;
-	case EWeaponType::EWT_Pistol:
-		if (isEquipping)
-		{
-			SocketName = FName("RightHandSocket");
-		}
-		else
-		{
-			SocketName = FName("OneHandedSheathSocket");
-		}
-		break;
-	case EWeaponType::EWT_Bow:
-		if (isEquipping)
-		{
-			SocketName = FName("RightHandSocket");
-		}
-		else
-		{
-			SocketName = FName("OneHandedSheathSocket");
-		}
-		break;
-	default:
-		break;
-
-	}
-
-	return SocketName;
-}
 
 FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping)
 {
@@ -412,32 +356,6 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSi
 	return MontageName;
 }
 
-/*
-this is called in blueprints 
-when the animation notify happens
-from the player hitting the equip button to start the animation
-*/
-void ASlashCharacter::AttachWeapon(const EWeaponType& WeaponSize, bool isEquipping)
-{
-	if (EquippedWeapon)
-	{
-		//socket the weapon
-		FName SocketName = WeaponSizeToSocketFName(WeaponSize, isEquipping);
-		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
-
-		//and then update its itemstate
-		if (isEquipping) 
-		{
-			EquippedWeapon->SetItemState(EItemState::EIS_Held);
-		}
-		else
-		{
-			EquippedWeapon->SetItemState(EItemState::EIS_Sheathed);
-		}
-	}
-
-}
-
 
 
 
@@ -508,20 +426,11 @@ void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 
 		if (CanDropWeapon())
 		{
-			EquippedWeapon->DetachMeshFromSocket();
-
-			if (!EquippedWeapon->IsAttachedTo(this)) 
-			{
-				EquippedWeapon->SetItemState(EItemState::EIS_Hovering);
-				EquippedWeapon = nullptr;
-				CharacterState = ECharacterState::ECS_Unarmed;
-				ActionState = EActionState::EAS_Unoccupied;
-			}
+			UnequipWeapon();
 	
 		}
 	}
 }
-
 
 
 bool ASlashCharacter::CanDropWeapon()
@@ -558,3 +467,5 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	}
 
 }
+
+
