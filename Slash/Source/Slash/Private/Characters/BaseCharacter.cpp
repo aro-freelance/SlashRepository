@@ -45,6 +45,8 @@ void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquippin
 		FName SocketName = WeaponTypeToSocketFName(WeaponType, isEquipping);
 		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
 
+		SetEquippedWeaponSettings();
+
 		//and then update its itemstate
 		if (isEquipping)
 		{
@@ -56,6 +58,44 @@ void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquippin
 		}
 	}
 
+}
+
+void ABaseCharacter::SetEquippedWeaponSettings()
+{
+	//TODO: set other stuff based on weapon type here. this is called when weapon is attached to character
+	if (EquippedWeapon)
+	{
+		switch (EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_OneHanded:
+			AttackMontage = AttackSwordMontage;
+			AttackMontageSectionNames = SwordAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+			break;
+		case EWeaponType::EWT_TwoHanded:
+			AttackMontage = AttackHammerMontage;
+			AttackMontageSectionNames = HammerAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+			break;
+		case EWeaponType::EWT_Rifle:
+			AttackMontage = AttackRifleMontage;
+			AttackMontageSectionNames = RifleAttackMontageSectionNames;
+			HasRangedWeapon = true;
+			HasSnipeWeapon = true;
+			break;
+		case EWeaponType::EWT_Pistol:
+			AttackMontage = AttackPistolMontage;
+			AttackMontageSectionNames = PistolAttackMontageSectionNames;
+			HasRangedWeapon = true;
+			break;
+		case EWeaponType::EWT_Bow:
+			AttackMontage = AttackBowMontage;
+			AttackMontageSectionNames = BowAttackMontageSectionNames;
+			HasRangedWeapon = true;
+			break;
+
+		}
+	}
 }
 
 FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping)
@@ -125,178 +165,17 @@ FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, boo
 
 }
 
-void ABaseCharacter::PlayAttackMontage(const EWeaponType& WeaponSize)
-{
-
-	//NOTE: when working on animations we can type ~ and then slowmo in UE5 PIE to play slowly
-
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	//Sword Attacks
-	if (AnimInstance && AttackSwordMontage && WeaponSize == EWeaponType::EWT_OneHanded)
-	{
-		ActionState = EActionState::EAS_Attacking;
-
-		AnimInstance->Montage_Play(AttackSwordMontage);
-
-		//TODO: fix or remove spin jump (renamed swordattack3) @Yelsa Fix sword attack 1
-		//case 2 disabled because spin jump animation has issue jumping back after ending.. 
-		// and its impact point is odd causing the enemy to get knocked towards player rather than away
-		const int32 RandomSelection = FMath::RandRange(0, 1);
-
-		FName SectionName = FName();
-		switch (RandomSelection)
-		{
-		case 0:
-			SectionName = FName("SwordAttack1");
-			break;
-		case 1:
-			SectionName = FName("SwordAttack2");
-			break;
-		case 2:
-			SectionName = FName("SwordAttack3");
-		default:
-			break;
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName, AttackSwordMontage);
-
-	}
-
-	//Fire Hammer Attacks
-	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponType::EWT_TwoHanded)
-	{
-		ActionState = EActionState::EAS_Attacking;
-
-		AnimInstance->Montage_Play(AttackHammerMontage);
 
 
-		//TODO: hammer low (renamed hammerattack0) is disabled because it needs to be extended to hit further from player. right now it is a "pulled punch" type attack and doesn't hit well.
-		const int32 RandomSelection = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-		switch (RandomSelection)
-		{
-		case 0:
-			SectionName = FName("HammerAttack1");
-			break;
-		case 1:
-			SectionName = FName("HammerAttack2");
-			break;
-		case 2:
-			SectionName = FName("HammerAttack0");
-			break;
-		default:
-			break;
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName, AttackHammerMontage);
-
-	}
-
-	//Rifle Attacks
-	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponType::EWT_Rifle)
-	{
-		ActionState = EActionState::EAS_Attacking;
-
-		AnimInstance->Montage_Play(AttackRifleMontage);
-
-
-		const int32 RandomSelection = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-		switch (RandomSelection)
-		{
-		case 0:
-			SectionName = FName("RifleAttack1");
-			break;
-		case 1:
-			SectionName = FName("RifleAttack2");
-			break;
-		default:
-			break;
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName, AttackRifleMontage);
-
-	}
-
-	//Pistol Attacks
-	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponType::EWT_Pistol)
-	{
-		ActionState = EActionState::EAS_Attacking;
-
-		AnimInstance->Montage_Play(AttackPistolMontage);
-
-
-		const int32 RandomSelection = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-		switch (RandomSelection)
-		{
-		case 0:
-			SectionName = FName("PistolAttack1");
-			break;
-		case 1:
-			SectionName = FName("PistolAttack2");
-			break;
-		default:
-			break;
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName, AttackPistolMontage);
-
-	}
-
-	//Bow Attacks
-	if (AnimInstance && AttackHammerMontage && WeaponSize == EWeaponType::EWT_Bow)
-	{
-		ActionState = EActionState::EAS_Attacking;
-
-		AnimInstance->Montage_Play(AttackBowMontage);
-
-
-		//TODO: add more bow attacks. NOTE THAT THEY ARE THE SAME ATM 
-		const int32 RandomSelection = FMath::RandRange(0, 1);
-		FName SectionName = FName();
-		switch (RandomSelection)
-		{
-		case 0:
-			SectionName = FName("BowAttack1");
-			break;
-		case 1:
-			//TODO: get more bow attacks?
-			SectionName = FName("BowAttack1");
-			break;
-		default:
-			break;
-		}
-
-		AnimInstance->Montage_JumpToSection(SectionName, AttackBowMontage);
-
-	}
-
-}
-
-void ABaseCharacter::PlayHitReactMontage(const FName& SectionName)
+void ABaseCharacter::PlayMontage(UAnimMontage* Montage, const FName& SectionName)
 {
 	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
 
-	if (AnimInstance && HitReactMontage)
+	if (AnimInstance && Montage)
 	{
 
-		AnimInstance->Montage_Play(HitReactMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, HitReactMontage);
-
-	}
-}
-
-void ABaseCharacter::PlayDeathMontage(const FName& SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && DeathMontage)
-	{
-
-		AnimInstance->Montage_Play(DeathMontage);
-		AnimInstance->Montage_JumpToSection(SectionName, DeathMontage);
+		AnimInstance->Montage_Play(Montage);
+		AnimInstance->Montage_JumpToSection(SectionName, Montage);
 
 	}
 }
@@ -582,7 +461,19 @@ bool ABaseCharacter::CheckCritical(const FVector& ImpactPoint)
 	return false;
 }
 
+FName ABaseCharacter::GetRandomSectionName(TArray<FName> MontageList)
+{
+	if (MontageList.IsEmpty())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("MontageList is Empty"));
+		return FName();
+	}
 
+	int32 LastIndex = MontageList.Num() - 1;
+	const int32 RandomSelection = FMath::RandRange(0, LastIndex);
+
+	return MontageList[RandomSelection];
+}
 
 FName ABaseCharacter::CalculateHitReactSectionName(const FVector& ImpactPoint)
 {
@@ -744,7 +635,7 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 			//Update TP
 			IncreaseTP();
 
-			PlayHitReactMontage(LastHitDirection);
+			PlayMontage(HitReactMontage, LastHitDirection);
 
 			//end attack states
 			AbortAttack();
@@ -848,14 +739,14 @@ void ABaseCharacter::Death()
 	//TODO
 	//UE_LOG(LogTemp, Warning, TEXT("%s defeated %s"), *CombatTarget->GetName(), *EnemyName);
 
-	FName SectionName = CalculateDeathMontageSectionName();
-	PlayDeathMontage(SectionName);
+	PlayMontage(DeathMontage, CalculateDeathMontageSectionName());
 
 	//Turn off this Enemy's HUD info, combat behaviors
 	EndCombat();
 
 
 }
+
 
 
 void ABaseCharacter::MeleeAttack()
@@ -870,9 +761,9 @@ void ABaseCharacter::MeleeAttack()
 
 	ActionState = EActionState::EAS_Attacking;
 
-	//TODO: do the attack
-	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-	PlayAttackMontage(WeaponType);
+	//do the attack
+	PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
+
 	if (EquippedWeapon->CanFire())
 	{
 		EquippedWeapon->Fire();
@@ -901,9 +792,9 @@ void ABaseCharacter::RangedAttack()
 
 	ActionState = EActionState::EAS_Attacking;
 
-	//TODO: do the attack
-	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-	PlayAttackMontage(WeaponType);
+	//do the attack
+	PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
+
 	if (EquippedWeapon->CanFire())
 	{
 		EquippedWeapon->Fire();
@@ -937,9 +828,9 @@ void ABaseCharacter::SnipeAttack()
 
 	ActionState = EActionState::EAS_Attacking;
 
-	//TODO: do the attack
-	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-	PlayAttackMontage(WeaponType);
+	//do the attack
+	PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
+
 	if (EquippedWeapon->CanFire())
 	{
 		EquippedWeapon->Fire();
@@ -970,9 +861,10 @@ void ABaseCharacter::SpecialAttack()
 
 	ActionState = EActionState::EAS_Attacking;
 
-	//TODO: do the attack
-	EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-	PlayAttackMontage(WeaponType);
+	//do the attack
+	PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
+
+	//PlayAttackMontage(WeaponType);
 	if (EquippedWeapon->CanFire())
 	{
 		EquippedWeapon->Fire();

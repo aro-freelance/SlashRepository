@@ -78,7 +78,7 @@ protected:
 	bool CanArm();
 	bool CanDropWeapon();
 	bool HasWeapon();
-	void PlayEquipMontage(const FName& SectionName);
+	//void PlayEquipMontage(const FName& SectionName);
 	FName WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping);
 	
 	ECharacterState WeaponSizeToCharacterState(const EWeaponType& WeaponSize);

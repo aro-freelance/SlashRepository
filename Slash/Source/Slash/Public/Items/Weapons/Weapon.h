@@ -12,6 +12,7 @@
 
 class USoundBase;
 class UBoxComponent;
+class UAnimMontage;
 
 UCLASS()
 class SLASH_API AWeapon : public AItem
@@ -77,9 +78,10 @@ public:
 	bool CanFire();
 	bool CanDoDamage();
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Projectile)
 	bool OverrideCanFire = false;
+
+	FName GetRandomAttackMontageSectionName();
 
 protected:
 
@@ -145,6 +147,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon FX")
 	USoundBase* WeaponPickupSound;
 
+
 	
 
 private:
@@ -157,12 +160,14 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	USceneComponent* BoxTraceEnd;
 
-	
+	//backup copy of animations in case they are overridden by character specific anims
+	TArray<FName> OriginalAttackMontageSectionNames;
 
 	//debugging
 	bool CanAttack = true;
 	bool CanCollide = true;
 	
+
 	
 
 //Getters and Setters
@@ -171,6 +176,7 @@ public:
 	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 	
 	FORCEINLINE EWeaponType GetWeaponType() const { return WeaponType; }
+	
 
 	FORCEINLINE double GetFollowDistance() const { return FollowDistance; }
 

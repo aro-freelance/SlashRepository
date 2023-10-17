@@ -16,12 +16,6 @@
 
 #include "Slash/DebugMacros.h"
 
-//#include "Animation/AnimMontage.h"
-//#include "Kismet/KismetSystemLibrary.h"
-//#include "Kismet/GameplayStatics.h"
-
-
-
 
 AEnemy::AEnemy()
 {
@@ -65,15 +59,6 @@ void AEnemy::BeginPlay()
 
 	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
 
-	//BP: Movement is Currently Handled in Blueprint (refer to 171 4min to implement in C++)
-	/*if (ArrayOfPatrolGoals.Num() > 0)
-	{
-		MovementGoal = ArrayOfPatrolGoals[0];
-		MoveToTarget();
-		GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::MoveToTarget, PatrolPauseLength);
-	}*/
-	
-
 }
 
 
@@ -86,8 +71,6 @@ void AEnemy::Tick(float DeltaTime)
 	{
 		
 		SetFollowDistance();
-
-		//TODO: Fully Implement EnemyTypes ECombatMode or remove it. To implement fully I will need to integrate it in blueprints.
 
 		//if out of combat distance, end combat
 		if (!IsInRangeOfTarget(CombatTarget, CombatRadius))
@@ -128,140 +111,6 @@ void AEnemy::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 }
 
-/*
-* MOVEMENT FUNCTIONS
-*/
-
-//BP: This functionality is in blueprints. This function is not currently in use. It is here in case I decide to switch to C++. 
-/*void AEnemy::Patrol()
-{
-	UE_LOG(LogTemp, Warning, TEXT("c++ patrol "));
-
-	//1. SET TARGET//////////////////////////////////////////////////////
-
-	const int32 NumPatrolTargets = ArrayOfPatrolGoals.Num();
-
-	if (PatrolType == EPatrolType::EPT_FullRandom)
-	{
-		//TODO: move to random location inside of nav
-	}
-
-	//RANDOM IN SET
-	if (MovementGoal && PatrolType == EPatrolType::EPT_RandomInSet)
-	{
-		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
-		{
-			if (NumPatrolTargets > 0)
-			{
-				TargetSelection = FMath::RandRange(0, NumPatrolTargets - 1);
-				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
-
-			}
-		}
-	}
-
-	if (MovementGoal && PatrolType == EPatrolType::EPT_SetOrderLoopEnd)
-	{
-		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
-		{
-
-			if (NumPatrolTargets > 0)
-			{
-				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
-
-				//Go to next target
-				TargetSelection = TargetSelection + 1;
-				//if you reach the end, go to the first target
-				if (!ArrayOfPatrolGoals.IsValidIndex(TargetSelection)) { TargetSelection = 0; }
-				
-			}
-		}
-	}
-
-	if (MovementGoal && PatrolType == EPatrolType::EPT_SetOrderReverseEnd)
-	{
-
-		UE_LOG(LogTemp, Warning, TEXT("order reverse end patrol"));
-
-		if (IsInRangeOfTarget(MovementGoal, PatrolRadius))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("goal in range"));
-
-			if (NumPatrolTargets > 0)
-			{
-				MovementGoal = ArrayOfPatrolGoals[TargetSelection];
-
-				UE_LOG(LogTemp, Warning, TEXT("new goal set"));
-
-				//Go to next target
-				if (IsReversePatrol) 
-				{
-					TargetSelection = TargetSelection - 1;
-				}
-				else 
-				{
-					TargetSelection = TargetSelection + 1;
-				}
-
-				//if you reach the end, reverse
-				if (!ArrayOfPatrolGoals.IsValidIndex(TargetSelection)) 
-				{ 
-					if (IsReversePatrol)
-					{
-						TargetSelection = TargetSelection + 2;
-						IsReversePatrol = false;
-					}
-					else
-					{
-						TargetSelection = TargetSelection - 2;
-						IsReversePatrol = true;
-					}
-				}
-
-			}
-		}
-	}
-	////////////////////////////////////////////////////////////////////////////////
-
-	//2. Pause and then Move to Target /////////////
-
-	MoveToTarget();
-	//GetWorldTimerManager().SetTimer(PatrolTimer, this, &AEnemy::MoveToTarget, PatrolPauseLength);
-
-	///////////////////////////
-}
-*/
-
-/*
-void AEnemy::MoveToTarget()
-{
-	UE_LOG(LogTemp, Warning, TEXT("move to target called"));
-
-	EnemyController = Cast<AAIController>(GetController());
-
-	if (EnemyController == nullptr || MovementGoal == nullptr)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("enemy controller or movementgoal null"));
-		return;
-	}
-
-	if (EnemyController && MovementGoal)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("enemy controller and goal exist. moving to target"));
-		FAIMoveRequest MoveRequest;
-		MoveRequest.SetGoalActor(MovementGoal);
-		MoveRequest.SetAcceptanceRadius(15.f);
-		FNavPathSharedPtr NavPath;
-		EnemyController->MoveTo(MoveRequest, &NavPath);
-		TArray<FNavPathPoint>& PathPoints = NavPath->GetPathPoints();
-		for (auto& Point : PathPoints)
-		{
-			const FVector& Location = Point.Location;
-			DrawDebugSphere(GetWorld(), Location, 12.f, 12, FColor::Green, false, 10.f);
-		}
-	}
-}
-*/
 
 bool AEnemy::IsInRangeOfTarget(AActor* Target, double Radius)
 {
@@ -387,7 +236,7 @@ void AEnemy::Death()
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	//Destroy after delay
-	SetLifeSpan(5.f);
+	SetLifeSpan(DespawnTimer);
 
 	UnequipWeapon();
 

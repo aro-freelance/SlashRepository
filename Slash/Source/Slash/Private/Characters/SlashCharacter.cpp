@@ -16,8 +16,6 @@
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/CapsuleComponent.h"
 
-//#include "Items/Weapons/WeaponTypes.h"
-//#include "Animation/AnimMontage.h
 
 ASlashCharacter::ASlashCharacter()
 {
@@ -215,12 +213,11 @@ void ASlashCharacter::EquipNewWeapon()
 
 void ASlashCharacter::EquipAnimation()
 {
-	UE_LOG(LogTemp, Warning, TEXT("equip weapon, weapon stored"));
 	EWeaponType WeaponSize = EquippedWeapon->GetWeaponType();
 	FName MontageName = WeaponSizeToEquipMontageFName(WeaponSize, true);
 	CharacterState = WeaponSizeToCharacterState(WeaponSize);
 
-	PlayEquipMontage(MontageName);
+	PlayMontage(EquipSwordMontage, MontageName);
 
 	//AttachWeapon is called in blueprints when anim notify happens at a certain point in the animation
 	
@@ -237,7 +234,7 @@ void ASlashCharacter::UnEquipAnimation()
 	EquippedWeapon->SetOwner(nullptr);
 	EquippedWeapon->SetInstigator(nullptr);
 
-	PlayEquipMontage(MontageName);
+	PlayMontage(EquipSwordMontage, MontageName);
 
 	//AttachWeapon is called in blueprints when anim notify happens at a certain point in the animation
 	
@@ -344,23 +341,6 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSi
 	}
 
 	return MontageName;
-}
-
-
-
-
-void ASlashCharacter::PlayEquipMontage(const FName& SectionName)
-{
-	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
-
-	if (AnimInstance && EquipSwordMontage)
-	{
-
-		AnimInstance->Montage_Play(EquipSwordMontage);
-
-		AnimInstance->Montage_JumpToSection(SectionName, EquipSwordMontage);
-
-	}
 }
 
 

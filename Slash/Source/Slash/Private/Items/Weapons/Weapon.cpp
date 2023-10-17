@@ -35,6 +35,7 @@ void AWeapon::BeginPlay()
 	Super::BeginPlay();
 
 	WeaponBox->OnComponentBeginOverlap.AddDynamic(this, &AWeapon::OnBoxOverlap);
+
 }
 
 void AWeapon::Fire()
@@ -409,3 +410,5 @@ FString AWeapon::BuildStateString()
 
 	return StateString;
 }
+
+

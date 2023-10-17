@@ -13,11 +13,6 @@ class AWeapon;
 class UAttributeComponent;
 class UHealthBarComponent;
 
-//@Yelsa : Bug - If a either character is interrupted mid-attack,
-//  their actionstate never goes from attacking to unoccupied. This results in the character locking up.
-// TODO: fix this by setting unoccupied actionstate when animation is interrupted 
-//  OR Set it when hit?
-
 
 UCLASS()
 class SLASH_API ABaseCharacter : public ACharacter, public IHitInterface
@@ -143,34 +138,67 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackSwordMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> SwordAttackMontageSectionNames;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackHammerMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> HammerAttackMontageSectionNames;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackRifleMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> RifleAttackMontageSectionNames;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackPistolMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> PistolAttackMontageSectionNames;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* AttackBowMontage;
 
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> BowAttackMontageSectionNames;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* HitReactMontage;
+
+	//no section list needed for hit react because it should be standardized for 4 directions.
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* DeathMontage;
 
-	//this is a placeholder for the currently active AttackMontage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> DeathMontageSectionNames;
+
+	
+	/*
+	* Selected Montage Values
+	*/
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
 	UAnimMontage* AttackMontage;
 
+	//UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> AttackMontageSectionNames;
+
+	//this is used to make the character stay on the ground in the pose at the end of the death anim
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose;
 
-	virtual void PlayAttackMontage(const EWeaponType& WeaponSize);
-	virtual void PlayHitReactMontage(const FName& SectionName);
-	virtual void PlayDeathMontage(const FName& SectionName);
+	
+
+	//UPROPERTY(EditAnywhere, Category = "Montages")
+	FName GetRandomSectionName(TArray<FName> MontageList);
+
+	virtual void SetEquippedWeaponSettings();
+
+	virtual void PlayMontage(UAnimMontage* Montage, const FName& SectionName);
 
 
 	/*
@@ -212,10 +240,13 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
 
-private:
-
+	FName CalculateAttackMontageSectionName(const EWeaponType& WeaponType);
 	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
 	FName CalculateDeathMontageSectionName();
+
+private:
+
+	
 
 
 

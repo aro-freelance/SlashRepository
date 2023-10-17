@@ -170,6 +170,9 @@ protected:
 
 	virtual void AbortAttack() override;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Despawn")
+	float DespawnTimer = 5.f;
+
 	//Montages
 	//TODO remove. this is in basecharacter
 	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
