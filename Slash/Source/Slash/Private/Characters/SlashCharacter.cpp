@@ -14,7 +14,6 @@
 #include "Items/Weapons/Weapon.h"
 
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/CapsuleComponent.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -44,11 +43,9 @@ ASlashCharacter::ASlashCharacter()
 	Eyebrows->SetupAttachment(GetMesh());
 	Eyebrows->AttachmentName = FString("head");
 
-	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
-
-
-
 	AutoPossessPlayer = EAutoReceiveInput::Player0;
+
+	Tags.Add(FName("Player"));
 
 }
 
@@ -376,10 +373,7 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 		}
 		
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Can't attack because: %s."), *BuildCharacterStateString());
-	}
+
 }
 
 

@@ -23,18 +23,13 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-	//the distance from combattarget enemy should reach before trying to hide
-	double HideDistance();
-
-	virtual void Death() override;
+	
 
 protected:
 	virtual void BeginPlay() override;
-	
 
 	UPROPERTY()
 	AAIController* EnemyController;
-
 
 	/*
 	* Navigation
@@ -70,27 +65,10 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Patrol")
 	float PatrolPauseLength = 5.0f; 
 
-	
-	void Patrol();
-
-	void MoveToTarget();
-
-	int32 TargetSelection = 0;
-	bool IsReversePatrol = false;
-
-
-	bool IsInRangeOfTarget(AActor* Target, double Radius);
-
-
-
 	/* **********
 	* Combat ****
 	* ***********
 	*/
-
-	
-	void ReadyCombatTick();
-	void ResetCombatTick();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsCombatTickReady;
@@ -100,16 +78,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float CombatTickLength = 50.0f;
-
-	bool ShouldDefend();
-	bool ShouldDodge();
-	bool ShouldHide();
-	bool ShouldFlee();
-	bool ShouldSpecialMove();
-	bool ShouldMeleeAttack();
-	bool ShouldRangedAttack();
-	bool ShouldSnipeAttack();
-	bool ReadyForCombatMove();
 
 	UFUNCTION()
 	void PawnSeen(APawn* SeenPawn);
@@ -147,10 +115,46 @@ protected:
 	double SnipeAttackRadius = 2000.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double SpecialAttackRadius = 200.f;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double HideDistance = 600.f;
 	
 	//Used for Enemy AI decisions
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	ECombatMode CombatMode = ECombatMode::ECM_OutOfCombat;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Despawn")
+	float DespawnTimer = 5.f;
+
+	//use the enemy specific sockets to attach weapon
+	UFUNCTION(BlueprintCallable)
+	FString BuildWeaponSocketString();
+
+private:
+
+	void Patrol();
+	void MoveToTarget();
+	bool IsInRangeOfTarget(AActor* Target, double Radius);
+
+
+	void ReadyCombatTick();
+	void ResetCombatTick();
+
+
+	//used for Enemy AI Combat decisions
+	void Combat();
+	virtual void StartCombat() override;
+	virtual void EndCombat() override;
+	virtual void AbortAttack() override;
+
+	bool ShouldDefend();
+	bool ShouldDodge();
+	bool ShouldHide();
+	bool ShouldFlee();
+	bool ShouldSpecialMove();
+	bool ShouldMeleeAttack();
+	bool ShouldRangedAttack();
+	bool ShouldSnipeAttack();
+	bool ReadyForCombatMove();
 
 	void Flee();
 	virtual void MeleeAttack() override;
@@ -161,30 +165,7 @@ protected:
 	virtual void Dodge() override;
 	virtual void Hide() override;
 
-	
-	//used for Enemy AI Combat decisions
-	void Combat();
-
-	virtual void StartCombat() override;
-	virtual void EndCombat() override;
-
-	virtual void AbortAttack() override;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Despawn")
-	float DespawnTimer = 5.f;
-
-	//Montages
-	//TODO remove. this is in basecharacter
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
-	UAnimMontage* AttackMontage;*/
-	
-	
-
-	//use the enemy specific sockets to attach weapon
-	UFUNCTION(BlueprintCallable)
-	FString BuildWeaponSocketString();
-
-private:
+	virtual void Death() override;
 
 	/*
 	* Components

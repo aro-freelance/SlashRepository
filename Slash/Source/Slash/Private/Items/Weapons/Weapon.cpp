@@ -68,8 +68,6 @@ void AWeapon::Fire()
 		AActor* A = World->SpawnActor(Projectile);
 		A->SetActorLocation(CharacterLocation + (SlashCharacter->GetActorForwardVector()*0.05));
 		A->SetOwner(this);
-
-
 		
 
 	}
@@ -109,15 +107,9 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 	FAttachmentTransformRules TransformRules(EAttachmentRule::SnapToTarget, true);
 	ItemMesh->AttachToComponent(InParent, TransformRules, InSocketName);
 
-	if (Sphere)
-	{
-		Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
+	ToggleCollisionSphere(false);
 
-	if (NiagaraEmberEffect)
-	{
-		NiagaraEmberEffect->Deactivate();
-	}
+	ToggleEmberEffect(false);
 
 	if (GEngine)
 	{
@@ -135,16 +127,39 @@ void AWeapon::DetachMeshFromSocket()
 	ItemMesh->SetWorldRotation(StartingRotation);
 	SetItemState(EItemState::EIS_Hovering);
 
-	if (Sphere)
-	{
-		Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	}
+	ToggleCollisionSphere(true);
+	ToggleEmberEffect(true);
 
+}
+
+void AWeapon::ToggleEmberEffect(bool ShouldActivate)
+{
 	if (NiagaraEmberEffect)
 	{
-		NiagaraEmberEffect->Activate();
+		if (ShouldActivate)
+		{
+			NiagaraEmberEffect->Activate();
+		}
+		else
+		{
+			NiagaraEmberEffect->Deactivate();
+		}
 	}
+}
 
+void AWeapon::ToggleCollisionSphere(bool ShouldTurnOn)
+{
+	if (Sphere)
+	{
+		if (ShouldTurnOn)
+		{
+			Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+		}
+		else
+		{
+			Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
 }
 
 
@@ -216,11 +231,7 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			UE_LOG(LogTemp, Warning, TEXT("Did not hit actor."));
 		}
 	}	
-	else
-	{	
 
-		FString StateString = BuildStateString();
-	}
 
 
 }
@@ -353,62 +364,5 @@ void AWeapon::PlayWeaponPickupSound()
 	}
 }
 
-
-
-FString AWeapon::BuildStateString()
-{
-	FString StateString = FString();
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(GetAttachParentActor());
-
-	if (!SlashCharacter) 
-	{
-		StateString = "Slash Character does not exist";
-		return StateString; 
-	}
-
-	switch (SlashCharacter->GetActionState())
-	{
-	case EActionState::EAS_Unoccupied:
-		StateString = "Unoccupied.";
-		break;
-	case EActionState::EAS_Equipping:
-		StateString = "Equipping.";
-		break;
-	case EActionState::EAS_Attacking:
-		StateString = "Attacking.";
-		break;
-	default:
-		break;
-	}
-
-	switch (SlashCharacter->GetCharacterState())
-	{
-	case ECharacterState::ECS_Unarmed:
-		StateString = StateString + " Unarmed";
-		break;
-	case ECharacterState::ECS_EquippedOneHanded:
-		StateString = StateString + " Equipped One Handed";
-		break;
-	case ECharacterState::ECS_EquippedTwoHanded:
-		StateString = StateString + " Equipped Two Handed";
-		break;
-	default:
-		break;
-	}
-
-	switch (GetWeaponCollisionState())
-	{
-	case EWeaponCollisionState::EWS_CollisionOn:
-		StateString = StateString + " Collision On";
-		break;
-	case EWeaponCollisionState::EWS_CollisionOff:
-		StateString = StateString + " Collision Off";
-		break;
-	default:
-		break;
-	}
-
-	return StateString;
-}
 
 

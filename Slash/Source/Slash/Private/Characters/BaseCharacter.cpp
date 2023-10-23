@@ -16,6 +16,13 @@ ABaseCharacter::ABaseCharacter()
  	
 	PrimaryActorTick.bCanEverTick = true;
 
+	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
+
+	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
+	HealthBarWidget->SetupAttachment(GetRootComponent());
+
 }
 
 
@@ -186,42 +193,7 @@ bool ABaseCharacter::CanAttack()
 		CharacterState != ECharacterState::ECS_Unarmed;
 }
 
-FString ABaseCharacter::BuildCharacterStateString()
-{
-	FString StateString = FString();
 
-	switch (ActionState)
-	{
-	case EActionState::EAS_Unoccupied:
-		StateString = "Unoccupied.";
-		break;
-	case EActionState::EAS_Equipping:
-		StateString = "Equipping.";
-		break;
-	case EActionState::EAS_Attacking:
-		StateString = "Attacking.";
-		break;
-	default:
-		break;
-	}
-
-	switch (CharacterState)
-	{
-	case ECharacterState::ECS_Unarmed:
-		StateString = StateString + " Unarmed";
-		break;
-	case ECharacterState::ECS_EquippedOneHanded:
-		StateString = StateString + " Equipped One Handed";
-		break;
-	case ECharacterState::ECS_EquippedTwoHanded:
-		StateString = StateString + " Equipped Two Handed";
-		break;
-	default:
-		break;
-	}
-
-	return StateString;
-}
 
 void ABaseCharacter::StartCombat()
 {
@@ -596,8 +568,6 @@ FName ABaseCharacter::CalculateDeathMontageSectionName()
 }
 
 
-
-
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon)
 {
 
@@ -640,14 +610,7 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 			//end attack states
 			AbortAttack();
 
-			if (HitSound)
-			{
-				UGameplayStatics::PlaySoundAtLocation(
-					this,
-					HitSound,
-					ImpactPoint
-				);
-			}
+			PlaySoundLocal(HitSound, ImpactPoint);
 
 			if (HitParticles && GetWorld())
 			{
@@ -667,6 +630,15 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		UE_LOG(LogTemp, Warning, TEXT("DamageDealer cast to BaseCharacter failed."));
 	}
 
+}
+
+void ABaseCharacter::PlaySoundLocal(USoundBase* Sound, const FVector& Location)
+{
+	UGameplayStatics::PlaySoundAtLocation(
+		this,
+		Sound,
+		Location
+	);
 }
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -741,9 +713,13 @@ void ABaseCharacter::Death()
 
 	PlayMontage(DeathMontage, CalculateDeathMontageSectionName());
 
+	PlaySoundLocal(DeathSound, GetActorLocation());
+
 	//Turn off this Enemy's HUD info, combat behaviors
 	EndCombat();
 
+	//turn off the collision capsule
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 }
 

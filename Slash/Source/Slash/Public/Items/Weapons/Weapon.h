@@ -20,8 +20,6 @@ class SLASH_API AWeapon : public AItem
 	GENERATED_BODY()
 
 public:
-	//void Equip(USceneComponent* InParent, FName InSocketName);
-
 	AWeapon();
 
 	UFUNCTION(BlueprintCallable)
@@ -109,12 +107,11 @@ protected:
 
 	void BoxTrace(FHitResult& BoxHit);
 
+	//called in BP
 	UFUNCTION(BlueprintImplementableEvent)
 	void CreateFields(const FVector& FieldLocation);
 
 	void MakeFieldAfterHit(FHitResult& BoxHit);
-
-	FString BuildStateString();
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
@@ -152,6 +149,10 @@ protected:
 
 private:
 
+
+	void ToggleEmberEffect(bool ShouldActivate);
+	void ToggleCollisionSphere(bool ShouldTurnOn);
+
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Hit Box")
 	UBoxComponent* WeaponBox;
 
@@ -167,7 +168,6 @@ private:
 	bool CanAttack = true;
 	bool CanCollide = true;
 	
-
 	
 
 //Getters and Setters

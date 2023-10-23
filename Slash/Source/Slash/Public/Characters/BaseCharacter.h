@@ -25,18 +25,10 @@ public:
 
 	virtual void Tick(float DeltaTime) override;
 
-
-	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
-
-	virtual void Death();
-
 	FString GetName();
 
-	UFUNCTION(BlueprintCallable)
-	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping);
 
-	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping);
+	
 
 protected:
 
@@ -46,12 +38,13 @@ protected:
 	FString Name = "Default Name";
 
 
+	virtual void PlaySoundLocal(USoundBase* Sound, const FVector& ImpactPoint);
+
 	/*
-	* Attack
+	* Combat
 	*/
-	
+
 	bool CanAttack();
-	FString BuildCharacterStateString();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	AWeapon* EquippedWeapon;
@@ -69,10 +62,6 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool HasSnipeWeapon = false;
 
-	/*
-	* Combat
-	*/
-
 	virtual void MeleeAttack();
 	virtual void RangedAttack();
 	virtual void SnipeAttack();
@@ -84,22 +73,15 @@ protected:
 	virtual void StartCombat();
 	virtual void EndCombat();
 
-	void IncreaseTP();
+	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
 
-	float CalculatePhysicalDamage(float DamageAmount);
-	float CalculateMagicalDamage(float DamageAmount);
-	float CompareSTRVIT(float AttackerSTR, float DefenderVIT);
-	int32 CompareDEXAGI(float AttackerDEX, float DefenderAGI);
-	float CompareINTMND(float AttackerINT, float DefenderMND);
-	int32 CompareCHR(float AttackerCHR, float DefenderCHR);
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
-	bool CheckCritical(const FVector& ImpactPoint);
+	virtual void Death();
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsInCombat = false;
-	
-	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsRegening = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
@@ -111,13 +93,18 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void AbortAttack();
 
+
+	UFUNCTION(BlueprintCallable)
+	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping);
+
+
 	UFUNCTION(BlueprintCallable)
 	void UnequipWeapon();
 
 	/*
 	* Combat FXs and UI
 	*/
-	void UpdateCombatHUD();
+	virtual void UpdateCombatHUD();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
 	FRotator HitParticleRotation = FRotator(0.f, 0.f, 0.f);
@@ -125,76 +112,19 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual Effects")
 	FVector HitParticleScale = FVector(1.f, 1.f, 1.f);
 
-	UPROPERTY(EditAnywhere, Category = "Sounds")
-	USoundBase* HitSound;
-
 	UPROPERTY(EditAnywhere, Category = "Visual Effects")
 	UParticleSystem* HitParticles;
 
-	/*
-	* Animation Montages
-	*/
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* HitSound;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackSwordMontage;
+	UPROPERTY(EditAnywhere, Category = "Sounds")
+	USoundBase* DeathSound;
 
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> SwordAttackMontageSectionNames;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackHammerMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> HammerAttackMontageSectionNames;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackRifleMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> RifleAttackMontageSectionNames;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackPistolMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> PistolAttackMontageSectionNames;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* AttackBowMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> BowAttackMontageSectionNames;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* HitReactMontage;
-
-	//no section list needed for hit react because it should be standardized for 4 directions.
-
-	UPROPERTY(EditDefaultsOnly, Category = "Montages")
-	UAnimMontage* DeathMontage;
-
-	UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> DeathMontageSectionNames;
-
-	
-	/*
-	* Selected Montage Values
-	*/
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
-	UAnimMontage* AttackMontage;
-
-	//UPROPERTY(EditAnywhere, Category = "Montages")
-	TArray<FName> AttackMontageSectionNames;
 
 	//this is used to make the character stay on the ground in the pose at the end of the death anim
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose;
-
-	
-
-	//UPROPERTY(EditAnywhere, Category = "Montages")
-	FName GetRandomSectionName(TArray<FName> MontageList);
 
 	virtual void SetEquippedWeaponSettings();
 
@@ -240,15 +170,85 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
 
-	FName CalculateAttackMontageSectionName(const EWeaponType& WeaponType);
-	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
-	FName CalculateDeathMontageSectionName();
 
 private:
 
-	
+	/*
+* Animation Montages
+*/
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackSwordMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> SwordAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackHammerMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> HammerAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackRifleMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> RifleAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackPistolMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> PistolAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackBowMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> BowAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* HitReactMontage;
+
+	//no section list needed for hit react because it should be standardized for 4 directions.
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* DeathMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> DeathMontageSectionNames;
+
+	//UPROPERTY(EditAnywhere, Category = "Montages")
+	FName GetRandomSectionName(TArray<FName> MontageList);
+
+	FName CalculateHitReactSectionName(const FVector& ImpactPoint);
+	FName CalculateDeathMontageSectionName();
+
+	/*
+	* Selected Montage Values
+	*/
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Montages")
+	UAnimMontage* AttackMontage;
+
+	//UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> AttackMontageSectionNames;
 
 
+
+
+	float CalculatePhysicalDamage(float DamageAmount);
+	float CalculateMagicalDamage(float DamageAmount);
+	float CompareSTRVIT(float AttackerSTR, float DefenderVIT);
+	int32 CompareDEXAGI(float AttackerDEX, float DefenderAGI);
+	float CompareINTMND(float AttackerINT, float DefenderMND);
+	int32 CompareCHR(float AttackerCHR, float DefenderCHR);
+
+	bool CheckCritical(const FVector& ImpactPoint);
+	void IncreaseTP();
+
+
+	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping);
 
 	float RegenTickTimer = 0.0f;
 

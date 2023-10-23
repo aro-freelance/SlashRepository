@@ -5,16 +5,15 @@
 #include "AIController.h"
 
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/CapsuleComponent.h"
 #include "Perception/PawnSensingComponent.h"
 #include "HUD/HealthBarComponent.h"
 #include "Components/AttributeComponent.h"
-#include "Components/WidgetComponent.h"
 
+
+#include "GameFramework/CharacterMovementComponent.h"
 
 #include "Items/Weapons/Weapon.h"
 
-#include "Slash/DebugMacros.h"
 
 
 AEnemy::AEnemy()
@@ -25,17 +24,14 @@ AEnemy::AEnemy()
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetGenerateOverlapEvents(true);
-	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	
-	Attributes = CreateDefaultSubobject<UAttributeComponent>(TEXT("Attributes"));
-
-	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
-	HealthBarWidget->SetupAttachment(GetRootComponent());
 
 	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
 	PawnSensing->SightRadius = 2500.f;
 	PawnSensing->SetPeripheralVisionAngle(50.f);
 
+	//TODO:create more complex tag system so enemies are not all the same team?
+	Tags.Add(FName("Enemy"));
 
 }
 
@@ -232,8 +228,7 @@ void AEnemy::Death()
 
 	CombatMode = ECombatMode::ECM_Dead;
 
-	//turn off the collision capsule
-	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
 
 	//Destroy after delay
 	SetLifeSpan(DespawnTimer);
