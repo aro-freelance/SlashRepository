@@ -75,6 +75,9 @@ protected:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
 
+	UFUNCTION(BlueprintCallable)
+	void FinishGetHit();
+
 	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
 
 	virtual void Death();

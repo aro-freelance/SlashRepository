@@ -571,6 +571,8 @@ FName ABaseCharacter::CalculateDeathMontageSectionName()
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon)
 {
 
+	ActionState = EActionState::EAS_HitReacting;
+
 	ABaseCharacter* Attacker = Cast<ABaseCharacter>(DamageDealer);
 	if (Attacker) 
 	{
@@ -593,10 +595,7 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		);
 
 		//React to the hit with Death or ELSE a normal hit.
-		if (!Attributes->IsAlive())
-		{
-			Death();
-		}
+		if (!Attributes->IsAlive()){ Death(); }
 		else
 		{
 			HP = Attributes->GetHP();
@@ -625,11 +624,12 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		}
 
 	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("DamageDealer cast to BaseCharacter failed."));
-	}
 
+}
+
+void ABaseCharacter::FinishGetHit()
+{
+	ActionState = EActionState::EAS_Unoccupied;
 }
 
 void ABaseCharacter::PlaySoundLocal(USoundBase* Sound, const FVector& Location)
