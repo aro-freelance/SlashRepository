@@ -581,7 +581,7 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		CombatTarget = Attacker;
 		LastHitWeapon = Weapon;
 		LastHitImpactPoint = ImpactPoint;
-		LastHitDirection = CalculateHitReactSectionName(ImpactPoint);
+		LastHitDirection = CalculateHitReactSectionName(DamageDealer->GetActorLocation());
 
 		if(!IsInCombat){ StartCombat(); }
 		
@@ -948,6 +948,8 @@ void ABaseCharacter::Recover(float DeltaTime)
 void ABaseCharacter::AbortAttack()
 {
 	ActionState = EActionState::EAS_Unoccupied;
+	if(EquippedWeapon){ EquippedWeapon->SetWeaponCollisionState(EWeaponCollisionState::EWS_CollisionOff); }
+	
 }
 
 void ABaseCharacter::UnequipWeapon()

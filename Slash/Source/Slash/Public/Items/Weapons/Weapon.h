@@ -183,7 +183,7 @@ public:
 	FORCEINLINE void SetItemState(EItemState NewItemState) { ItemState = NewItemState; }
 	FORCEINLINE EItemState GetItemState() const { return ItemState; }
 
-
+	FORCEINLINE void SetWeaponCollisionState(EWeaponCollisionState NewWeaponCollisionState) { WeaponCollisionState = NewWeaponCollisionState; }
 	FORCEINLINE EWeaponCollisionState GetWeaponCollisionState() const { return WeaponCollisionState; }
 
 	FORCEINLINE float GetWeaponDamage() const { return Damage; }

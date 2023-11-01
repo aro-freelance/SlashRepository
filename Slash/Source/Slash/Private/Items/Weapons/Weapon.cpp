@@ -278,8 +278,6 @@ bool AWeapon::ActorIsSameType(AActor* OtherActor)
 bool AWeapon::CanDoDamage()
 {
 
-
-
 	//get the character that the weapon is attached to
 	ABaseCharacter* Character = Cast<ABaseCharacter>(GetAttachParentActor());
 
