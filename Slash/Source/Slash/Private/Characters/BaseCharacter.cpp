@@ -195,6 +195,7 @@ bool ABaseCharacter::CanAttack()
 
 
 
+
 void ABaseCharacter::StartCombat()
 {
 	

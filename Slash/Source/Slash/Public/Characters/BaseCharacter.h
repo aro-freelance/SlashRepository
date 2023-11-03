@@ -70,6 +70,8 @@ protected:
 	virtual void Dodge();
 	virtual void Hide();
 
+
+
 	virtual void StartCombat();
 	virtual void EndCombat();
 

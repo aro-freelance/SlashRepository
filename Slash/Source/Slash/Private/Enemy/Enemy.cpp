@@ -168,6 +168,29 @@ void AEnemy::SetFollowDistance()
 	}
 }
 
+FVector AEnemy::GetTranslationWarpTarget()
+{
+	if (CombatTarget == nullptr) { return FVector(); }
+
+	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
+	const FVector Location = GetActorLocation();
+	FVector DistanceBetweenCharacters = (Location - CombatTargetLocation).GetSafeNormal();
+
+	DistanceBetweenCharacters *= FollowDistance;
+
+	return CombatTargetLocation + DistanceBetweenCharacters;
+}
+
+FVector AEnemy::GetRotationWarpTarget()
+{
+	if (CombatTarget)
+	{
+		return CombatTarget->GetActorLocation();
+	}
+	return FVector();
+}
+
+
 void AEnemy::StartCombat()
 {
 	Super::StartCombat();

@@ -92,6 +92,13 @@ protected:
 	double FollowDistance = 100.f;
 	UFUNCTION(BlueprintCallable)
 	void SetFollowDistance();
+
+	//this is for moving closer to a target while in the attack montage
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWarpTarget();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetRotationWarpTarget();
 	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsReturning = false;
