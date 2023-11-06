@@ -85,6 +85,9 @@ protected:
 	
 	ECharacterState WeaponSizeToCharacterState(const EWeaponType& WeaponSize);
 
+	virtual void PawnSeen(APawn* SeenPawn) override;
+
+
 private:
 
 

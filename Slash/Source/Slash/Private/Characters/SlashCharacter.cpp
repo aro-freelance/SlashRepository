@@ -14,6 +14,7 @@
 #include "Items/Weapons/Weapon.h"
 
 #include "Components/SkeletalMeshComponent.h"
+#include <Enemy/Enemy.h>
 
 
 ASlashCharacter::ASlashCharacter()
@@ -267,6 +268,14 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponType& W
 	return NewCharacterState;
 }
 
+void ASlashCharacter::PawnSeen(APawn* SeenPawn)
+{
+	AEnemy* EnemySeen = Cast<AEnemy>(SeenPawn);
+	if (EnemySeen)
+	{
+		CombatTarget = EnemySeen;
+	}
+}
 
 
 FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping)

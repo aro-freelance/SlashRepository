@@ -5,7 +5,7 @@
 #include "AIController.h"
 
 #include "Components/SkeletalMeshComponent.h"
-#include "Perception/PawnSensingComponent.h"
+
 #include "HUD/HealthBarComponent.h"
 #include "Components/AttributeComponent.h"
 
@@ -26,9 +26,7 @@ AEnemy::AEnemy()
 	GetMesh()->SetGenerateOverlapEvents(true);
 	
 
-	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
-	PawnSensing->SightRadius = 2500.f;
-	PawnSensing->SetPeripheralVisionAngle(50.f);
+	
 
 	//TODO:create more complex tag system so enemies are not all the same team?
 	Tags.Add(FName("Enemy"));
@@ -46,15 +44,20 @@ void AEnemy::BeginPlay()
 		HealthBarWidget->SetNameText(Name);
 	}
 
-	if (PawnSensing)
-	{
-		PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
-
-	}
-
 
 	GetWorldTimerManager().SetTimer(CombatTickTimer, this, &AEnemy::ReadyCombatTick, CombatTickLength);
 
+}
+
+void AEnemy::PawnSeen(APawn* SeenPawn)
+{
+	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
+	if (CharacterSeen && !IsInCombat)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
+		CombatTarget = CharacterSeen;
+		StartCombat();
+	}
 }
 
 
@@ -143,52 +146,7 @@ void AEnemy::ReadyCombatTick()
 	IsCombatTickReady = true;
 }
 
-void AEnemy::PawnSeen(APawn* SeenPawn)
-{
 
-	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
-
-	if (CharacterSeen && !IsInCombat)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
-
-		CombatTarget = CharacterSeen;
-
-		StartCombat();
-
-	}
-
-}
-
-void AEnemy::SetFollowDistance()
-{
-	if (EquippedWeapon) 
-	{
-		FollowDistance = EquippedWeapon->GetFollowDistance();
-	}
-}
-
-FVector AEnemy::GetTranslationWarpTarget()
-{
-	if (CombatTarget == nullptr) { return FVector(); }
-
-	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
-	const FVector Location = GetActorLocation();
-	FVector DistanceBetweenCharacters = (Location - CombatTargetLocation).GetSafeNormal();
-
-	DistanceBetweenCharacters *= FollowDistance;
-
-	return CombatTargetLocation + DistanceBetweenCharacters;
-}
-
-FVector AEnemy::GetRotationWarpTarget()
-{
-	if (CombatTarget)
-	{
-		return CombatTarget->GetActorLocation();
-	}
-	return FVector();
-}
 
 
 void AEnemy::StartCombat()

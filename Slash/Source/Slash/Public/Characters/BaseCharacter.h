@@ -12,6 +12,7 @@ class UAnimMontage;
 class AWeapon;
 class UAttributeComponent;
 class UHealthBarComponent;
+class UPawnSensingComponent;
 
 
 UCLASS()
@@ -27,8 +28,8 @@ public:
 
 	FString GetName();
 
-
-	
+	//this is called by the target that is hit in GetHit to tell the attacker that they scored a hit, and execute processed based on that
+	void ProcessHitTarget(AActor* TargetHit);
 
 protected:
 
@@ -43,6 +44,9 @@ protected:
 	/*
 	* Combat
 	*/
+
+	UFUNCTION()
+	virtual void PawnSeen(APawn* SeenPawn);
 
 	bool CanAttack();
 
@@ -70,7 +74,20 @@ protected:
 	virtual void Dodge();
 	virtual void Hide();
 
+	//How close should this follow it's combat target
+// Minimum should be 50+ (maybe more...) so the enemy doesn't stand right on player
+// ranged focused enemies could be 500+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	double FollowDistance = 20;
+	UFUNCTION(BlueprintCallable)
+	void SetFollowDistance();
 
+	//this is for moving closer to a target while in the attack montage
+	UFUNCTION(BlueprintCallable)
+	FVector GetTranslationWarpTarget();
+
+	UFUNCTION(BlueprintCallable)
+	FVector GetRotationWarpTarget();
 
 	virtual void StartCombat();
 	virtual void EndCombat();
@@ -175,6 +192,8 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
 
+	UPROPERTY(VisibleAnywhere)
+	UPawnSensingComponent* PawnSensing;
 
 private:
 

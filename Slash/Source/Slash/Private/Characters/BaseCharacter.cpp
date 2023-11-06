@@ -6,6 +6,8 @@
 #include "HUD/HealthBarComponent.h"
 #include "Components/AttributeComponent.h"
 
+#include "Perception/PawnSensingComponent.h"
+
 #include "Kismet/GameplayStatics.h"
 
 #include "Items/Weapons/Weapon.h"
@@ -23,12 +25,22 @@ ABaseCharacter::ABaseCharacter()
 	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
 	HealthBarWidget->SetupAttachment(GetRootComponent());
 
+	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
+	PawnSensing->SightRadius = 2500.f;
+	PawnSensing->SetPeripheralVisionAngle(50.f);
+
 }
 
 
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (PawnSensing)
+	{
+		PawnSensing->OnSeePawn.AddDynamic(this, &ABaseCharacter::PawnSeen);
+
+	}
 	
 }
 
@@ -187,13 +199,55 @@ void ABaseCharacter::PlayMontage(UAnimMontage* Montage, const FName& SectionName
 	}
 }
 
+void ABaseCharacter::PawnSeen(APawn* SeenPawn)
+{
+
+	//TODO: doing this here broke enemy pawnseen functionality. 
+	// could try to do this here again to make it available to all base characters. 
+	// or could remove this and use it separately in slashcharacter and enemy
+
+}
+
 bool ABaseCharacter::CanAttack()
 {
 	return ActionState == EActionState::EAS_Unoccupied &&
 		CharacterState != ECharacterState::ECS_Unarmed;
 }
 
+void ABaseCharacter::SetFollowDistance()
+{
+	if (EquippedWeapon)
+	{
+		FollowDistance = EquippedWeapon->GetFollowDistance();
+	}
+}
 
+
+FVector ABaseCharacter::GetTranslationWarpTarget()
+{
+	if (!CombatTarget) { return FVector(); }
+
+	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
+	const FVector Location = GetActorLocation();
+	FVector DistanceBetweenCharacters = (Location - CombatTargetLocation).GetSafeNormal();
+
+	//TODO implement this on the weapons (input the follow distance in unreal)
+	//SetFollowDistance();
+	DistanceBetweenCharacters *= FollowDistance;
+	
+
+	return CombatTargetLocation + DistanceBetweenCharacters;
+}
+
+FVector ABaseCharacter::GetRotationWarpTarget()
+{
+	if(!CombatTarget) { return FVector(); }
+	if (CombatTarget)
+	{
+		return CombatTarget->GetActorLocation();
+	}
+	return FVector();
+}
 
 
 void ABaseCharacter::StartCombat()
@@ -578,6 +632,9 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 	if (Attacker) 
 	{
 
+		//tell the attacker they scored a hit
+		Attacker->ProcessHitTarget(this);
+
 		//Store Information about the Attacker and Weapon of Attacker
 		CombatTarget = Attacker;
 		LastHitWeapon = Weapon;
@@ -953,6 +1010,20 @@ void ABaseCharacter::AbortAttack()
 	
 }
 
+void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
+{
+	//if the target hit is a character,
+	ABaseCharacter* CharacterHit = Cast<ABaseCharacter>(TargetHit);
+	if (CharacterHit)
+	{
+		//set the combattarget to that character
+		CombatTarget = CharacterHit;
+	}
+
+	//TODO implement more reactions to hitting a character and/or item
+	
+}
+
 void ABaseCharacter::UnequipWeapon()
 {
 	EquippedWeapon->DetachMeshFromSocket();
@@ -980,6 +1051,8 @@ FString ABaseCharacter::GetName()
 {
 	return Name;
 }
+
+
 
 
 
