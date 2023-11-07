@@ -16,6 +16,13 @@ class AItem;
 class USphereComponent;
 
 
+//TODO: 
+// 1. DOWNLOAD ATTACK ANIMATIONS AGAIN FOR ECHO. 
+// 2. HANDLE ROOT ANIM WITH BLENDER. 
+// 3. Reimport 
+// 4. Add to montages and reintegrate 
+// 5. Test
+
 
 UCLASS()
 class SLASH_API ASlashCharacter : public ABaseCharacter
