@@ -2,13 +2,14 @@
 
 
 #include "Enemy/Enemy.h"
+
 #include "AIController.h"
 
 #include "Components/SkeletalMeshComponent.h"
 
 #include "HUD/HealthBarComponent.h"
 #include "Components/AttributeComponent.h"
-
+#include "Perception/PawnSensingComponent.h"
 
 #include "GameFramework/CharacterMovementComponent.h"
 
@@ -26,7 +27,9 @@ AEnemy::AEnemy()
 	GetMesh()->SetGenerateOverlapEvents(true);
 	
 
-	
+	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
+	PawnSensing->SightRadius = 2500.f;
+	PawnSensing->SetPeripheralVisionAngle(50.f);
 
 	//TODO:create more complex tag system so enemies are not all the same team?
 	Tags.Add(FName("Enemy"));
@@ -42,6 +45,12 @@ void AEnemy::BeginPlay()
 	{
 		HealthBarWidget->SetVisibility(false);
 		HealthBarWidget->SetNameText(Name);
+	}
+
+	if (PawnSensing)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("base begin pawnsensing setup"));
+		PawnSensing->OnSeePawn.AddDynamic(this, &AEnemy::PawnSeen);
 	}
 
 

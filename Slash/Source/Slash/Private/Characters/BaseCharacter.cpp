@@ -6,7 +6,6 @@
 #include "HUD/HealthBarComponent.h"
 #include "Components/AttributeComponent.h"
 
-#include "Perception/PawnSensingComponent.h"
 
 #include "Kismet/GameplayStatics.h"
 
@@ -25,22 +24,13 @@ ABaseCharacter::ABaseCharacter()
 	HealthBarWidget = CreateDefaultSubobject<UHealthBarComponent>(TEXT("HealthBar"));
 	HealthBarWidget->SetupAttachment(GetRootComponent());
 
-	PawnSensing = CreateAbstractDefaultSubobject<UPawnSensingComponent>(TEXT("PawnSensing"));
-	PawnSensing->SightRadius = 2500.f;
-	PawnSensing->SetPeripheralVisionAngle(50.f);
-
+	
 }
 
 
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (PawnSensing)
-	{
-		PawnSensing->OnSeePawn.AddDynamic(this, &ABaseCharacter::PawnSeen);
-
-	}
 	
 }
 
@@ -114,6 +104,7 @@ void ABaseCharacter::SetEquippedWeaponSettings()
 			break;
 
 		}
+
 	}
 }
 
@@ -199,14 +190,6 @@ void ABaseCharacter::PlayMontage(UAnimMontage* Montage, const FName& SectionName
 	}
 }
 
-void ABaseCharacter::PawnSeen(APawn* SeenPawn)
-{
-
-	//TODO: doing this here broke enemy pawnseen functionality. 
-	// could try to do this here again to make it available to all base characters. 
-	// or could remove this and use it separately in slashcharacter and enemy
-
-}
 
 bool ABaseCharacter::CanAttack()
 {
@@ -221,6 +204,8 @@ void ABaseCharacter::SetFollowDistance()
 		FollowDistance = EquippedWeapon->GetFollowDistance();
 	}
 }
+
+
 
 
 FVector ABaseCharacter::GetTranslationWarpTarget()
@@ -269,6 +254,7 @@ void ABaseCharacter::EndCombat()
 
 	//clear last target information
 	CombatTarget = nullptr;
+	LastAttacker = nullptr;
 	LastHitWeapon = nullptr;
 	LastHitImpactPoint = FVector();
 	LastHitDirection = FName();
@@ -294,9 +280,9 @@ float ABaseCharacter::CalculatePhysicalDamage(float DamageAmount)
 
 	int32 PrecisionRange = LastHitWeapon->GetPrecisionRange();
 
-	if (CombatTarget != nullptr && Attributes)
+	if (LastAttacker != nullptr && Attributes)
 	{
-		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
+		UAttributeComponent* SlashCharacterAttributeComponent = LastAttacker->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
 			float AttackerSTR = SlashCharacterAttributeComponent->GetStr();
@@ -330,9 +316,9 @@ float ABaseCharacter::CalculateMagicalDamage(float DamageAmount)
 
 	int32 PrecisionRange = LastHitWeapon->GetPrecisionRange();
 
-	if (CombatTarget != nullptr && Attributes)
+	if (LastAttacker != nullptr && Attributes)
 	{
-		UAttributeComponent* SlashCharacterAttributeComponent = CombatTarget->GetAttributes();
+		UAttributeComponent* SlashCharacterAttributeComponent = LastAttacker->GetAttributes();
 		if (SlashCharacterAttributeComponent)
 		{
 			float AttackerINT = SlashCharacterAttributeComponent->GetInt();
@@ -635,8 +621,14 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		//tell the attacker they scored a hit
 		Attacker->ProcessHitTarget(this);
 
+		if (!CombatTarget) 
+		{ 
+			UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *Attacker->GetName()); 
+			CombatTarget = Attacker;
+		}
+
 		//Store Information about the Attacker and Weapon of Attacker
-		CombatTarget = Attacker;
+		LastAttacker = Attacker;
 		LastHitWeapon = Weapon;
 		LastHitImpactPoint = ImpactPoint;
 		LastHitDirection = CalculateHitReactSectionName(DamageDealer->GetActorLocation());
@@ -763,7 +755,7 @@ void ABaseCharacter::Death()
 	//Log Message for Defeat
 	if (GEngine)
 	{
-		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *CombatTarget->GetName(), *Name));
+		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *LastAttacker->GetName(), *Name));
 	}
 
 	//TODO
@@ -1016,6 +1008,8 @@ void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
 	ABaseCharacter* CharacterHit = Cast<ABaseCharacter>(TargetHit);
 	if (CharacterHit)
 	{
+		if (!CombatTarget) { UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *CharacterHit->GetName()); }
+
 		//set the combattarget to that character
 		CombatTarget = CharacterHit;
 	}

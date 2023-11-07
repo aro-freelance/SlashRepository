@@ -185,9 +185,9 @@ void AWeapon::OnBoxOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 	
 	if(CanDoDamage())
 	{
-		UE_LOG(LogTemp, Warning, 
+		/*UE_LOG(LogTemp, Warning, 
 			TEXT("Can do damage. Weapon Component: %s . Overlapped with Actor: %s . Their Component: %s"), 
-			*OverlappedComponent->GetName(), *OtherActor->GetName(), *OtherComp->GetName());
+			*OverlappedComponent->GetName(), *OtherActor->GetName(), *OtherComp->GetName());*/
 
 		FHitResult BoxHit;
 		BoxTrace(BoxHit);

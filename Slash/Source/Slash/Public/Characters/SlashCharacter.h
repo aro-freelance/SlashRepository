@@ -13,6 +13,8 @@ class UInputMappingContext;
 class UInputAction;
 class UGroomComponent;
 class AItem;
+class USphereComponent;
+
 
 
 UCLASS()
@@ -61,10 +63,17 @@ protected:
 	UInputAction* CharacterAttackAction;
 	void Attack(const FInputActionValue& Value);
 
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
 	UInputAction* CharacterDropWeaponAction;
 	//input = hold equip
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterLockOnAction;
+	void LockOnToEnemy(const FInputActionValue& Value);
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
+	UInputAction* CharacterToggleLockOnAction;
+	void ToggleEnemyToLock(const FInputActionValue& Value);
 
 
 	/*
@@ -85,8 +94,16 @@ protected:
 	
 	ECharacterState WeaponSizeToCharacterState(const EWeaponType& WeaponSize);
 
-	virtual void PawnSeen(APawn* SeenPawn) override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On")
+	bool HasEnemyLockedOn = false;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On")
+	float LockOnRadius = 1000.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On")
+	float TargetLockDistance = 600.f;
+
+	
 
 private:
 

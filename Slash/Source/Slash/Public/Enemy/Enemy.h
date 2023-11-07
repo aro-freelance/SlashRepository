@@ -8,8 +8,8 @@
 #include "Enemy.generated.h"
 
 
+class UPawnSensingComponent;
 class AAIController;
-
 
 
 UCLASS()
@@ -28,8 +28,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY()
-	AAIController* EnemyController;
+	
 
 	/*
 	* Navigation
@@ -79,7 +78,11 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float CombatTickLength = 50.0f;
 
-	virtual void PawnSeen(APawn* SeenPawn) override;
+	UPROPERTY()
+	AAIController* AIController;
+
+	UFUNCTION()
+	void PawnSeen(APawn* SeenPawn);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double CombatRadius = 2500.f;
@@ -164,6 +167,7 @@ private:
 	*/
 
 	
-
+	UPROPERTY(VisibleAnywhere)
+	UPawnSensingComponent* PawnSensing;
 	
 };

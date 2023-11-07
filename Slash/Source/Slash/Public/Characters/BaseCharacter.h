@@ -12,7 +12,6 @@ class UAnimMontage;
 class AWeapon;
 class UAttributeComponent;
 class UHealthBarComponent;
-class UPawnSensingComponent;
 
 
 UCLASS()
@@ -45,14 +44,15 @@ protected:
 	* Combat
 	*/
 
-	UFUNCTION()
-	virtual void PawnSeen(APawn* SeenPawn);
+
 
 	bool CanAttack();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	AWeapon* EquippedWeapon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
+	ABaseCharacter* CombatTarget;
 
 	ECharacterState CharacterState = ECharacterState::ECS_Unarmed;
 
@@ -81,6 +81,7 @@ protected:
 	double FollowDistance = 20;
 	UFUNCTION(BlueprintCallable)
 	void SetFollowDistance();
+
 
 	//this is for moving closer to a target while in the attack montage
 	UFUNCTION(BlueprintCallable)
@@ -172,8 +173,10 @@ protected:
 	/*
 	* the most recent damager of this basecharacter
 	*/
+	
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
-	ABaseCharacter* CombatTarget;
+	ABaseCharacter* LastAttacker;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	AWeapon* LastHitWeapon;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
@@ -192,8 +195,7 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
 
-	UPROPERTY(VisibleAnywhere)
-	UPawnSensingComponent* PawnSensing;
+	
 
 private:
 

@@ -13,8 +13,11 @@
 #include "Components/AttributeComponent.h"
 #include "Items/Weapons/Weapon.h"
 
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/KismetMathLibrary.h"
+
 #include "Components/SkeletalMeshComponent.h"
-#include <Enemy/Enemy.h>
+#include "Enemy/Enemy.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -62,6 +65,7 @@ void ASlashCharacter::BeginPlay()
 			Subsystem->AddMappingContext(SlashCharacterContext, 0);
 		}
 	}
+
 
 }
 
@@ -268,14 +272,6 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponType& W
 	return NewCharacterState;
 }
 
-void ASlashCharacter::PawnSeen(APawn* SeenPawn)
-{
-	AEnemy* EnemySeen = Cast<AEnemy>(SeenPawn);
-	if (EnemySeen)
-	{
-		CombatTarget = EnemySeen;
-	}
-}
 
 
 FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSize, bool isEquipping)
@@ -352,13 +348,13 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSi
 
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
-	
-	if (CanAttack()) 
+
+	if (CanAttack())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Can attack"));
 
 		EWeaponType WeaponType = EquippedWeapon->GetWeaponType();
-		
+
 		switch (WeaponType)
 		{
 		case EWeaponType::EWT_OneHanded:
@@ -380,8 +376,74 @@ void ASlashCharacter::Attack(const FInputActionValue& Value)
 			break;
 
 		}
+
+	}
+
+}
+
+void ASlashCharacter::LockOnToEnemy(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Lock On pressed"));
+
+	if (HasEnemyLockedOn)
+	{
+		HasEnemyLockedOn = false;
+
+		//TODO: unlock
+		CombatTarget = nullptr;
+
+		UE_LOG(LogTemp, Warning, TEXT("unlocked"));
+	}
+	else
+	{
+
+		FVector CameraForwardVector = CameraBoom->GetTargetRotation().Vector();
+
+		FVector EndVector = (CameraForwardVector * TargetLockDistance) + GetActorLocation();
+
+		TArray<TEnumAsByte<EObjectTypeQuery>> CharactersInLockOnRadius;
+		CharactersInLockOnRadius.Add(UEngineTypes::ConvertToObjectType(ECC_Pawn));
+
+		TArray<AActor*> ActorsToIgnore;
+		ActorsToIgnore.Add(this);
+		FHitResult OutHit;
+
+		UKismetSystemLibrary::SphereTraceSingleForObjects(
+			GetWorld(),
+			GetActorLocation(),
+			EndVector,
+			LockOnRadius,
+			CharactersInLockOnRadius,
+			false, // bool bTraceComplex
+			ActorsToIgnore,
+			EDrawDebugTrace::None,
+			OutHit,
+			true // bool bIgnoreSelf
+		);
+
+		//if an character is hit
+		ABaseCharacter* HitActor = Cast<ABaseCharacter>(OutHit.GetActor());
+		if (HitActor)
+		{
+			//store as combat target
+			if (!CombatTarget) { UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *HitActor->GetName()); }
+			CombatTarget = HitActor;
+
+			HasEnemyLockedOn = true;
+		}
 		
 	}
+
+}
+
+void ASlashCharacter::ToggleEnemyToLock(const FInputActionValue& Value)
+{
+
+	UE_LOG(LogTemp, Warning, TEXT("Toggle Lock pressed"));
+
+	//TODO: if locked on to enemy, check all enemies in range, add to array, 
+	// lock on to the next possible enemy in array
 
 }
 
@@ -420,7 +482,15 @@ void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if (CombatTarget && HasEnemyLockedOn)
+	{
+		//turn camera toward locked on target
+		Controller->SetControlRotation(
+			UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CombatTarget->GetActorLocation()));
+	}
+
 }
+
 
 void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -436,6 +506,9 @@ void ASlashCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 		EnhancedInputComponent->BindAction(CharacterEquipAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Equip);
 		EnhancedInputComponent->BindAction(CharacterAttackAction, ETriggerEvent::Triggered, this, &ASlashCharacter::Attack);
 		EnhancedInputComponent->BindAction(CharacterDropWeaponAction, ETriggerEvent::Triggered, this, &ASlashCharacter::DropWeapon);
+
+		EnhancedInputComponent->BindAction(CharacterLockOnAction, ETriggerEvent::Triggered, this, &ASlashCharacter::LockOnToEnemy);
+		EnhancedInputComponent->BindAction(CharacterToggleLockOnAction, ETriggerEvent::Triggered, this, &ASlashCharacter::ToggleEnemyToLock);
 
 	}
 
