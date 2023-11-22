@@ -186,6 +186,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	float LastDamageAmount;
 
+
 	/*
 	* Components
 	*/
@@ -196,6 +197,7 @@ protected:
 	UHealthBarComponent* HealthBarWidget;
 
 	
+
 
 private:
 

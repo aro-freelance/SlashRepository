@@ -215,9 +215,6 @@ FVector ABaseCharacter::GetTranslationWarpTarget()
 	const FVector CombatTargetLocation = CombatTarget->GetActorLocation();
 	const FVector Location = GetActorLocation();
 	FVector DistanceBetweenCharacters = (Location - CombatTargetLocation).GetSafeNormal();
-
-	//TODO implement this on the weapons (input the follow distance in unreal)
-	//SetFollowDistance();
 	DistanceBetweenCharacters *= FollowDistance;
 	
 
@@ -226,7 +223,7 @@ FVector ABaseCharacter::GetTranslationWarpTarget()
 
 FVector ABaseCharacter::GetRotationWarpTarget()
 {
-	if(!CombatTarget) { return FVector(); }
+	if (!CombatTarget) { return FVector(); }
 	if (CombatTarget)
 	{
 		return CombatTarget->GetActorLocation();
@@ -806,6 +803,8 @@ void ABaseCharacter::MeleeAttack()
 
 }
 
+
+
 void ABaseCharacter::RangedAttack()
 {
 	UE_LOG(LogTemp, Warning, TEXT("RangedAttack Method"));
@@ -1002,16 +1001,27 @@ void ABaseCharacter::AbortAttack()
 	
 }
 
+
 void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
 {
 	//if the target hit is a character,
 	ABaseCharacter* CharacterHit = Cast<ABaseCharacter>(TargetHit);
 	if (CharacterHit)
 	{
-		if (!CombatTarget) { UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *CharacterHit->GetName()); }
+		if (!CombatTarget) 
+		{
+			CombatTarget = CharacterHit;
+		}
+		
+		//if you defeated target
+		if (CharacterHit->GetAttributes()->GetHP() <= 0) 
+		{
+			UE_LOG(LogTemp, Warning, TEXT("you defeated %s"), *CharacterHit->GetName());
+			CombatTarget = nullptr;
 
-		//set the combattarget to that character
-		CombatTarget = CharacterHit;
+			//TODO: rewards for defeating enemy
+		}
+		
 	}
 
 	//TODO implement more reactions to hitting a character and/or item

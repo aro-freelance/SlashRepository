@@ -4,7 +4,7 @@
 #include "Items/Weapons/Weapon.h"
 #include "Characters/SlashCharacter.h"
 #include "Kismet/GameplayStatics.h"
-#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Components/BoxComponent.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Interfaces/HitInterface.h"
@@ -149,31 +149,31 @@ void AWeapon::ToggleEmberEffect(bool ShouldActivate)
 
 void AWeapon::ToggleCollisionSphere(bool ShouldTurnOn)
 {
-	if (Sphere)
+	if (CollisionCapsule)
 	{
 		if (ShouldTurnOn)
 		{
-			Sphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			CollisionCapsule->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 		}
 		else
 		{
-			Sphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+			CollisionCapsule->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}
 	}
 }
 
 
 
-void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AWeapon::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	Super::OnSphereOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
+	Super::OnCollisionCapsuleOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
 }
 
-void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AWeapon::OnCollisionCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
-	Super::OnSphereEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
+	Super::OnCollisionCapsuleEndOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex);
 
 }
 

@@ -3,7 +3,7 @@
 
 #include "Items/Item.h"
 #include "Slash/DebugMacros.h"
-#include "Components/SphereComponent.h"
+#include "Components/CapsuleComponent.h"
 #include "Characters/SlashCharacter.h"
 #include "NiagaraComponent.h"
 
@@ -17,8 +17,8 @@ AItem::AItem()
 	ItemMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	RootComponent = ItemMesh;
 
-	Sphere = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere"));
-	Sphere->SetupAttachment(GetRootComponent());
+	CollisionCapsule = CreateDefaultSubobject<UCapsuleComponent>(TEXT("CollisionCapsule"));
+	CollisionCapsule->SetupAttachment(GetRootComponent());
 
 	NiagaraEmberEffect = CreateDefaultSubobject<UNiagaraComponent>(TEXT("Niagara Embers"));
 	NiagaraEmberEffect->SetupAttachment(GetRootComponent());
@@ -29,8 +29,8 @@ void AItem::BeginPlay()
 {
 	Super::BeginPlay();
 
-	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnSphereOverlap);
-	Sphere->OnComponentEndOverlap.AddDynamic(this, &AItem::OnSphereEndOverlap);
+	CollisionCapsule->OnComponentBeginOverlap.AddDynamic(this, &AItem::OnCollisionCapsuleOverlap);
+	CollisionCapsule->OnComponentEndOverlap.AddDynamic(this, &AItem::OnCollisionCapsuleEndOverlap);
 
 
 }
@@ -46,24 +46,26 @@ float AItem::TransformedCos()
 }
 
 
-void AItem::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+void AItem::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 
 	if (SlashCharacter) 
 	{
+		UE_LOG(LogTemp, Warning, TEXT("START overlap with item named %s"), *GetName());
 		SlashCharacter->SetOverlappingItem(this);
 	}
 
 }
 
-void AItem::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+void AItem::OnCollisionCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
 	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 
 	if (SlashCharacter)
 	{
+		UE_LOG(LogTemp, Warning, TEXT("END overlap with item named %s"), *GetName());
 		SlashCharacter->SetOverlappingItem(nullptr);
 	}
 
