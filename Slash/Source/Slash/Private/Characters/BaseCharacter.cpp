@@ -768,6 +768,12 @@ void ABaseCharacter::Death()
 	//turn off the collision capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
+	//Change this Character to not be a target of attacks
+	Tags.Add(FName("Dead"));
+
+	//play death HUD
+	//TODO
+
 }
 
 
@@ -1018,6 +1024,10 @@ void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
 		{
 			UE_LOG(LogTemp, Warning, TEXT("you defeated %s"), *CharacterHit->GetName());
 			CombatTarget = nullptr;
+
+			//TODO: change this to if no other targets in range end combat
+			EndCombat();
+			
 
 			//TODO: rewards for defeating enemy
 		}

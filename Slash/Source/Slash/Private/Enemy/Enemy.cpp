@@ -61,9 +61,21 @@ void AEnemy::BeginPlay()
 void AEnemy::PawnSeen(APawn* SeenPawn)
 {
 	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
+	
 	if (CharacterSeen && !IsInCombat)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
+		//UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
+		
+		if (CharacterSeen->ActorHasTag("Dead")) 
+		{ 
+			//UE_LOG(LogTemp, Warning, TEXT("Seen Character is dead. Return."));
+
+			//TODO: add to ignore list? would need to remove if revived?
+
+			return; 
+		};
+
+		
 		CombatTarget = CharacterSeen;
 		StartCombat();
 	}
