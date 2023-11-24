@@ -1041,13 +1041,8 @@ void ABaseCharacter::UnequipWeapon()
 
 void ABaseCharacter::UpdateCombatHUD()
 {
-	if (HealthBarWidget)
-	{
-		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
-
-		//TODO: make a new attribute function to return the health in a different format?
-		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
-	}
+	//this is handled in the overrides in Enemy and SlashCharacter... 
+	// TODO: if we want shared functionality put it here.
 }
 
 //Return the user friendly name of this character

@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GroomComponent.h"
 #include "Items/Item.h"
+#include "Items/Treasure.h"
 #include "Components/AttributeComponent.h"
 #include "Items/Weapons/Weapon.h"
 
@@ -18,6 +19,9 @@
 
 #include "Components/SkeletalMeshComponent.h"
 #include "Enemy/Enemy.h"
+
+#include "HUD/SlashOverlay.h"
+#include "HUD/SlashHUD.h"
 
 
 ASlashCharacter::ASlashCharacter()
@@ -59,6 +63,16 @@ void ASlashCharacter::BeginPlay()
 	
 	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 	{
+
+		if (ASlashHUD* SlashHUD = Cast<ASlashHUD>(PlayerController->GetHUD()))
+		{
+			SlashOverlay = SlashHUD->GetSlashOverlay();
+			
+			//initialize the HUD
+			UpdateCombatHUD();
+		}
+
+
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
 			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -66,6 +80,7 @@ void ASlashCharacter::BeginPlay()
 		}
 	}
 
+	
 
 }
 
@@ -270,6 +285,62 @@ ECharacterState ASlashCharacter::WeaponSizeToCharacterState(const EWeaponType& W
 	}
 
 	return NewCharacterState;
+}
+
+void ASlashCharacter::UpdateCombatHUD()
+{
+	if (SlashOverlay && Attributes)
+	{
+		float HPP = Attributes->GetHealthPercent();
+		float TPP = Attributes->GetTPPercent();
+		float Gold = Attributes->GetGold();
+		float Souls = Attributes->GetSouls();
+
+		UE_LOG(LogTemp, Warning, 
+			TEXT("UpdateCombatHUD. HPBarPercent: %f. TPBarPercent: %f. GoldText: %f. SoulsText: %f."),
+			HPP, TPP, Gold, Souls);
+
+		SlashOverlay->SetHealthBarPercent(HPP);
+		SlashOverlay->SetTPBarPercent(TPP);
+		SlashOverlay->SetGoldText(Gold);
+		SlashOverlay->SetSoulsText(Souls);
+	}
+	else
+	{
+		if (SlashOverlay && !Attributes)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Update Combat HUD failed because attributes don't exist."));
+		}
+		if (Attributes && !SlashOverlay)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Update Combat HUD failed because overlay doesn't exist."));
+		}
+		if(!SlashOverlay && !Attributes)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Update Combat HUD failed because overlay and attributes both don't exist."));
+		}
+		
+	}
+}
+
+
+
+//this is called in treasure OnSphereOverlap
+void ASlashCharacter::AddTreasure(ATreasure* Treasure)
+{
+	if (Attributes)
+	{
+		int32 CurrentGold = Attributes->GetGold();
+		int32 CurrentSouls = Attributes->GetSouls();
+
+		Attributes->SetGold(CurrentGold + Treasure->GetGoldAmount());
+		Attributes->SetSouls(CurrentSouls + Treasure->GetSoulsAmount());
+
+		UpdateCombatHUD();
+	}
+	
+	//TODO add something to inventory?
+
 }
 
 
@@ -481,6 +552,8 @@ bool ASlashCharacter::CanDropWeapon()
 void ASlashCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+
 
 	if (CombatTarget && HasEnemyLockedOn)
 	{

@@ -52,7 +52,7 @@ void AItem::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, 
 
 	if (SlashCharacter) 
 	{
-		UE_LOG(LogTemp, Warning, TEXT("START overlap with item named %s"), *GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("START overlap with item named %s"), *GetName());
 		SlashCharacter->SetOverlappingItem(this);
 	}
 
@@ -65,7 +65,7 @@ void AItem::OnCollisionCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponen
 
 	if (SlashCharacter)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("END overlap with item named %s"), *GetName());
+		//UE_LOG(LogTemp, Warning, TEXT("END overlap with item named %s"), *GetName());
 		SlashCharacter->SetOverlappingItem(nullptr);
 	}
 

@@ -14,6 +14,8 @@ class UInputAction;
 class UGroomComponent;
 class AItem;
 class USphereComponent;
+class ATreasure;
+class USlashOverlay;
 
 
 //TODO: 
@@ -35,6 +37,8 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Death() override;
+
+	void AddTreasure(ATreasure* Treasure);
 
 protected:
 	virtual void BeginPlay() override;
@@ -110,7 +114,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Lock On")
 	float TargetLockDistance = 600.f;
 
-	
+	USlashOverlay* SlashOverlay;
+
+	virtual void UpdateCombatHUD() override;
 
 private:
 
@@ -133,6 +139,8 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* EquipSwordMontage;
+
+	
 
 
 //Getters and Setters

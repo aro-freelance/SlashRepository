@@ -187,6 +187,17 @@ void AEnemy::EndCombat()
 
 
 
+void AEnemy::UpdateCombatHUD()
+{
+	if (HealthBarWidget)
+	{
+		HealthBarWidget->SetHealthPercent(Attributes->GetHealthPercent());
+
+		//TODO: make a new attribute function to return the health in a different format?
+		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
+	}
+}
+
 void AEnemy::Combat()
 {
 

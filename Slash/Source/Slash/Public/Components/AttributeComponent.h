@@ -45,6 +45,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Gold")
 	float Gold;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Souls")
+	float Souls;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Character Stats")
 	float STR = 1;
@@ -75,6 +78,7 @@ public:
 
 	void ReceiveDamage(float Damage);
 	float GetHealthPercent();
+	float GetTPPercent();
 
 	float GetStr();
 	float GetVit();
@@ -95,6 +99,12 @@ public:
 	void SetHP(float NewHP) { HP = NewHP; }
 
 	void SetTP(float NewTP) { TP = NewTP; }
+
+	void SetGold(int32 NewGold) { Gold = NewGold; }
+	void SetSouls(int32 NewSouls) { Souls = NewSouls; }
+
+	int32 GetGold() const { return Gold; }
+	int32 GetSouls() const { return Souls; }
 
 	bool IsAlive();
 

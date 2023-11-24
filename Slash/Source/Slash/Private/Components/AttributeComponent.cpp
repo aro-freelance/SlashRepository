@@ -32,6 +32,11 @@ float UAttributeComponent::GetHealthPercent()
 	return (HP / MaxHP);
 }
 
+float UAttributeComponent::GetTPPercent()
+{
+	return (TP / MaxTP);
+}
+
 float UAttributeComponent::GetStr()
 {
 	return STR;

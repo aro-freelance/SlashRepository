@@ -13,7 +13,7 @@ class SLASH_API ATreasure : public AItem
 
 protected:
 
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	virtual void OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 private:
@@ -23,5 +23,14 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Treasure Properties")
 	int32 Gold;
+
+	UPROPERTY(EditAnywhere, Category = "Treasure Properties")
+	int32 Souls;
+
+//Getters and Setters
+public:
+	FORCEINLINE int32 GetGoldAmount() const { return Gold; }
+
+	FORCEINLINE int32 GetSoulsAmount() const { return Souls; }
 
 };

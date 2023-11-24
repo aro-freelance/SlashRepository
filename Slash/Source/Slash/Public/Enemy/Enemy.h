@@ -124,6 +124,8 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	FString BuildWeaponSocketString();
 
+	virtual void UpdateCombatHUD();
+
 private:
 
 	void Patrol();
