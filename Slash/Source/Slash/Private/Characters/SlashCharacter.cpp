@@ -86,6 +86,7 @@ void ASlashCharacter::BeginPlay()
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 	
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 
@@ -117,6 +118,7 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("Jump pressed"));
 
@@ -126,6 +128,7 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 
 void ASlashCharacter::Dodge(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("Dodge pressed"));
 
@@ -133,6 +136,8 @@ void ASlashCharacter::Dodge(const FInputActionValue& Value)
 
 void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+
 	if (CanDisarm())
 	{
 		ActionState = EActionState::EAS_Equipping;
@@ -419,6 +424,7 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSi
 
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 
 	if (CanAttack())
 	{
@@ -523,6 +529,7 @@ void ASlashCharacter::ToggleEnemyToLock(const FInputActionValue& Value)
 
 void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("drop weapon pressed"));
 

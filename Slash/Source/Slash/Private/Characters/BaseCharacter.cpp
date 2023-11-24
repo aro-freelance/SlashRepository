@@ -257,7 +257,8 @@ void ABaseCharacter::EndCombat()
 	LastHitDirection = FName();
 	LastDamageAmount = 0.f;
 	IsInCombat = false;
-	
+
+	CombatMode = ECombatMode::ECM_OutOfCombat;
 
 	//TODO: Turn off combat music
 
@@ -608,6 +609,7 @@ FName ABaseCharacter::CalculateDeathMontageSectionName()
 
 void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return; }
 
 	ActionState = EActionState::EAS_HitReacting;
 
@@ -690,6 +692,8 @@ void ABaseCharacter::PlaySoundLocal(USoundBase* Sound, const FVector& Location)
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
+	if (CombatMode == ECombatMode::ECM_Dead) { return 0.f; }
+
 	float FinalDamageAmount = 0.0f;
 
 	if (Attributes && LastHitWeapon) 
@@ -749,6 +753,9 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 void ABaseCharacter::Death()
 {
+
+	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
 	//Log Message for Defeat
 	if (GEngine)
 	{
@@ -763,7 +770,10 @@ void ABaseCharacter::Death()
 	PlaySoundLocal(DeathSound, GetActorLocation());
 
 	//Turn off this Enemy's HUD info, combat behaviors
+	AbortAttack();
 	EndCombat();
+	CombatMode = ECombatMode::ECM_Dead;
+
 
 	//turn off the collision capsule
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
@@ -780,6 +790,7 @@ void ABaseCharacter::Death()
 
 void ABaseCharacter::MeleeAttack()
 {
+
 	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method called by %s"), *GetName());
 
 	if (!EquippedWeapon)
@@ -788,6 +799,7 @@ void ABaseCharacter::MeleeAttack()
 		return;
 	}
 
+	CombatMode = ECombatMode::ECM_MeleeAttacking;
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -821,6 +833,7 @@ void ABaseCharacter::RangedAttack()
 		return;
 	}
 
+	CombatMode = ECombatMode::ECM_RangeAttacking;
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -857,6 +870,7 @@ void ABaseCharacter::SnipeAttack()
 		return;
 	}
 
+	CombatMode = ECombatMode::ECM_SnipeAttacking;
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -890,6 +904,7 @@ void ABaseCharacter::SpecialAttack()
 	//use the TP
 	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
 
+	CombatMode = ECombatMode::ECM_SpecialAttacking;
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -915,6 +930,8 @@ void ABaseCharacter::Defend()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
 
+	CombatMode = ECombatMode::ECM_Defending;
+
 	//TODO: execute the defend logic
 
 	//TODO: turn chasing back on when defend anim is done?
@@ -924,6 +941,8 @@ void ABaseCharacter::Dodge()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
 
+	CombatMode = ECombatMode::ECM_Dodging;
+
 	//TODO: execute the dodge logic
 
 	//TODO: turn chasing back on when dodge anim is done?
@@ -932,6 +951,8 @@ void ABaseCharacter::Dodge()
 void ABaseCharacter::Hide()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
+
+	CombatMode = ECombatMode::ECM_Hiding;
 
 	//TODO: execute the hide logic
 
@@ -1020,22 +1041,47 @@ void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
 		}
 		
 		//if you defeated target
-		if (CharacterHit->GetAttributes()->GetHP() <= 0) 
+		if (CharacterHit->GetAttributes()->GetHP() <= 0)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("you defeated %s"), *CharacterHit->GetName());
-			CombatTarget = nullptr;
-
-			//TODO: change this to if no other targets in range end combat
-			EndCombat();
-			
-
-			//TODO: rewards for defeating enemy
+			DefeatTargetCharacter(CharacterHit);
 		}
-		
 	}
 
 	//TODO implement more reactions to hitting a character and/or item
 	
+}
+
+void ABaseCharacter::DefeatTargetCharacter(ABaseCharacter* CharacterHit)
+{
+	
+	
+	ASlashCharacter* ThisSlashCharacter = Cast<ASlashCharacter>(this);
+	if (ThisSlashCharacter) 
+	{
+		//TODO: player rewards for victory
+		UE_LOG(LogTemp, Warning, TEXT("You defeated %s."), *CharacterHit->GetName());
+	}
+	else
+	{
+		//handle enemy defeating player
+		UE_LOG(LogTemp, Warning, TEXT("You were defeated by %s."), *this->GetName());
+		
+		//end current attack
+		AbortAttack();
+
+		//TODO: change this to...
+		// CombatTarget = nullptr
+		// if no other targets in range 
+		// end combat
+		EndCombat();
+	}
+	
+	
+	
+
+	
+
+		
 }
 
 void ABaseCharacter::UnequipWeapon()

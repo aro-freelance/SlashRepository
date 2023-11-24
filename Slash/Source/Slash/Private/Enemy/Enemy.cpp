@@ -100,7 +100,15 @@ void AEnemy::Tick(float DeltaTime)
 		//Wait to make a new Combat choice every tick
 		else if (IsCombatTickReady) 
 		{ 
-			Combat();
+			//if target is alive attack, make a combat move, otherwise, end combat
+			if (CombatTarget->GetCombatMode() != ECombatMode::ECM_Dead)
+			{
+				Combat();
+			}
+			else
+			{
+				EndCombat();
+			}
 		}
 
 		//BP: Logic for PURUSING COMBAT TARGET is in Blueprints
@@ -193,8 +201,6 @@ void AEnemy::EndCombat()
 	{
 		HealthBarWidget->SetVisibility(false);
 	}
-
-	CombatMode = ECombatMode::ECM_OutOfCombat;
 }
 
 
@@ -238,9 +244,6 @@ void AEnemy::Combat()
 void AEnemy::Death()
 {
 	Super::Death();
-
-	CombatMode = ECombatMode::ECM_Dead;
-
 	
 
 	//Destroy after delay
@@ -354,16 +357,12 @@ void AEnemy::MeleeAttack()
 {
 	Super::MeleeAttack();
 
-	CombatMode = ECombatMode::ECM_MeleeAttacking;
-
 	ResetCombatTick();
 }
 
 void AEnemy::RangedAttack()
 {
 	Super::RangedAttack();
-
-	CombatMode = ECombatMode::ECM_RangeAttacking;
 
 	ResetCombatTick();
 }
@@ -372,16 +371,12 @@ void AEnemy::SnipeAttack()
 {
 	Super::SnipeAttack();
 
-	CombatMode = ECombatMode::ECM_SnipeAttacking;
-
 	ResetCombatTick();
 }
 
 void AEnemy::SpecialAttack()
 {
 	Super::SpecialAttack();
-
-	CombatMode = ECombatMode::ECM_SpecialAttacking;
 
 	ResetCombatTick();
 }
@@ -390,8 +385,6 @@ void AEnemy::Defend()
 {
 	Super::Defend();
 
-	CombatMode = ECombatMode::ECM_Defending;
-
 	ResetCombatTick();
 }
 
@@ -399,16 +392,12 @@ void AEnemy::Dodge()
 {
 	Super::Dodge();
 
-	CombatMode = ECombatMode::ECM_Dodging;
-
 	ResetCombatTick();
 }
 
 void AEnemy::Hide()
 {
 	Super::Hide();
-
-	CombatMode = ECombatMode::ECM_Hiding;
 
 	ResetCombatTick();
 }

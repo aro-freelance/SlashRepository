@@ -11,7 +11,8 @@ void USlashAnimInstance::NativeInitializeAnimation()
 	Super::NativeInitializeAnimation();
 
 	SlashCharacter = Cast<ASlashCharacter>(TryGetPawnOwner());
-	if (SlashCharacter) {
+	if (SlashCharacter) 
+	{
 		SlashCharacterMovement = SlashCharacter->GetCharacterMovement();
 	}
 }
@@ -27,6 +28,11 @@ void USlashAnimInstance::NativeUpdateAnimation(float DeltaTime)
 		IsFalling = SlashCharacterMovement->IsFalling();
 
 		CharacterState = SlashCharacter->GetCharacterState();
+
+		CombatMode = SlashCharacter->GetCombatMode();
+
+		DeathPose = SlashCharacter->GetDeathPose();
 	}
+
 
 }

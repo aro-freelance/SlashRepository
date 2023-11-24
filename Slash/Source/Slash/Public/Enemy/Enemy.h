@@ -112,10 +112,7 @@ protected:
 	double SpecialAttackRadius = 200.f;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	double HideDistance = 600.f;
-	
-	//Used for Enemy AI decisions
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	ECombatMode CombatMode = ECombatMode::ECM_OutOfCombat;
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Despawn")
 	float DespawnTimer = 5.f;

@@ -34,4 +34,10 @@ public:
 	UPROPERTY(BlueprintReadOnly, Category = "Movement | Character State")
 	ECharacterState CharacterState;
 
+	UPROPERTY(BlueprintReadOnly, Category = "Combat Mode")
+	ECombatMode CombatMode;
+
+	UPROPERTY(BlueprintReadOnly, Category = "Death Pose")
+	EDeathPose DeathPose;
+
 };

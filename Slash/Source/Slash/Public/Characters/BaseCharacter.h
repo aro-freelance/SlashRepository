@@ -30,6 +30,8 @@ public:
 	//this is called by the target that is hit in GetHit to tell the attacker that they scored a hit, and execute processed based on that
 	void ProcessHitTarget(AActor* TargetHit);
 
+	void DefeatTargetCharacter(ABaseCharacter* CharacterHit);
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -74,6 +76,10 @@ protected:
 	virtual void Dodge();
 	virtual void Hide();
 
+	//Used for Death state and for Enemy AI decisions
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	ECombatMode CombatMode = ECombatMode::ECM_OutOfCombat;
+
 	//How close should this follow it's combat target
 // Minimum should be 50+ (maybe more...) so the enemy doesn't stand right on player
 // ranged focused enemies could be 500+
@@ -94,6 +100,8 @@ protected:
 	virtual void EndCombat();
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
+
+	void ReturnIfDead(bool& retFlag);
 
 	UFUNCTION(BlueprintCallable)
 	void FinishGetHit();
@@ -283,6 +291,9 @@ private:
 //Getters and Setters
 public:
 	FORCEINLINE ECharacterState GetCharacterState() const { return CharacterState; }
+	FORCEINLINE ECombatMode GetCombatMode() const { return CombatMode; }
+
+	FORCEINLINE EDeathPose GetDeathPose() const { return DeathPose; }
 
 	//FORCEINLINE void SetCharacterState(ECharacterState NewCharacterState) { CharacterState = NewCharacterState; }
 
