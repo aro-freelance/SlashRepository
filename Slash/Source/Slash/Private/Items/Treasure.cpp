@@ -3,6 +3,7 @@
 
 #include "Items/Treasure.h"
 #include "Characters/SlashCharacter.h"
+#include "Interfaces/PickupInterface.h"
 #include "Kismet/GameplayStatics.h"
 
 void ATreasure::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
@@ -11,20 +12,11 @@ void ATreasure::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedCompone
 
 	if (SlashCharacter)
 	{
-		//play a pickup sound
-		if (PickupSound)
-		{
-			UGameplayStatics::PlaySoundAtLocation(
-				this,
-				PickupSound,
-				GetActorLocation()
-			);
-		}
 
-		//TODO: react to the item pick up by calling a member function 
 		SlashCharacter->AddTreasure(this);
 
-		//and destroy the item
-		Destroy();
+		bool ShouldDestroy = true;
+		PickupSystem(true);
+
 	}
 }

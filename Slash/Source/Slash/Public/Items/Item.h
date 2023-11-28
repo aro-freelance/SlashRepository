@@ -7,6 +7,9 @@
 #include "Item.generated.h"
 
 class UCapsuleComponent;
+class UNiagaraComponent;
+class UNiagaraSystem;
+class USoundBase;
 
 enum class EItemState : uint8
 {
@@ -66,8 +69,18 @@ protected:
 	virtual void OnCollisionCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+
+	UPROPERTY(EditAnywhere)
+	UNiagaraSystem* PickupEffect;
+
+	UPROPERTY(EditAnywhere)
+	USoundBase* PickupSound;
+
+	virtual void PickupSystem(bool ShouldDestroy);
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	UStaticMeshComponent* ItemMesh;
+
 
 	EItemState ItemState = EItemState::EIS_Hovering;
 	
@@ -75,7 +88,7 @@ protected:
 	UCapsuleComponent* CollisionCapsule;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara Effects")
-	class UNiagaraComponent* NiagaraEmberEffect;
+	UNiagaraComponent* NiagaraEmberEffect;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Niagara Effects")
 	float EffectDelayTimeEnd = 100;
@@ -89,6 +102,8 @@ private:
 	float RunningTime = 0;
 
 	float ParticleDelayTimer = 0;
+
+	
 	
 };
 

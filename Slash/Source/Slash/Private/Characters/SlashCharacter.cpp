@@ -10,6 +10,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GroomComponent.h"
 #include "Items/Item.h"
+#include "Items/Soul.h"
 #include "Items/Treasure.h"
 #include "Components/AttributeComponent.h"
 #include "Items/Weapons/Weapon.h"
@@ -171,6 +172,23 @@ void ASlashCharacter::Death()
 
 	//TODO: Handle Player Character Death with GameOver or with some sort of downed mechanic
 
+}
+
+void ASlashCharacter::SetOverlappingItem(AItem* Item)
+{
+	OverlappingItem = Item;
+}
+
+void ASlashCharacter::AddSouls(ASoul* Soul)
+{
+	float SoulValue = Soul->GetValue();
+	float StoredSouls = Attributes->GetSouls();
+
+	UE_LOG(LogTemp, Warning, TEXT("add soul. stored %f. new  %f"), StoredSouls, SoulValue);
+
+	Attributes->SetSouls(StoredSouls + SoulValue);
+
+	UpdateCombatHUD();
 }
 
 
@@ -336,10 +354,10 @@ void ASlashCharacter::AddTreasure(ATreasure* Treasure)
 	if (Attributes)
 	{
 		int32 CurrentGold = Attributes->GetGold();
-		int32 CurrentSouls = Attributes->GetSouls();
+		//int32 CurrentSouls = Attributes->GetSouls();
 
 		Attributes->SetGold(CurrentGold + Treasure->GetGoldAmount());
-		Attributes->SetSouls(CurrentSouls + Treasure->GetSoulsAmount());
+		//Attributes->SetSouls(CurrentSouls + Treasure->GetSoulsAmount());
 
 		UpdateCombatHUD();
 	}

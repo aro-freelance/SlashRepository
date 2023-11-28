@@ -18,19 +18,17 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere, Category = Sounds)
-	USoundBase* PickupSound;
 
 	UPROPERTY(EditAnywhere, Category = "Treasure Properties")
 	int32 Gold;
 
-	UPROPERTY(EditAnywhere, Category = "Treasure Properties")
-	int32 Souls;
+	//UPROPERTY(EditAnywhere, Category = "Treasure Properties")
+	//int32 Souls;
 
 //Getters and Setters
 public:
 	FORCEINLINE int32 GetGoldAmount() const { return Gold; }
 
-	FORCEINLINE int32 GetSoulsAmount() const { return Souls; }
+	//FORCEINLINE int32 GetSoulsAmount() const { return Souls; }
 
 };

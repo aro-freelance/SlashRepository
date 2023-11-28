@@ -4,8 +4,10 @@
 #include "Items/Item.h"
 #include "Slash/DebugMacros.h"
 #include "Components/CapsuleComponent.h"
-#include "Characters/SlashCharacter.h"
+#include "Interfaces/PickupInterface.h"
+#include "NiagaraFunctionLibrary.h"
 #include "NiagaraComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 
 AItem::AItem()
@@ -48,25 +50,60 @@ float AItem::TransformedCos()
 
 void AItem::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 
-	if (SlashCharacter) 
+	if (PickupInterface)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("START overlap with item named %s"), *GetName());
-		SlashCharacter->SetOverlappingItem(this);
+		PickupInterface ->SetOverlappingItem(this);
 	}
 
 }
 
 void AItem::OnCollisionCapsuleEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
 
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
-
-	if (SlashCharacter)
+	if (PickupInterface)
 	{
 		//UE_LOG(LogTemp, Warning, TEXT("END overlap with item named %s"), *GetName());
-		SlashCharacter->SetOverlappingItem(nullptr);
+		PickupInterface->SetOverlappingItem(nullptr);
+	}
+
+}
+
+void AItem::PickupSystem(bool ShouldDestroy)
+{
+	if (PickupEffect)
+	{
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+			this,
+			PickupEffect,
+			GetActorLocation()
+		);
+	}
+
+	if (PickupSound)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(
+			this,
+			PickupSound,
+			GetActorLocation()
+		);
+	}
+
+	if (ShouldDestroy)
+	{
+		Destroy();
+
+		/*if (DestroyTimer <= 0)
+		{
+			Destroy();
+		}
+		else
+		{
+			SetLifeSpan(DestroyTimer);
+		}*/
 	}
 
 }

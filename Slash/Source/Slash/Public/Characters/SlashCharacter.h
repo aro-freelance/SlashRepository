@@ -5,6 +5,7 @@
 #include "InputActionValue.h"
 #include "CharacterTypes.h"
 #include "Items/Weapons/WeaponTypes.h"
+#include "Interfaces/PickupInterface.h"
 #include "SlashCharacter.generated.h"
 
 class USpringArmComponent;
@@ -13,21 +14,14 @@ class UInputMappingContext;
 class UInputAction;
 class UGroomComponent;
 class AItem;
+class ASoul;
 class USphereComponent;
 class ATreasure;
 class USlashOverlay;
 
 
-//TODO: 
-// 1. DOWNLOAD ATTACK ANIMATIONS AGAIN FOR ECHO. 
-// 2. HANDLE ROOT ANIM WITH BLENDER. 
-// 3. Reimport 
-// 4. Add to montages and reintegrate 
-// 5. Test
-
-
 UCLASS()
-class SLASH_API ASlashCharacter : public ABaseCharacter
+class SLASH_API ASlashCharacter : public ABaseCharacter, public IPickupInterface
 {
 	GENERATED_BODY()
 
@@ -37,6 +31,9 @@ public:
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 	virtual void Death() override;
+
+	virtual void SetOverlappingItem(AItem* Item) override;
+	virtual void AddSouls(class ASoul* Soul) override;
 
 	void AddTreasure(ATreasure* Treasure);
 
@@ -145,6 +142,6 @@ private:
 
 //Getters and Setters
 public:
-	FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
 
 };
