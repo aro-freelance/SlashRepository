@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Items/Weapons/Weapon.h"
+#include "Items/Soul.h"
 
 
 
@@ -245,12 +246,28 @@ void AEnemy::Death()
 {
 	Super::Death();
 	
+	SpawnDrops();
 
 	//Destroy after delay
 	SetLifeSpan(DespawnTimer);
 
 	UnequipWeapon();
 
+}
+
+void AEnemy::SpawnDrops()
+{
+	//Spawn Exp Drop
+	UWorld* World = GetWorld();
+	if (World && SoulClass && Attributes)
+	{
+		FVector SoulSpawnPoint = GetActorLocation() + DropLocationOffset;
+		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, SoulSpawnPoint, GetActorRotation());
+		SpawnedSoul->SetValue(Attributes->GetSoulDropAmount());
+	
+	}
+
+	//TODO: spawn treasure too?
 }
 
 bool AEnemy::ShouldDefend()

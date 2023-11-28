@@ -161,6 +161,14 @@ private:
 
 	virtual void Death() override;
 
+	UPROPERTY(EditAnywhere, Category = Treasure)
+	FVector DropLocationOffset = FVector();
+
+	void SpawnDrops();
+
+	UPROPERTY(EditAnywhere, Category = Soul)
+	TSubclassOf<class ASoul> SoulClass;
+
 	/*
 	* Components
 	*/

@@ -21,12 +21,10 @@ protected:
 
 private:
 
-	
-
-	void HandlePickupFXs();
 
 public:
 
 	FORCEINLINE int32 GetValue() const { return Value; }
+	FORCEINLINE void SetValue(int32 NewValue) { Value = NewValue; }
 	
 };

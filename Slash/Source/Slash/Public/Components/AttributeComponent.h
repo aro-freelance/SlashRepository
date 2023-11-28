@@ -68,7 +68,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
 	float RegenPercent = 0.055; //TODO: .025
 	
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Drops)
+	int32 SoulDropAmount = 1;
 
 private:	
 	
@@ -105,6 +106,8 @@ public:
 
 	int32 GetGold() const { return Gold; }
 	int32 GetSouls() const { return Souls; }
+
+	int32 GetSoulDropAmount() const { return SoulDropAmount; }
 
 	bool IsAlive();
 

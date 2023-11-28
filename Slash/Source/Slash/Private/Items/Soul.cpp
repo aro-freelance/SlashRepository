@@ -14,10 +14,12 @@ void ASoul::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedComponent, 
 	if (PickupInterface)
 	{
 		PickupInterface->AddSouls(this);
+
+		bool ShouldDestroy = true;
+		PickupSystem(ShouldDestroy);
 	}
 	
-	bool ShouldDestroy = true;
-	PickupSystem(ShouldDestroy);
+	
 
 }
 

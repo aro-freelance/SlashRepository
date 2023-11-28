@@ -94,6 +94,7 @@ void AItem::PickupSystem(bool ShouldDestroy)
 
 	if (ShouldDestroy)
 	{
+		//TODO remove this if using timer below
 		Destroy();
 
 		/*if (DestroyTimer <= 0)
