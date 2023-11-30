@@ -87,7 +87,7 @@ void ASlashCharacter::BeginPlay()
 
 void ASlashCharacter::Move(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 	
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 
@@ -119,7 +119,7 @@ void ASlashCharacter::Look(const FInputActionValue& Value)
 
 void ASlashCharacter::Jump(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("Jump pressed"));
 
@@ -129,15 +129,32 @@ void ASlashCharacter::Jump(const FInputActionValue& Value)
 
 void ASlashCharacter::Dodge(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("Dodge pressed"));
+
+
+	if (Attributes)
+	{
+		if (Attributes->GetStamina() >= StaminaRequiredToDodge)
+		{
+			Attributes->UseStamina(StaminaRequiredToDodge);
+			ABaseCharacter::Dodge();
+			UpdateCombatHUD();
+		}
+		else
+		{
+			//TODO: indicate to player than they are low on stamina
+			UE_LOG(LogTemp, Warning, TEXT("Not Enough Stamina. %f"), Attributes->GetStamina());
+		}
+	}
+	
 
 }
 
 void ASlashCharacter::Equip(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 
 	if (CanDisarm())
 	{
@@ -316,15 +333,17 @@ void ASlashCharacter::UpdateCombatHUD()
 	{
 		float HPP = Attributes->GetHealthPercent();
 		float TPP = Attributes->GetTPPercent();
+		float StaminaP = Attributes->GetStaminaPercent();
 		float Gold = Attributes->GetGold();
 		float Souls = Attributes->GetSouls();
 
 		UE_LOG(LogTemp, Warning, 
-			TEXT("UpdateCombatHUD. HPBarPercent: %f. TPBarPercent: %f. GoldText: %f. SoulsText: %f."),
-			HPP, TPP, Gold, Souls);
+			TEXT("UpdateCombatHUD. HPBarPercent: %f. TPBarPercent: %f. StaminaP: %f. GoldText: %f. SoulsText: %f."),
+			HPP, TPP, StaminaP, Gold, Souls);
 
 		SlashOverlay->SetHealthBarPercent(HPP);
 		SlashOverlay->SetTPBarPercent(TPP);
+		SlashOverlay->SetStaminaBarPercent(StaminaP);
 		SlashOverlay->SetGoldText(Gold);
 		SlashOverlay->SetSoulsText(Souls);
 	}
@@ -344,6 +363,37 @@ void ASlashCharacter::UpdateCombatHUD()
 		}
 		
 	}
+}
+
+void ASlashCharacter::SetReadyInCombat()
+{
+	Super::SetReadyInCombat();
+
+	if (IsInCombat)
+	{
+		CombatMode = ECombatMode::ECM_ReadyInCombat;
+	}
+	else
+	{
+		CombatMode = ECombatMode::ECM_OutOfCombat;
+	}
+}
+
+bool ASlashCharacter::IsBusy()
+{
+	bool isBusy = false;
+
+	if (CombatMode == ECombatMode::ECM_Dead ||
+		CombatMode == ECombatMode::ECM_MeleeAttacking ||
+		CombatMode == ECombatMode::ECM_RangeAttacking ||
+		CombatMode == ECombatMode::ECM_SnipeAttacking ||
+		CombatMode == ECombatMode::ECM_SpecialAttacking ||
+		CombatMode == ECombatMode::ECM_Dodging)
+	{
+		isBusy = true;
+	}
+
+	return isBusy;
 }
 
 
@@ -442,7 +492,7 @@ FName ASlashCharacter::WeaponSizeToEquipMontageFName(const EWeaponType& WeaponSi
 
 void ASlashCharacter::Attack(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 
 	if (CanAttack())
 	{
@@ -547,7 +597,7 @@ void ASlashCharacter::ToggleEnemyToLock(const FInputActionValue& Value)
 
 void ASlashCharacter::DropWeapon(const FInputActionValue& Value)
 {
-	if (CombatMode == ECombatMode::ECM_Dead) { return; }
+	if (IsBusy()) { return; }
 
 	UE_LOG(LogTemp, Warning, TEXT("drop weapon pressed"));
 

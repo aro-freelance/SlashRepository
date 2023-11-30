@@ -101,8 +101,6 @@ protected:
 
 	virtual void GetHit_Implementation(const FVector& ImpactPoint, ACharacter* DamageDealer, AWeapon* Weapon);
 
-	void ReturnIfDead(bool& retFlag);
-
 	UFUNCTION(BlueprintCallable)
 	void FinishGetHit();
 
@@ -118,12 +116,21 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
 	float RegenTickLength = 150.0f;
 	UFUNCTION(BlueprintCallable)
-	void Recover(float DeltaTime);
+	virtual void Recover(float DeltaTime);
+
+	void RegenStamina();
+
+	void Regen();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge)
+	float StaminaRequiredToDodge = 10;
 
 	//when animations don't complete, end attack state
 	UFUNCTION(BlueprintCallable)
 	virtual void AbortAttack();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetReadyInCombat();
 
 	UFUNCTION(BlueprintCallable)
 	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping);
@@ -252,6 +259,12 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Montages")
 	TArray<FName> DeathMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* DodgeMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> DodgeMontageSectionNames;
 
 	//UPROPERTY(EditAnywhere, Category = "Montages")
 	FName GetRandomSectionName(TArray<FName> MontageList);

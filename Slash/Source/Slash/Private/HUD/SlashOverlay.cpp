@@ -21,6 +21,14 @@ void USlashOverlay::SetTPBarPercent(float Percent)
 	}
 }
 
+void USlashOverlay::SetStaminaBarPercent(float Percent)
+{
+	if (StaminaProgressBar)
+	{
+		StaminaProgressBar->SetPercent(Percent);
+	}
+}
+
 void USlashOverlay::SetGoldText(int32 Amount)
 {
 	if (GoldAmountText)

@@ -116,17 +116,6 @@ void AEnemy::Tick(float DeltaTime)
 		
 	}
 
-	if (IsRegening)
-	{
-		if (HealthBarWidget)
-		{
-			HealthBarWidget->SetVisibility(true);
-		}
-
-		Recover(DeltaTime);
-
-	}
-
 	//BP: Logic for PATROLLING when out of combat is in Blueprints (refer to 171 12min to implement in C++)
 	//Patrol();
 
@@ -215,6 +204,41 @@ void AEnemy::UpdateCombatHUD()
 		//TODO: make a new attribute function to return the health in a different format?
 		HealthBarWidget->SetHealthText(Attributes->GetHealthPercent());
 	}
+}
+
+void AEnemy::SetReadyInCombat()
+{
+	Super::SetReadyInCombat();
+
+	if (IsInCombat)
+	{
+		CombatMode = ECombatMode::ECM_Chasing;
+	}
+	else
+	{
+		CombatMode = ECombatMode::ECM_OutOfCombat;
+	}
+}
+
+void AEnemy::Recover(float DeltaTime)
+{
+	Super::Recover(DeltaTime);
+
+	if (IsRegening)
+	{
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetVisibility(true);
+		}
+	}
+	else 
+	{
+		if (HealthBarWidget)
+		{
+			HealthBarWidget->SetVisibility(false);
+		}
+	}
+		
 }
 
 void AEnemy::Combat()

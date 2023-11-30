@@ -123,6 +123,10 @@ protected:
 
 	virtual void UpdateCombatHUD();
 
+	virtual void SetReadyInCombat() override;
+
+	virtual void Recover(float DeltaTime) override;
+
 private:
 
 	void Patrol();

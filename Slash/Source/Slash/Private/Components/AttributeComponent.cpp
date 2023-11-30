@@ -27,6 +27,11 @@ void UAttributeComponent::ReceiveDamage(float Damage)
 
 }
 
+void UAttributeComponent::UseStamina(float StaminaCost)
+{
+	Stamina = FMath::Clamp(Stamina - StaminaCost, 0.f, MaxStamina);
+}
+
 float UAttributeComponent::GetHealthPercent()
 {
 	return (HP / MaxHP);
@@ -35,6 +40,11 @@ float UAttributeComponent::GetHealthPercent()
 float UAttributeComponent::GetTPPercent()
 {
 	return (TP / MaxTP);
+}
+
+float UAttributeComponent::GetStaminaPercent()
+{
+	return (Stamina / MaxStamina);
 }
 
 float UAttributeComponent::GetStr()
@@ -101,9 +111,24 @@ float UAttributeComponent::GetMaxTP()
 	return MaxTP;
 }
 
+float UAttributeComponent::GetStamina()
+{
+	return Stamina;
+}
+
+float UAttributeComponent::GetMaxStamina()
+{
+	return MaxStamina;
+}
+
 float UAttributeComponent::GetRegenPercent()
 {
 	return RegenPercent;
+}
+
+float UAttributeComponent::GetStaminaRegenPercent()
+{
+	return StaminaRegenPercent;
 }
 
 bool UAttributeComponent::IsAlive()

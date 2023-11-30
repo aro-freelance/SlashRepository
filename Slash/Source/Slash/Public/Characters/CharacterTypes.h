@@ -30,6 +30,7 @@ UENUM(BlueprintType)
 enum class ECombatMode : uint8
 {
 	ECM_OutOfCombat UMETA(DisplayName = "OutOfCombat"),
+	ECM_ReadyInCombat UMETA(DisplayName = "ReadyInCombat"),
 	ECM_Chasing UMETA(DisplayName = "Chasing"),
 	ECM_MeleeAttacking UMETA(DisplayName = "Melee Attacking"),
 	ECM_RangeAttacking UMETA(DisplayName = "Range Attacking"),

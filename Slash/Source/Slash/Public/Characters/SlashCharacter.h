@@ -115,6 +115,10 @@ protected:
 
 	virtual void UpdateCombatHUD() override;
 
+	virtual void SetReadyInCombat() override;
+
+	
+
 private:
 
 
@@ -138,7 +142,7 @@ private:
 	UAnimMontage* EquipSwordMontage;
 
 	
-
+	bool IsBusy();
 
 //Getters and Setters
 public:

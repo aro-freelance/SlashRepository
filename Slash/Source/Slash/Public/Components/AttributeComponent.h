@@ -28,11 +28,15 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
 	float TP = 0;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
+	float Stamina = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
 	float MaxHP = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
 	float MaxMP = 100;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
 	float MaxTP = 100;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dynamic Stats")
+	float MaxStamina = 100;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Experience")
 	float XP;
@@ -67,7 +71,10 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
 	float RegenPercent = 0.055; //TODO: .025
-	
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
+	float StaminaRegenPercent = 0.05; //TODO: .025
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Drops)
 	int32 SoulDropAmount = 1;
 
@@ -78,8 +85,11 @@ private:
 public:
 
 	void ReceiveDamage(float Damage);
+	void UseStamina(float StaminaCost);
+
 	float GetHealthPercent();
 	float GetTPPercent();
+	float GetStaminaPercent();
 
 	float GetStr();
 	float GetVit();
@@ -95,11 +105,17 @@ public:
 	float GetMaxMP();
 	float GetTP();
 	float GetMaxTP();
+	float GetStamina();
+	float GetMaxStamina();
+	
 	float GetRegenPercent();
+	float GetStaminaRegenPercent();
 		
 	void SetHP(float NewHP) { HP = NewHP; }
 
 	void SetTP(float NewTP) { TP = NewTP; }
+
+	void SetStamina(float NewStamina) { Stamina = NewStamina; }
 
 	void SetGold(int32 NewGold) { Gold = NewGold; }
 	void SetSouls(int32 NewSouls) { Souls = NewSouls; }

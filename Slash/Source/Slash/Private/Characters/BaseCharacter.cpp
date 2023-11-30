@@ -10,6 +10,7 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "Items/Weapons/Weapon.h"
+#include "Enemy/Enemy.h"
 
 
 ABaseCharacter::ABaseCharacter()
@@ -37,6 +38,9 @@ void ABaseCharacter::BeginPlay()
 void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	//recover hp if out of combat but also recover stamina over time
+	Recover(DeltaTime);
 
 }
 
@@ -944,6 +948,7 @@ void ABaseCharacter::Dodge()
 	CombatMode = ECombatMode::ECM_Dodging;
 
 	//TODO: execute the dodge logic
+	PlayMontage(DodgeMontage, GetRandomSectionName(DodgeMontageSectionNames));
 
 	//TODO: turn chasing back on when dodge anim is done?
 }
@@ -969,47 +974,13 @@ void ABaseCharacter::Recover(float DeltaTime)
 
 	if (RegenTickTimerDeltaTime >= RegenTickLengthDeltaTime)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("recover before: %f"), Attributes->GetHP());
 
-		//if less than max hp, recover hp by regen percent
-		if (Attributes->GetHP() && Attributes->GetMaxHP() && Attributes->GetRegenPercent())
+		if (CombatMode == ECombatMode::ECM_OutOfCombat) 
 		{
-			float CurrentHP = Attributes->GetHP();
-			float LocalMaxHP = Attributes->GetMaxHP();
-			float CurrentRegenPercent = Attributes->GetRegenPercent();
-
-			if (CurrentHP < LocalMaxHP)
-			{
-
-				float Amount = FMath::Clamp(CurrentHP + (LocalMaxHP * CurrentRegenPercent), 0.0f, LocalMaxHP);
-
-				//change the stat amount
-				Attributes->SetHP(Amount);
-
-				//Update the Blueprint Accessable Stats
-				HP = Attributes->GetHP();
-				MaxHP = Attributes->GetMaxHP();
-				RegenPercent = Attributes->GetRegenPercent();
-
-				//update the healthbar
-				UpdateCombatHUD();
-
-				//if full hp, end regen
-				if (Attributes->GetHP() >= Attributes->GetMaxHP())
-				{
-					UE_LOG(LogTemp, Warning, TEXT("regen off"));
-					IsRegening = false;
-
-					if (HealthBarWidget)
-					{
-						HealthBarWidget->SetVisibility(false);
-					}
-				}
-			}
-
-			UE_LOG(LogTemp, Warning, TEXT("recover after: %f"), Attributes->GetHP());
-
+			Regen();
 		}
+		
+		RegenStamina();
 
 		//TODO: other recovery aspects? MP? TP?
 
@@ -1021,11 +992,90 @@ void ABaseCharacter::Recover(float DeltaTime)
 	
 }
 
+void ABaseCharacter::RegenStamina()
+{
+	if (Attributes)
+	{
+		float CurrentStamina = Attributes->GetStamina();
+		float LocalMaxStamina = Attributes->GetMaxStamina();
+		float StaminaRegenPercent = Attributes->GetStaminaRegenPercent();
+
+		if (CurrentStamina < LocalMaxStamina)
+		{
+
+			float Amount = FMath::Clamp(CurrentStamina + (LocalMaxStamina * StaminaRegenPercent), 0.0f, LocalMaxStamina);
+
+			//change the stat amount
+			Attributes->SetStamina(Amount);
+
+			//update the healthbar
+			UpdateCombatHUD();
+		}
+
+	}
+}
+
+void ABaseCharacter::Regen()
+{
+	//if less than max hp, recover hp by regen percent
+	if (Attributes)
+	{
+		float CurrentHP = Attributes->GetHP();
+		float LocalMaxHP = Attributes->GetMaxHP();
+		float CurrentRegenPercent = Attributes->GetRegenPercent();
+
+		if (CurrentHP < LocalMaxHP)
+		{
+
+			float Amount = FMath::Clamp(CurrentHP + (LocalMaxHP * CurrentRegenPercent), 0.0f, LocalMaxHP);
+
+			//change the stat amount
+			Attributes->SetHP(Amount);
+
+			//Update the Blueprint Accessable Stats
+			HP = Attributes->GetHP();
+			MaxHP = Attributes->GetMaxHP();
+			RegenPercent = Attributes->GetRegenPercent();
+
+			//update the healthbar
+			UpdateCombatHUD();
+
+			//if full hp, end regen
+			if (Attributes->GetHP() >= Attributes->GetMaxHP())
+			{
+				UE_LOG(LogTemp, Warning, TEXT("regen off"));
+				IsRegening = false;
+
+				if (HealthBarWidget)
+				{
+					HealthBarWidget->SetVisibility(false);
+				}
+			}
+		}
+
+	}
+}
+
 void ABaseCharacter::AbortAttack()
 {
 	ActionState = EActionState::EAS_Unoccupied;
 	if(EquippedWeapon){ EquippedWeapon->SetWeaponCollisionState(EWeaponCollisionState::EWS_CollisionOff); }
 	
+}
+
+void ABaseCharacter::SetReadyInCombat()
+{
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(this);
+	AEnemy* Enemy = Cast<AEnemy>(this);
+
+	if (SlashCharacter)
+	{
+		CombatMode = ECombatMode::ECM_ReadyInCombat;
+	}
+	if (Enemy)
+	{
+		CombatMode = ECombatMode::ECM_Chasing;
+	}
 }
 
 
