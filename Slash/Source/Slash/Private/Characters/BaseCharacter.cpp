@@ -39,7 +39,7 @@ void ABaseCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	//recover hp if out of combat but also recover stamina over time
+	
 	Recover(DeltaTime);
 
 }

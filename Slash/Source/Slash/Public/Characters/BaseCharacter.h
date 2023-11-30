@@ -123,7 +123,7 @@ protected:
 	void Regen();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge)
-	float StaminaRequiredToDodge = 10;
+	float StaminaRequiredToDodge = 15;
 
 	//when animations don't complete, end attack state
 	UFUNCTION(BlueprintCallable)

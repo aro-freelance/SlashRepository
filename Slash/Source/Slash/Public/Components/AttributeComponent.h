@@ -73,7 +73,7 @@ protected:
 	float RegenPercent = 0.055; //TODO: .025
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Recovery")
-	float StaminaRegenPercent = 0.05; //TODO: .025
+	float StaminaRegenPercent = 0.09; //TODO: .025
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Drops)
 	int32 SoulDropAmount = 1;

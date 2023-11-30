@@ -144,5 +144,8 @@ void UAttributeComponent::TickComponent(float DeltaTime, ELevelTick TickType, FA
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
+	//this is in the Recovery function in basecharacter
+	//Stamina = FMath::Clamp(Stamina + StaminaRegenPercent * DeltaTime, 0.f, MaxStamina);
+
 }
 
