@@ -113,6 +113,8 @@ public:
 		
 	void SetHP(float NewHP) { HP = NewHP; }
 
+	void SetMP(float NewMP) { TP = NewMP; }
+
 	void SetTP(float NewTP) { TP = NewTP; }
 
 	void SetStamina(float NewStamina) { Stamina = NewStamina; }

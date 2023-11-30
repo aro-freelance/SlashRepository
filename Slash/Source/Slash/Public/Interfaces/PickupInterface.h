@@ -22,5 +22,10 @@ public:
 
 	virtual void SetOverlappingItem(class AItem* Item);
 	virtual void AddSouls(class ASoul* Soul);
+	virtual void UseHealthPotion(class ARecoveryPickup* Potion);
+	virtual void UseManaPotion(class ARecoveryPickup* Potion);
+	virtual void UseTPPotion(class ARecoveryPickup* Potion);
+	virtual void UseStaminaPotion(class ARecoveryPickup* Potion);
+	virtual void UseBuffPotion(class ARecoveryPickup* Potion);
 
 };

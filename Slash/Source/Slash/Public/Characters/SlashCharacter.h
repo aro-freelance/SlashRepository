@@ -15,6 +15,7 @@ class UInputAction;
 class UGroomComponent;
 class AItem;
 class ASoul;
+class ARecoveryPickup;
 class USphereComponent;
 class ATreasure;
 class USlashOverlay;
@@ -33,7 +34,12 @@ public:
 	virtual void Death() override;
 
 	virtual void SetOverlappingItem(AItem* Item) override;
-	virtual void AddSouls(class ASoul* Soul) override;
+	virtual void AddSouls(ASoul* Soul) override;
+	virtual void UseHealthPotion(ARecoveryPickup* Potion) override;
+	virtual void UseManaPotion(ARecoveryPickup* Potion) override;
+	virtual void UseTPPotion(ARecoveryPickup* Potion) override;
+	virtual void UseStaminaPotion(ARecoveryPickup* Potion) override;
+	virtual void UseBuffPotion(ARecoveryPickup* Potion) override;
 
 	void AddTreasure(ATreasure* Treasure);
 
@@ -143,6 +149,31 @@ private:
 
 	
 	bool IsBusy();
+
+
+
+
+	/*
+	* BUFFS
+	*/
+	
+	bool IsInvincible = false;
+	bool IsInfinMP = false;
+	bool IsInfinTP = false;
+	bool IsInfinStam = false;
+	float XPMultiplier = 1.f;
+	float GoldMultiplier = 1.f;
+	float SpeedMultiplier = 1.f;
+	float PowerMultiplier = 1.f;
+	
+	bool IsBuffed = false;
+
+	void BuffTimer(float DeltaTime);
+
+	//TODO: if we want to have multiple buffs at once we need one of these for each type of buff?
+	float BuffTickTimer = 0.0f;
+	float LastBuffReceivedDuration = 0.0f;
+
 
 //Getters and Setters
 public:

@@ -32,6 +32,7 @@ public:
 
 	void DefeatTargetCharacter(ABaseCharacter* CharacterHit);
 
+
 protected:
 
 	virtual void BeginPlay() override;
@@ -41,6 +42,7 @@ protected:
 
 
 	virtual void PlaySoundLocal(USoundBase* Sound, const FVector& ImpactPoint);
+
 
 	/*
 	* Combat
@@ -299,6 +301,8 @@ private:
 	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping);
 
 	float RegenTickTimer = 0.0f;
+
+	
 
 
 //Getters and Setters

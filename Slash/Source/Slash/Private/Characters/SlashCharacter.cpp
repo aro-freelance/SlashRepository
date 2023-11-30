@@ -12,6 +12,7 @@
 #include "Items/Item.h"
 #include "Items/Soul.h"
 #include "Items/Treasure.h"
+#include "Items/RecoveryPickup.h"
 #include "Components/AttributeComponent.h"
 #include "Items/Weapons/Weapon.h"
 
@@ -198,17 +199,151 @@ void ASlashCharacter::SetOverlappingItem(AItem* Item)
 
 void ASlashCharacter::AddSouls(ASoul* Soul)
 {
-	float SoulValue = Soul->GetValue();
-	float StoredSouls = Attributes->GetSouls();
+	if (Attributes)
+	{
+		float SoulValue = Soul->GetValue();
+		float StoredSouls = Attributes->GetSouls();
 
-	UE_LOG(LogTemp, Warning, TEXT("add soul. stored %f. new  %f"), StoredSouls, SoulValue);
+		UE_LOG(LogTemp, Warning, TEXT("add soul. stored %f. new  %f"), StoredSouls, SoulValue);
 
-	Attributes->SetSouls(StoredSouls + SoulValue);
+		Attributes->SetSouls(StoredSouls + SoulValue);
 
-	UpdateCombatHUD();
+		UpdateCombatHUD();
+	}
 }
 
+void ASlashCharacter::UseHealthPotion(ARecoveryPickup* Potion)
+{
+	
+	if (Attributes)
+	{
+		float PotionPower = Potion->GetPotionPower();
+		float MaxHP = Attributes->GetMaxHP();
+		float HealAmount = PotionPower * MaxHP;
 
+		float Amount = FMath::Clamp((Attributes->GetHP() + HealAmount), 0.0f, MaxHP);
+
+		Attributes->SetHP(Amount);
+	}
+
+}
+
+void ASlashCharacter::UseManaPotion(ARecoveryPickup* Potion)
+{
+	if (Attributes)
+	{
+		float PotionPower = Potion->GetPotionPower();
+		float MaxMP = Attributes->GetMaxMP();
+		float HealAmount = PotionPower * MaxMP;
+
+		float Amount = FMath::Clamp((Attributes->GetMP() + HealAmount), 0.0f, MaxMP);
+
+		Attributes->SetMP(Amount);
+	}
+}
+
+void ASlashCharacter::UseTPPotion(ARecoveryPickup* Potion)
+{
+	if (Attributes)
+	{
+		float PotionPower = Potion->GetPotionPower();
+		float MaxTP = Attributes->GetMaxTP();
+		float HealAmount = PotionPower * MaxTP;
+
+		float Amount = FMath::Clamp((Attributes->GetTP() + HealAmount), 0.0f, MaxTP);
+
+		Attributes->SetTP(Amount);
+	}
+}
+
+void ASlashCharacter::UseStaminaPotion(ARecoveryPickup* Potion)
+{
+	if (Attributes)
+	{
+		float PotionPower = Potion->GetPotionPower();
+		float MaxStamina = Attributes->GetMaxStamina();
+		float HealAmount = PotionPower * MaxStamina;
+
+		float Amount = FMath::Clamp((Attributes->GetStamina() + HealAmount), 0.0f, MaxStamina);
+
+		Attributes->SetStamina(Amount);
+	}
+}
+
+void ASlashCharacter::UseBuffPotion(ARecoveryPickup* Potion)
+{
+	if (Attributes)
+	{
+		float PotionPower = Potion->GetPotionPower();
+		EBuffType BuffType = Potion->GetBuffType();
+		float Duration = Potion->GetPotionDuration();
+
+		switch(BuffType)
+		{
+		case EBuffType::EBT_None:
+			break;
+		case EBuffType::EBT_Invincible:
+			IsInvincible = true;
+			break;
+		case EBuffType::EBT_InfinMP:
+			IsInfinMP = true;
+			break;
+		case EBuffType::EBT_InfinTP:
+			IsInfinTP = true;
+			break;
+		case EBuffType::EBT_InfinStam:
+			IsInfinStam = true;
+			break;
+		case EBuffType::EBT_XPMultiplier:
+			XPMultiplier = XPMultiplier * (1 + PotionPower);
+			break;
+		case EBuffType::EBT_GoldMultiplier:
+			GoldMultiplier = GoldMultiplier * (1 + PotionPower);
+			break;
+		case EBuffType::EBT_SpeedBoost:
+			SpeedMultiplier = SpeedMultiplier * (1 + PotionPower);
+			break;
+		case EBuffType::EBT_PowerBoost:
+			PowerMultiplier = PowerMultiplier * (1 + PotionPower);
+			break;
+
+		}
+
+		//TODO: handle picking up another buff by either: A. canceling previous. or B. Keeping separate timers for each type of buff?
+		if (BuffType != EBuffType::EBT_None)
+		{
+			IsBuffed = true;
+			BuffTickTimer = 0.0f;
+			LastBuffReceivedDuration = Duration;
+		}
+	}
+}
+
+//called in Tick if IsBuffed
+void ASlashCharacter::BuffTimer(float DeltaTime)
+{
+	float BuffTickTimerDeltaTime = BuffTickTimer * DeltaTime;
+	float BuffDurationDeltaTime = LastBuffReceivedDuration * DeltaTime;
+
+	//if the time elapsed is greater than the buff duration, turn off the buffs 
+	// (TODO: if we are keeping multiple buffs keep track of each and deactivate seperately.)
+	if (BuffTickTimerDeltaTime >= BuffDurationDeltaTime)
+	{
+		IsInvincible = false;
+		IsInfinMP = false;
+		IsInfinTP = false;
+		IsInfinStam = false;
+		XPMultiplier = 1.f;
+		GoldMultiplier = 1.f;
+		SpeedMultiplier = 1.f;
+		PowerMultiplier = 1.f;
+
+		//and turn this timer off until another buff is picked up.
+		IsBuffed = false;
+
+	}
+
+}
 
 bool ASlashCharacter::CanDisarm()
 {
@@ -395,6 +530,8 @@ bool ASlashCharacter::IsBusy()
 
 	return isBusy;
 }
+
+
 
 
 
@@ -635,6 +772,11 @@ void ASlashCharacter::Tick(float DeltaTime)
 		//turn camera toward locked on target
 		Controller->SetControlRotation(
 			UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CombatTarget->GetActorLocation()));
+	}
+
+	if (IsBuffed)
+	{
+		BuffTimer(DeltaTime);
 	}
 
 }

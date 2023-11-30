@@ -6,49 +6,29 @@ void ARecoveryPickup::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedC
 {
 	Super::OnCollisionCapsuleOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 	
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
 
-	//switch (PotionType)
-	//{
-	//case EPotionType::EPT_Health:
-	//	HealthPotion();
-	//	break;
-	//case EPotionType::EPT_Mana:
-	//	ManaPotion();
-	//	break;
-	//case EPotionType::EPT_TP:
-	//	TPPotion();
-	//	break;
-	//case EPotionType::EPT_Stamina:
-	//	StaminaPotion();
-	//	break;
-	//case EPotionType::EPT_Buff:
-	//	BuffPotion();
-	//	break;
-	//}
+	if (SlashCharacter)
+	{
 
-}
+		switch (PotionType)
+		{
+		case EPotionType::EPT_Health:
+			SlashCharacter->UseHealthPotion(this);
+			break;
+		case EPotionType::EPT_Mana:
+			SlashCharacter->UseManaPotion(this);
+			break;
+		case EPotionType::EPT_TP:
+			SlashCharacter->UseTPPotion(this);
+			break;
+		case EPotionType::EPT_Stamina:
+			SlashCharacter->UseStaminaPotion(this);
+			break;
+		case EPotionType::EPT_Buff:
+			SlashCharacter->UseBuffPotion(this);
+			break;
+		}
+	}
 
-void ARecoveryPickup::HealthPotion()
-{
-	//TODO: heal for value
-}
-
-void ARecoveryPickup::ManaPotion()
-{
-	//TODO: mp heal for value
-}
-
-void ARecoveryPickup::TPPotion()
-{
-	//TODO: tp heal for value
-}
-
-void ARecoveryPickup::StaminaPotion()
-{
-	//TODO: stam heal for value
-}
-
-void ARecoveryPickup::BuffPotion()
-{
-	//TODO: switch based on buff type and execute function for that buff (make new functions)
 }
