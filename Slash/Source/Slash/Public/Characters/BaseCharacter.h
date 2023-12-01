@@ -32,6 +32,10 @@ public:
 
 	void DefeatTargetCharacter(ABaseCharacter* CharacterHit);
 
+	//when animations don't complete, end attack state
+	UFUNCTION(BlueprintCallable)
+	virtual void AbortAttack();
+
 
 protected:
 
@@ -129,9 +133,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Dodge)
 	float StaminaRequiredToDodge = 15;
 
-	//when animations don't complete, end attack state
-	UFUNCTION(BlueprintCallable)
-	virtual void AbortAttack();
+	
 
 	UFUNCTION(BlueprintCallable)
 	virtual void SetReadyInCombat();

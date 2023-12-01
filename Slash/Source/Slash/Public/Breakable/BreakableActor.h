@@ -28,7 +28,10 @@ protected:
 	UGeometryCollectionComponent* GeometryCollection;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
-	bool ShouldSpawnTreasureOnBreak;
+	bool ShouldSpawnTreasureOnBreak = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Potions and Buffs")
+	bool ShouldSpawnRecoveryPickupOnBreak = false;
 
 	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
 	//TSubclassOf<class ATreasure> TreasureToSpawnOnBreak;
@@ -36,6 +39,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Treasure")
 	TArray<TSubclassOf<class ATreasure>> ArrayOfTreasureToSpawnOnBreak;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Spawn Potions and Buffs")
+	TArray<TSubclassOf<class ARecoveryPickup>> ArrayOfPotionsNBuffsToSpawnOnBreak;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite)
 	class UCapsuleComponent* Capsule;

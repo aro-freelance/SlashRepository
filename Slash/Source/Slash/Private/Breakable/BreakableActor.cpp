@@ -4,6 +4,7 @@
 #include "Breakable/BreakableActor.h"
 #include "GeometryCollection/GeometryCollectionComponent.h"
 #include "Items/Treasure.h"
+#include "Items/RecoveryPickup.h"
 #include "Components/CapsuleComponent.h"
 
 ABreakableActor::ABreakableActor()
@@ -59,6 +60,23 @@ void ABreakableActor::GetHit_Implementation(const FVector& ImpactPoint, ACharact
 				GetActorRotation()
 			);
 		}
+	}
+
+	if (ShouldSpawnRecoveryPickupOnBreak)
+	{
+		UWorld* World = GetWorld();
+		if (World && ArrayOfPotionsNBuffsToSpawnOnBreak.Num() > 0)
+		{
+			const int32 RandomSelection = FMath::RandRange(0, ArrayOfPotionsNBuffsToSpawnOnBreak.Num() - 1);
+
+			World->SpawnActor<ARecoveryPickup>
+				(
+					ArrayOfPotionsNBuffsToSpawnOnBreak[RandomSelection],
+					GetActorLocation(),
+					GetActorRotation()
+				);
+		}
+
 	}
 	
 
