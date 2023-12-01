@@ -31,6 +31,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
+	void ClearCenterPopupText();
+
 	virtual void Death() override;
 
 	virtual void SetOverlappingItem(AItem* Item) override;
@@ -126,8 +128,7 @@ protected:
 
 	virtual void SetReadyInCombat() override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buff")
-	bool IsBuffed = false;
+	
 
 private:
 
@@ -154,36 +155,13 @@ private:
 	
 	bool IsBusy();
 
-
-
-
-	/*
-	* BUFFS
-	*/
-	
-	bool IsInvincible = false;
-	bool IsInfinMP = false;
-	bool IsInfinTP = false;
-	bool IsInfinStam = false;
-	float XPMultiplier = 1.f;
-	float GoldMultiplier = 1.f;
-	float SpeedMultiplier = 1.f;
-	float PowerMultiplier = 1.f;
-	
-	
-
-	void BuffTimer(float DeltaTime);
-
-	void ClearCenterPopupText();
-
-	//TODO: if we want to have multiple buffs at once we need one of these for each type of buff?
-	UPROPERTY(VisibleAnywhere)
-	float BuffTickTimer = 0.0f;
-	float LastBuffReceivedDuration = 0.0f;
+	bool CanDodge();
 
 
 //Getters and Setters
 public:
 	//FORCEINLINE void SetOverlappingItem(AItem* Item) { OverlappingItem = Item; }
+
+	FORCEINLINE float GetPopupDisplayTime() const { return PopupDisplayTime; };
 
 };

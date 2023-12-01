@@ -92,6 +92,13 @@ void ASlashCharacter::Move(const FInputActionValue& Value)
 	
 	if (ActionState != EActionState::EAS_Unoccupied) return;
 
+	if (SpeedMultiplier)
+	{
+		//TODO: set speed to higher amount. 
+		//Turn this off by returning it to default in the function that turns buff off. 
+		// (so we should store the movement speed before we change it)
+	}
+
 	//get controller movement input
 	const FVector2D MovementVector = Value.Get<FVector2D>();
 	//get controller camera input
@@ -137,9 +144,13 @@ void ASlashCharacter::Dodge(const FInputActionValue& Value)
 
 	if (Attributes)
 	{
-		if (Attributes->GetStamina() >= StaminaRequiredToDodge)
+		if (CanDodge())
 		{
-			Attributes->UseStamina(StaminaRequiredToDodge);
+			if (!IsInfinStam)
+			{
+				Attributes->UseStamina(StaminaRequiredToDodge);
+			}
+			
 			ABaseCharacter::Dodge();
 			UpdateCombatHUD();
 		}
@@ -202,6 +213,12 @@ void ASlashCharacter::AddSouls(ASoul* Soul)
 	if (Attributes)
 	{
 		float SoulValue = Soul->GetValue();
+		
+		if (XPMultiplier)
+		{
+			SoulValue = SoulValue * (1 + XPMultiplier);
+		}
+
 		float StoredSouls = Attributes->GetSouls();
 
 		UE_LOG(LogTemp, Warning, TEXT("add soul. stored %f. new  %f"), StoredSouls, SoulValue);
@@ -337,45 +354,7 @@ void ASlashCharacter::UseBuffPotion(ARecoveryPickup* Potion)
 	}
 }
 
-//called in Tick if IsBuffed
-void ASlashCharacter::BuffTimer(float DeltaTime)
-{
-	float BuffTickTimerDeltaTime = BuffTickTimer * DeltaTime;
-	float BuffDurationDeltaTime = LastBuffReceivedDuration * DeltaTime;
-	float PopUpDurationDeltaTime = PopupDisplayTime * DeltaTime;
 
-	//when the popup display timer is over, turn it off
-	if (BuffTickTimerDeltaTime >= PopUpDurationDeltaTime)
-	{
-		ClearCenterPopupText();
-	}
-
-
-	//if the time elapsed is greater than the buff duration, turn off the buffs 
-	// (TODO: if we are keeping multiple buffs keep track of each and deactivate seperately.)
-	if (BuffTickTimerDeltaTime >= BuffDurationDeltaTime)
-	{
-		ClearCenterPopupText();
-
-		IsInvincible = false;
-		IsInfinMP = false;
-		IsInfinTP = false;
-		IsInfinStam = false;
-		XPMultiplier = 1.f;
-		GoldMultiplier = 1.f;
-		SpeedMultiplier = 1.f;
-		PowerMultiplier = 1.f;
-
-		//and turn this timer off until another buff is picked up.
-		IsBuffed = false;
-
-		//TODO: if visual effect is added turn it OFF here
-
-	}
-
-	BuffTickTimer += 1;
-
-}
 
 void ASlashCharacter::ClearCenterPopupText()
 {
@@ -384,6 +363,7 @@ void ASlashCharacter::ClearCenterPopupText()
 		SlashOverlay->SetCenterPopupText("");
 	}
 }
+
 
 bool ASlashCharacter::CanDisarm()
 {
@@ -571,6 +551,22 @@ bool ASlashCharacter::IsBusy()
 	return isBusy;
 }
 
+bool ASlashCharacter::CanDodge()
+{
+	bool IsDodgeReady = false;
+	if (Attributes->GetStamina() >= StaminaRequiredToDodge)
+	{
+		IsDodgeReady = true;
+	}
+
+	if (IsInfinStam)
+	{
+		IsDodgeReady = true;
+	}
+	
+	return IsDodgeReady;
+}
+
 
 
 
@@ -581,10 +577,14 @@ void ASlashCharacter::AddTreasure(ATreasure* Treasure)
 	if (Attributes)
 	{
 		int32 CurrentGold = Attributes->GetGold();
-		//int32 CurrentSouls = Attributes->GetSouls();
+		int32 TreasureAmount = Treasure->GetGoldAmount();
 
-		Attributes->SetGold(CurrentGold + Treasure->GetGoldAmount());
-		//Attributes->SetSouls(CurrentSouls + Treasure->GetSoulsAmount());
+		if (GoldMultiplier)
+		{
+			TreasureAmount = TreasureAmount * (1 + GoldMultiplier);
+		}
+
+		Attributes->SetGold(CurrentGold + TreasureAmount);
 
 		UpdateCombatHUD();
 	}
@@ -812,11 +812,6 @@ void ASlashCharacter::Tick(float DeltaTime)
 		//turn camera toward locked on target
 		Controller->SetControlRotation(
 			UKismetMathLibrary::FindLookAtRotation(GetActorLocation(), CombatTarget->GetActorLocation()));
-	}
-
-	if (IsBuffed)
-	{
-		BuffTimer(DeltaTime);
 	}
 
 }

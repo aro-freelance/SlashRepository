@@ -52,6 +52,8 @@ protected:
 
 	bool CanAttack();
 
+	bool CanSpecialAttack();
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	AWeapon* EquippedWeapon;
 
@@ -213,6 +215,31 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	UHealthBarComponent* HealthBarWidget;
 
+
+/*
+* BUFFS
+*/
+
+	bool IsInvincible = false;
+	bool IsInfinMP = false;
+	bool IsInfinTP = false;
+	bool IsInfinStam = false;
+	float XPMultiplier = 1.f;
+	float GoldMultiplier = 1.f;
+	float SpeedMultiplier = 1.f;
+	float PowerMultiplier = 1.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buff")
+	bool IsBuffed = false;
+
+	virtual void BuffTimer(float DeltaTime);
+
+	
+
+	//TODO: if we want to have multiple buffs at once we need one of these for each type of buff?
+	UPROPERTY(VisibleAnywhere)
+	float BuffTickTimer = 0.0f;
+	float LastBuffReceivedDuration = 0.0f;
 	
 
 private:
@@ -302,7 +329,6 @@ private:
 
 	float RegenTickTimer = 0.0f;
 
-	
 
 
 //Getters and Setters
@@ -321,5 +347,7 @@ public:
 	FORCEINLINE AWeapon* GetWeapon() const { return EquippedWeapon; }
 
 	FORCEINLINE void SetInCombat(bool NewIsInCombat) { IsInCombat = NewIsInCombat; }
+
+	FORCEINLINE float GetPowerMultiplier() const { return PowerMultiplier; }
 
 };

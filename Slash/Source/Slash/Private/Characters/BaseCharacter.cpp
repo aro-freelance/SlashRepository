@@ -43,6 +43,11 @@ void ABaseCharacter::Tick(float DeltaTime)
 	
 	Recover(DeltaTime);
 
+	if (IsBuffed)
+	{
+		BuffTimer(DeltaTime);
+	}
+
 }
 
 
@@ -200,6 +205,21 @@ bool ABaseCharacter::CanAttack()
 {
 	return ActionState == EActionState::EAS_Unoccupied &&
 		CharacterState != ECharacterState::ECS_Unarmed;
+}
+
+bool ABaseCharacter::CanSpecialAttack()
+{
+	bool CanSpecialAttack = false;
+	if (Attributes->GetTP() >= SpecialAttackTPCost)
+	{
+		CanSpecialAttack = true;
+	}
+	if (IsInfinTP)
+	{
+		CanSpecialAttack = true;
+	}
+
+	return CanSpecialAttack;
 }
 
 void ABaseCharacter::SetFollowDistance()
@@ -621,7 +641,6 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 	ABaseCharacter* Attacker = Cast<ABaseCharacter>(DamageDealer);
 	if (Attacker) 
 	{
-
 		//tell the attacker they scored a hit
 		Attacker->ProcessHitTarget(this);
 
@@ -638,11 +657,18 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 		LastHitDirection = CalculateHitReactSectionName(DamageDealer->GetActorLocation());
 
 		if(!IsInCombat){ StartCombat(); }
+
+		//TODO: playtest where the best place to add this multiplier is... 
+		// this is increasing the weapon damage currently, 
+		// the other option would be to change it in the CalculatePhys or Magic functions after other mods
+		// doing it here should result in a stronger buff than further down the line
+		float PowerMultipler = Attacker->GetPowerMultiplier();
+		float MultiplierWeaponDamage = PowerMultipler * Weapon->GetWeaponDamage();
 		
 		//Deal Damage
 		UGameplayStatics::ApplyDamage(
 			this,
-			Weapon->GetWeaponDamage(),
+			MultiplierWeaponDamage,
 			DamageDealer->GetController(),
 			Weapon,
 			UDamageType::StaticClass()
@@ -695,6 +721,56 @@ void ABaseCharacter::PlaySoundLocal(USoundBase* Sound, const FVector& Location)
 	);
 }
 
+//called in Tick if IsBuffed
+void ABaseCharacter::BuffTimer(float DeltaTime)
+{
+	float BuffTickTimerDeltaTime = BuffTickTimer * DeltaTime;
+	float BuffDurationDeltaTime = LastBuffReceivedDuration * DeltaTime;
+
+	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(this);
+	if (SlashCharacter)
+	{
+		float PopupDisplayTime = SlashCharacter->GetPopupDisplayTime();
+		float PopUpDurationDeltaTime = PopupDisplayTime * DeltaTime;
+
+		//when the popup display timer is over, turn it off
+		if (BuffTickTimerDeltaTime >= PopUpDurationDeltaTime)
+		{
+			SlashCharacter->ClearCenterPopupText();
+		}
+	}
+	
+
+
+	//if the time elapsed is greater than the buff duration, turn off the buffs 
+	// (TODO: if we are keeping multiple buffs keep track of each and deactivate seperately.)
+	if (BuffTickTimerDeltaTime >= BuffDurationDeltaTime)
+	{
+		if (SlashCharacter)
+		{
+			SlashCharacter->ClearCenterPopupText();
+		}
+
+		IsInvincible = false;
+		IsInfinMP = false; //TODO: when mp is added implement this the same way as tp and stam
+		IsInfinTP = false;
+		IsInfinStam = false;
+		XPMultiplier = 1.f;
+		GoldMultiplier = 1.f;
+		SpeedMultiplier = 1.f;
+		PowerMultiplier = 1.f;
+
+		//and turn this timer off until another buff is picked up.
+		IsBuffed = false;
+
+		//TODO: if visual effect is added turn it OFF here
+
+	}
+
+	BuffTickTimer += 1;
+
+}
+
 
 float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -729,6 +805,12 @@ float ABaseCharacter::TakeDamage(float DamageAmount, FDamageEvent const& DamageE
 
 			FinalDamageAmount = CalculateMagicalDamage(MagicDamageAmount) + CalculatePhysicalDamage(PhysicalDamageAmount);
 			UE_LOG(LogTemp, Warning, TEXT("hybrid damage. Final: %f. Magic: %f. Physical: %f."), FinalDamageAmount, MagicDamageAmount, PhysicalDamageAmount);
+		}
+
+		//check for invincible buff
+		if (IsInvincible)
+		{
+			FinalDamageAmount = 0;
 		}
 
 		//store the damage amount
@@ -907,27 +989,40 @@ void ABaseCharacter::SpecialAttack()
 		return;
 	}
 
-	//use the TP
-	Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
-
-	CombatMode = ECombatMode::ECM_SpecialAttacking;
-	ActionState = EActionState::EAS_Attacking;
-
-	//do the attack
-	PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
-
-	//PlayAttackMontage(WeaponType);
-	if (EquippedWeapon->CanFire())
+	if (CanSpecialAttack())
 	{
-		EquippedWeapon->Fire();
+		if (!IsInfinTP) 
+		{
+			//use the TP
+			Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
+		}
+		
+		CombatMode = ECombatMode::ECM_SpecialAttacking;
+		ActionState = EActionState::EAS_Attacking;
+
+		//do the attack
+		PlayMontage(AttackMontage, GetRandomSectionName(AttackMontageSectionNames));
+
+		//PlayAttackMontage(WeaponType);
+		if (EquippedWeapon->CanFire())
+		{
+			EquippedWeapon->Fire();
+		}
+
+		bool AttackHitTarget = true;
+		//TODO: update this based on the attack hitting or not
+		if (AttackHitTarget)
+		{
+			IncreaseTP();
+		}
+	}
+	else
+	{
+		//TODO: tell player they don't have enough TP
+		UE_LOG(LogTemp, Warning, TEXT("Not enough TP to use special move"));
 	}
 
-	bool AttackHitTarget = true;
-	//TODO: update this based on the attack hitting or not
-	if (AttackHitTarget)
-	{
-		IncreaseTP();
-	}
+	
 
 	//TODO: turn chasing back on when attack anim is done?
 }
