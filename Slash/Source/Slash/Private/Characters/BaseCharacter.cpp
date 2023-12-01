@@ -967,6 +967,7 @@ void ABaseCharacter::Hide()
 }
 
 
+//TODO: change this to an interface to give different functionality to players and enemies
 //when out of combat, without full hp/mp increase hp/mp per tick
 void ABaseCharacter::Recover(float DeltaTime)
 {
@@ -976,11 +977,15 @@ void ABaseCharacter::Recover(float DeltaTime)
 
 	if (RegenTickTimerDeltaTime >= RegenTickLengthDeltaTime)
 	{
-
-		if (CombatMode == ECombatMode::ECM_OutOfCombat) 
+		AEnemy* Enemy = Cast<AEnemy>(this);
+		if (Enemy)
 		{
-			Regen();
+			if (CombatMode == ECombatMode::ECM_OutOfCombat)
+			{
+				Regen();
+			}
 		}
+		
 		
 		RegenStamina();
 

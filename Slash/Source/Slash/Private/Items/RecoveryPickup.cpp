@@ -6,29 +6,35 @@ void ARecoveryPickup::OnCollisionCapsuleOverlap(UPrimitiveComponent* OverlappedC
 {
 	Super::OnCollisionCapsuleOverlap(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 	
-	ASlashCharacter* SlashCharacter = Cast<ASlashCharacter>(OtherActor);
+	UE_LOG(LogTemp, Warning, TEXT("RecoveryPickup Collision Function."));
 
-	if (SlashCharacter)
+	IPickupInterface* PickupInterface = Cast<IPickupInterface>(OtherActor);
+	if (PickupInterface)
 	{
+		bool ShouldDestroy = true;
+		PickupSystem(ShouldDestroy);
 
 		switch (PotionType)
 		{
 		case EPotionType::EPT_Health:
-			SlashCharacter->UseHealthPotion(this);
+			PickupInterface->UseHealthPotion(this);
 			break;
 		case EPotionType::EPT_Mana:
-			SlashCharacter->UseManaPotion(this);
+			PickupInterface->UseManaPotion(this);
 			break;
 		case EPotionType::EPT_TP:
-			SlashCharacter->UseTPPotion(this);
+			PickupInterface->UseTPPotion(this);
 			break;
 		case EPotionType::EPT_Stamina:
-			SlashCharacter->UseStaminaPotion(this);
+			PickupInterface->UseStaminaPotion(this);
 			break;
 		case EPotionType::EPT_Buff:
-			SlashCharacter->UseBuffPotion(this);
+			PickupInterface->UseBuffPotion(this);
 			break;
 		}
+
 	}
+
+	
 
 }

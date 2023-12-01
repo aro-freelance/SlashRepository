@@ -214,16 +214,18 @@ void ASlashCharacter::AddSouls(ASoul* Soul)
 
 void ASlashCharacter::UseHealthPotion(ARecoveryPickup* Potion)
 {
+	UE_LOG(LogTemp, Warning, TEXT("health potion Function."));
 	
 	if (Attributes)
 	{
 		float PotionPower = Potion->GetPotionPower();
-		float MaxHP = Attributes->GetMaxHP();
-		float HealAmount = PotionPower * MaxHP;
+		float LocalMaxHP = Attributes->GetMaxHP();
+		float HealAmount = PotionPower * LocalMaxHP;
 
-		float Amount = FMath::Clamp((Attributes->GetHP() + HealAmount), 0.0f, MaxHP);
+		float Amount = FMath::Clamp((Attributes->GetHP() + HealAmount), 0.0f, LocalMaxHP);
 
 		Attributes->SetHP(Amount);
+		UpdateCombatHUD();
 	}
 
 }
@@ -239,6 +241,7 @@ void ASlashCharacter::UseManaPotion(ARecoveryPickup* Potion)
 		float Amount = FMath::Clamp((Attributes->GetMP() + HealAmount), 0.0f, MaxMP);
 
 		Attributes->SetMP(Amount);
+		UpdateCombatHUD();
 	}
 }
 
@@ -253,6 +256,7 @@ void ASlashCharacter::UseTPPotion(ARecoveryPickup* Potion)
 		float Amount = FMath::Clamp((Attributes->GetTP() + HealAmount), 0.0f, MaxTP);
 
 		Attributes->SetTP(Amount);
+		UpdateCombatHUD();
 	}
 }
 
@@ -267,16 +271,18 @@ void ASlashCharacter::UseStaminaPotion(ARecoveryPickup* Potion)
 		float Amount = FMath::Clamp((Attributes->GetStamina() + HealAmount), 0.0f, MaxStamina);
 
 		Attributes->SetStamina(Amount);
+		UpdateCombatHUD();
 	}
 }
 
 void ASlashCharacter::UseBuffPotion(ARecoveryPickup* Potion)
 {
-	if (Attributes)
+	if (Attributes && SlashOverlay)
 	{
 		float PotionPower = Potion->GetPotionPower();
 		EBuffType BuffType = Potion->GetBuffType();
 		float Duration = Potion->GetPotionDuration();
+		FString DisplayText = "";
 
 		switch(BuffType)
 		{
@@ -284,30 +290,42 @@ void ASlashCharacter::UseBuffPotion(ARecoveryPickup* Potion)
 			break;
 		case EBuffType::EBT_Invincible:
 			IsInvincible = true;
+			DisplayText = "Invincible Buff!";
 			break;
 		case EBuffType::EBT_InfinMP:
 			IsInfinMP = true;
+			DisplayText = "Infinite MP Buff!";
 			break;
 		case EBuffType::EBT_InfinTP:
 			IsInfinTP = true;
+			DisplayText = "Infinite TP Buff!";
 			break;
 		case EBuffType::EBT_InfinStam:
 			IsInfinStam = true;
+			DisplayText = "Infinite Stamina Buff!";
 			break;
 		case EBuffType::EBT_XPMultiplier:
 			XPMultiplier = XPMultiplier * (1 + PotionPower);
+			DisplayText = "Experience Buff!";
 			break;
 		case EBuffType::EBT_GoldMultiplier:
 			GoldMultiplier = GoldMultiplier * (1 + PotionPower);
+			DisplayText = "Gold Buff!";
 			break;
 		case EBuffType::EBT_SpeedBoost:
 			SpeedMultiplier = SpeedMultiplier * (1 + PotionPower);
+			DisplayText = "Speed Buff!";
 			break;
 		case EBuffType::EBT_PowerBoost:
 			PowerMultiplier = PowerMultiplier * (1 + PotionPower);
+			DisplayText = "Power Buff!";
 			break;
 
 		}
+
+		//TODO: if visual effect is added turn it on here
+		SlashOverlay->SetCenterPopupText(DisplayText);
+
 
 		//TODO: handle picking up another buff by either: A. canceling previous. or B. Keeping separate timers for each type of buff?
 		if (BuffType != EBuffType::EBT_None)
@@ -324,11 +342,21 @@ void ASlashCharacter::BuffTimer(float DeltaTime)
 {
 	float BuffTickTimerDeltaTime = BuffTickTimer * DeltaTime;
 	float BuffDurationDeltaTime = LastBuffReceivedDuration * DeltaTime;
+	float PopUpDurationDeltaTime = PopupDisplayTime * DeltaTime;
+
+	//when the popup display timer is over, turn it off
+	if (BuffTickTimerDeltaTime >= PopUpDurationDeltaTime)
+	{
+		ClearCenterPopupText();
+	}
+
 
 	//if the time elapsed is greater than the buff duration, turn off the buffs 
 	// (TODO: if we are keeping multiple buffs keep track of each and deactivate seperately.)
 	if (BuffTickTimerDeltaTime >= BuffDurationDeltaTime)
 	{
+		ClearCenterPopupText();
+
 		IsInvincible = false;
 		IsInfinMP = false;
 		IsInfinTP = false;
@@ -341,8 +369,20 @@ void ASlashCharacter::BuffTimer(float DeltaTime)
 		//and turn this timer off until another buff is picked up.
 		IsBuffed = false;
 
+		//TODO: if visual effect is added turn it OFF here
+
 	}
 
+	BuffTickTimer += 1;
+
+}
+
+void ASlashCharacter::ClearCenterPopupText()
+{
+	if (SlashOverlay)
+	{
+		SlashOverlay->SetCenterPopupText("");
+	}
 }
 
 bool ASlashCharacter::CanDisarm()

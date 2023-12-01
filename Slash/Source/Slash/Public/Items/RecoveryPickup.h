@@ -32,7 +32,7 @@ protected:
 	float PotionPower = 0.2f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Potion Duration")
-	float PotionDuration = 1.f;
+	float PotionDuration = 300.f;
 
 private:
 

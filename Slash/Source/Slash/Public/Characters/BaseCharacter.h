@@ -320,4 +320,6 @@ public:
 
 	FORCEINLINE AWeapon* GetWeapon() const { return EquippedWeapon; }
 
+	FORCEINLINE void SetInCombat(bool NewIsInCombat) { IsInCombat = NewIsInCombat; }
+
 };

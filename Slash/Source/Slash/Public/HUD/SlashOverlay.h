@@ -24,6 +24,7 @@ public:
 
 	void SetGoldText(int32 Amount);
 	void SetSoulsText(int32 Amount);
+	void SetCenterPopupText(FString Text);
 
 private:
 
@@ -41,5 +42,8 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	class UTextBlock* SoulAmountText;
+
+	UPROPERTY(meta = (BindWidget))
+	class UTextBlock* CenterPopupText;
 	
 };

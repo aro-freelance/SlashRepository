@@ -78,6 +78,9 @@ void AEnemy::PawnSeen(APawn* SeenPawn)
 
 		
 		CombatTarget = CharacterSeen;
+
+		CharacterSeen->SetInCombat(true);
+
 		StartCombat();
 	}
 }

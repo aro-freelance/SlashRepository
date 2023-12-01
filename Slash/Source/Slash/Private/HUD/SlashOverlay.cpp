@@ -46,3 +46,9 @@ void USlashOverlay::SetSoulsText(int32 Amount)
 		SoulAmountText->SetText(SoulsFText);
 	}
 }
+
+void USlashOverlay::SetCenterPopupText(FString Text)
+{
+	FText DisplayText = FText::FromString(*Text);
+	CenterPopupText->SetText(DisplayText);
+}

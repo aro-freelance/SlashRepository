@@ -119,11 +119,15 @@ protected:
 
 	USlashOverlay* SlashOverlay;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Popup Message")
+	float PopupDisplayTime = 100.f;
+
 	virtual void UpdateCombatHUD() override;
 
 	virtual void SetReadyInCombat() override;
 
-	
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Buff")
+	bool IsBuffed = false;
 
 private:
 
@@ -166,11 +170,14 @@ private:
 	float SpeedMultiplier = 1.f;
 	float PowerMultiplier = 1.f;
 	
-	bool IsBuffed = false;
+	
 
 	void BuffTimer(float DeltaTime);
 
+	void ClearCenterPopupText();
+
 	//TODO: if we want to have multiple buffs at once we need one of these for each type of buff?
+	UPROPERTY(VisibleAnywhere)
 	float BuffTickTimer = 0.0f;
 	float LastBuffReceivedDuration = 0.0f;
 
