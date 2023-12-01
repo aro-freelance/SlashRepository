@@ -1160,6 +1160,7 @@ void ABaseCharacter::Regen()
 
 void ABaseCharacter::AbortAttack()
 {
+	CombatMode = ECombatMode::ECM_ReadyInCombat;
 	ActionState = EActionState::EAS_Unoccupied;
 	if(EquippedWeapon){ EquippedWeapon->SetWeaponCollisionState(EWeaponCollisionState::EWS_CollisionOff); }
 	
