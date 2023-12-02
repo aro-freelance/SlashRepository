@@ -44,7 +44,7 @@ void AEnemy::BeginPlay()
 
 	if (HealthBarWidget)
 	{
-		HealthBarWidget->SetVisibility(false);
+		SetHealthBarVisibility(false, "BeginPlay");
 		HealthBarWidget->SetNameText(Name);
 	}
 
@@ -61,28 +61,31 @@ void AEnemy::BeginPlay()
 
 void AEnemy::PawnSeen(APawn* SeenPawn)
 {
-	ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
-	
-	if (CharacterSeen && !IsInCombat)
+	if (CanSee())
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
-		
-		if (CharacterSeen->ActorHasTag("Dead")) 
-		{ 
-			//UE_LOG(LogTemp, Warning, TEXT("Seen Character is dead. Return."));
+		ASlashCharacter* CharacterSeen = Cast<ASlashCharacter>(SeenPawn);
+		if (CharacterSeen && !IsInCombat)
+		{
+			//UE_LOG(LogTemp, Warning, TEXT("Pawn Seen"));
 
-			//TODO: add to ignore list? would need to remove if revived?
+			if (CharacterSeen->ActorHasTag("Dead"))
+			{
+				//UE_LOG(LogTemp, Warning, TEXT("Seen Character is dead. Return."));
 
-			return; 
-		};
+				//TODO: add to ignore list? would need to remove if revived?
 
-		
-		CombatTarget = CharacterSeen;
+				return;
+			};
 
-		CharacterSeen->SetInCombat(true);
 
-		StartCombat();
+			SetCombatTarget(CharacterSeen, "PawnSeen");
+
+			CharacterSeen->SetInCombat(true);
+
+			StartCombat();
+		}
 	}
+	
 }
 
 
@@ -175,14 +178,26 @@ void AEnemy::StartCombat()
 {
 	Super::StartCombat();
 
+	if (CombatMode != ECombatMode::ECM_Dead)
+	{
+		SetHealthBarVisibility(true, "Start Combat");
+
+		SetCombatMode(ECombatMode::ECM_Chasing);
+		IsCombatTickReady = true;
+	}
+	
+}
+
+void AEnemy::SetHealthBarVisibility(bool ShouldBeOn, FString FunctionCallingThis)
+{
+	FString BString = "On";
+	if (!ShouldBeOn) { BString = "Off"; }
+	UE_LOG(LogTemp, Warning, TEXT("%s: Set Health Bar Visibility : %s"), *FunctionCallingThis, *BString);
+
 	if (HealthBarWidget)
 	{
-		HealthBarWidget->SetVisibility(true);
+		HealthBarWidget->SetVisibility(ShouldBeOn);
 	}
-
-	SetCombatMode(ECombatMode::ECM_Chasing);
-	IsCombatTickReady = true;
-
 }
 
 void AEnemy::EndCombat()
@@ -192,7 +207,7 @@ void AEnemy::EndCombat()
 
 	if (HealthBarWidget)
 	{
-		HealthBarWidget->SetVisibility(false);
+		SetHealthBarVisibility(false, "EndCombat");
 	}
 }
 
@@ -227,18 +242,14 @@ void AEnemy::Recover(float DeltaTime)
 {
 	Super::Recover(DeltaTime);
 
-	if (IsRegening)
+	if (CanRecover())
 	{
-		if (HealthBarWidget)
+		if (IsRegening)
 		{
-			HealthBarWidget->SetVisibility(true);
-		}
-	}
-	else 
-	{
-		if (HealthBarWidget)
-		{
-			HealthBarWidget->SetVisibility(false);
+			if (HealthBarWidget)
+			{
+				SetHealthBarVisibility(true, "Recover, IsRegening");
+			}
 		}
 	}
 		

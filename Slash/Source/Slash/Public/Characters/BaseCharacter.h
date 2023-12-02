@@ -119,6 +119,11 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	virtual void SetCombatMode(ECombatMode NewCombatMode);
 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetCombatTarget(ABaseCharacter* Target, FString NameOfFunctionCallingThis);
+
+	UFUNCTION(BlueprintCallable)
+	virtual void ClearCombatTarget(FString NameOfFunctionCallingThis);
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsInCombat = false;
@@ -126,6 +131,12 @@ protected:
 	bool IsRegening = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Regen")
 	float RegenTickLength = 150.0f;
+
+
+	virtual bool CanRecover();
+	virtual bool CanSee();
+
+
 	UFUNCTION(BlueprintCallable)
 	virtual void Recover(float DeltaTime);
 

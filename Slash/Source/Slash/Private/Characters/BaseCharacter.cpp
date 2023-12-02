@@ -259,14 +259,15 @@ FVector ABaseCharacter::GetRotationWarpTarget()
 
 void ABaseCharacter::StartCombat()
 {
-	
-	//TODO turn on combat hud
+	if (CombatMode != ECombatMode::ECM_Dead)
+	{
+		//TODO turn on combat hud
 
-	IsInCombat = true;
-	
+		IsInCombat = true;
 
-	//TODO: Turn on combat music
 
+		//TODO: Turn on combat music
+	}
 }
 
 void ABaseCharacter::EndCombat()
@@ -275,7 +276,7 @@ void ABaseCharacter::EndCombat()
 	
 
 	//clear last target information
-	CombatTarget = nullptr;
+	ClearCombatTarget("EndCombat");
 	LastAttacker = nullptr;
 	LastHitWeapon = nullptr;
 	LastHitImpactPoint = FVector();
@@ -646,8 +647,7 @@ void ABaseCharacter::GetHit_Implementation(const FVector& ImpactPoint, ACharacte
 
 		if (!CombatTarget) 
 		{ 
-			UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *Attacker->GetName()); 
-			CombatTarget = Attacker;
+			SetCombatTarget(Attacker, "GetHit");
 		}
 
 		//Store Information about the Attacker and Weapon of Attacker
@@ -861,6 +861,11 @@ void ABaseCharacter::Death()
 	//AbortAttack();
 	//EndCombat();
 	SetCombatMode(ECombatMode::ECM_Dead);
+	ClearCombatTarget("Death of Self");
+	if (LastAttacker)
+	{
+		LastAttacker->ClearCombatTarget("Death of Target");
+	}
 
 
 	//turn off the collision capsule
@@ -895,6 +900,22 @@ void ABaseCharacter::SetCombatMode(ECombatMode NewCombatMode)
 		UE_LOG(LogTemp, Warning, TEXT("%s: SetCombatMode Called for %s but prevented because DEAD."), *FullName, *CombatModeString);
 	}
 	
+}
+
+void ABaseCharacter::SetCombatTarget(ABaseCharacter* Target, FString NameOfFunctionCallingThis)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s : %s setting new combat target: %s"), 
+		*NameOfFunctionCallingThis, *GetName(), *Target->GetName());
+
+	CombatTarget = Target;
+}
+
+void ABaseCharacter::ClearCombatTarget(FString NameOfFunctionCallingThis)
+{
+	UE_LOG(LogTemp, Warning, TEXT("%s : %s setting new combat target: nullptr"),
+		*NameOfFunctionCallingThis, *GetName());
+
+	CombatTarget = nullptr;
 }
 
 
@@ -1085,36 +1106,66 @@ void ABaseCharacter::Hide()
 }
 
 
+bool ABaseCharacter::CanRecover()
+{
+	bool b = true;
+
+	if (CombatMode == ECombatMode::ECM_Dead)
+	{
+		b = false;
+	}
+	//TODO: add other conditions that would prevent recovery. 
+	// Potentially make different functions to check canregen, canmanaregen etc to be more specific
+	//  and call them separately in recover or split recover to multiple functions.
+
+	return b;
+}
+
+bool ABaseCharacter::CanSee()
+{
+	bool b = true;
+
+	if (CombatMode == ECombatMode::ECM_Dead)
+	{
+		b = false;
+	}
+	//TODO: add other conditions that would prevent seeing. 
+
+	return b;
+}
+
 //TODO: change this to an interface to give different functionality to players and enemies
 //when out of combat, without full hp/mp increase hp/mp per tick
 void ABaseCharacter::Recover(float DeltaTime)
 {
-
-	float RegenTickTimerDeltaTime = RegenTickTimer * DeltaTime;
-	float RegenTickLengthDeltaTime = RegenTickLength * DeltaTime;
-
-	if (RegenTickTimerDeltaTime >= RegenTickLengthDeltaTime)
+	if(CanRecover())
 	{
-		AEnemy* Enemy = Cast<AEnemy>(this);
-		if (Enemy)
+		float RegenTickTimerDeltaTime = RegenTickTimer * DeltaTime;
+		float RegenTickLengthDeltaTime = RegenTickLength * DeltaTime;
+
+		if (RegenTickTimerDeltaTime >= RegenTickLengthDeltaTime)
 		{
-			if (CombatMode == ECombatMode::ECM_OutOfCombat)
+			AEnemy* Enemy = Cast<AEnemy>(this);
+			if (Enemy)
 			{
-				Regen();
+				if (CombatMode == ECombatMode::ECM_OutOfCombat)
+				{
+					Regen();
+				}
 			}
+
+
+			RegenStamina();
+
+			//TODO: other recovery aspects? MP? TP?
+
+			RegenTickTimer = 0.0f;
+
 		}
-		
-		
-		RegenStamina();
 
-		//TODO: other recovery aspects? MP? TP?
-
-		RegenTickTimer = 0.0f;
-
+		RegenTickTimer += 1;
 	}
 
-	RegenTickTimer += 1;
-	
 }
 
 void ABaseCharacter::RegenStamina()
@@ -1213,7 +1264,7 @@ void ABaseCharacter::ProcessHitTarget(AActor* TargetHit)
 	{
 		if (!CombatTarget) 
 		{
-			CombatTarget = CharacterHit;
+			SetCombatTarget(CharacterHit, "ProcessHitTarget");
 		}
 		
 		//if you defeated target
@@ -1236,6 +1287,10 @@ void ABaseCharacter::DefeatTargetCharacter(ABaseCharacter* CharacterHit)
 	{
 		//TODO: player rewards for victory
 		UE_LOG(LogTemp, Warning, TEXT("You defeated %s."), *CharacterHit->GetName());
+
+		//clear the dead target from CombatTarget
+		ClearCombatTarget("DefeatTargetCharacter as player");
+
 	}
 	else
 	{

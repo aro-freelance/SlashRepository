@@ -294,6 +294,8 @@ void ASlashCharacter::UseStaminaPotion(ARecoveryPickup* Potion)
 
 void ASlashCharacter::UseBuffPotion(ARecoveryPickup* Potion)
 {
+
+
 	if (Attributes && SlashOverlay)
 	{
 		float PotionPower = Potion->GetPotionPower();
@@ -713,7 +715,7 @@ void ASlashCharacter::LockOnToEnemy(const FInputActionValue& Value)
 		HasEnemyLockedOn = false;
 
 		//TODO: unlock
-		CombatTarget = nullptr;
+		ClearCombatTarget("LockOn Toggle OFF");
 
 		UE_LOG(LogTemp, Warning, TEXT("unlocked"));
 	}
@@ -750,7 +752,7 @@ void ASlashCharacter::LockOnToEnemy(const FInputActionValue& Value)
 		{
 			//store as combat target
 			if (!CombatTarget) { UE_LOG(LogTemp, Warning, TEXT("setting new combat target: %s"), *HitActor->GetName()); }
-			CombatTarget = HitActor;
+			SetCombatTarget(HitActor, "LockOn Toggle ON");
 
 			HasEnemyLockedOn = true;
 		}

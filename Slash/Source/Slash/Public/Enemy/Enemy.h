@@ -28,7 +28,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	
+	void SetHealthBarVisibility(bool ShouldBeOn, FString FunctionCallingThis);
 
 	/*
 	* Navigation
@@ -141,6 +141,7 @@ private:
 	//used for Enemy AI Combat decisions
 	void Combat();
 	virtual void StartCombat() override;
+	
 	virtual void EndCombat() override;
 	virtual void AbortAttack() override;
 
