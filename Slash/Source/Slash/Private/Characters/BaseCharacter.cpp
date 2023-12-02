@@ -283,7 +283,7 @@ void ABaseCharacter::EndCombat()
 	LastDamageAmount = 0.f;
 	IsInCombat = false;
 
-	CombatMode = ECombatMode::ECM_OutOfCombat;
+	SetCombatMode(ECombatMode::ECM_OutOfCombat);
 
 	//TODO: Turn off combat music
 
@@ -858,9 +858,9 @@ void ABaseCharacter::Death()
 	PlaySoundLocal(DeathSound, GetActorLocation());
 
 	//Turn off this Enemy's HUD info, combat behaviors
-	AbortAttack();
-	EndCombat();
-	CombatMode = ECombatMode::ECM_Dead;
+	//AbortAttack();
+	//EndCombat();
+	SetCombatMode(ECombatMode::ECM_Dead);
 
 
 	//turn off the collision capsule
@@ -872,6 +872,29 @@ void ABaseCharacter::Death()
 	//play death HUD
 	//TODO
 
+}
+
+void ABaseCharacter::SetCombatMode(ECombatMode NewCombatMode)
+{
+	FString CombatModeString = UEnum::GetDisplayValueAsText(NewCombatMode).ToString();
+	FString FullName = GetName();
+
+	if (NewCombatMode == CombatMode)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s : tried to set CombatMode to %s but prevented because DUPLICATE CALL "), *FullName, *CombatModeString);
+	}
+
+	//if not dead, set new combatmode
+	if (CombatMode != ECombatMode::ECM_Dead) 
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s : CombatMode set to %s"), *FullName, *CombatModeString);
+		CombatMode = NewCombatMode;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s: SetCombatMode Called for %s but prevented because DEAD."), *FullName, *CombatModeString);
+	}
+	
 }
 
 
@@ -887,7 +910,7 @@ void ABaseCharacter::MeleeAttack()
 		return;
 	}
 
-	CombatMode = ECombatMode::ECM_MeleeAttacking;
+	SetCombatMode(ECombatMode::ECM_MeleeAttacking);
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -921,7 +944,7 @@ void ABaseCharacter::RangedAttack()
 		return;
 	}
 
-	CombatMode = ECombatMode::ECM_RangeAttacking;
+	SetCombatMode(ECombatMode::ECM_RangeAttacking);
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -958,7 +981,7 @@ void ABaseCharacter::SnipeAttack()
 		return;
 	}
 
-	CombatMode = ECombatMode::ECM_SnipeAttacking;
+	SetCombatMode(ECombatMode::ECM_SnipeAttacking);
 	ActionState = EActionState::EAS_Attacking;
 
 	//do the attack
@@ -997,7 +1020,7 @@ void ABaseCharacter::SpecialAttack()
 			Attributes->SetTP(Attributes->GetTP() - SpecialAttackTPCost);
 		}
 		
-		CombatMode = ECombatMode::ECM_SpecialAttacking;
+		SetCombatMode(ECombatMode::ECM_SpecialAttacking);
 		ActionState = EActionState::EAS_Attacking;
 
 		//do the attack
@@ -1031,7 +1054,7 @@ void ABaseCharacter::Defend()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Defend Method"));
 
-	CombatMode = ECombatMode::ECM_Defending;
+	SetCombatMode(ECombatMode::ECM_Defending);
 
 	//TODO: execute the defend logic
 
@@ -1042,7 +1065,7 @@ void ABaseCharacter::Dodge()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Dodge Method"));
 
-	CombatMode = ECombatMode::ECM_Dodging;
+	SetCombatMode(ECombatMode::ECM_Dodging);
 
 	//TODO: execute the dodge logic
 	PlayMontage(DodgeMontage, GetRandomSectionName(DodgeMontageSectionNames));
@@ -1054,7 +1077,7 @@ void ABaseCharacter::Hide()
 {
 	UE_LOG(LogTemp, Warning, TEXT("Hide Method"));
 
-	CombatMode = ECombatMode::ECM_Hiding;
+	SetCombatMode(ECombatMode::ECM_Hiding);
 
 	//TODO: execute the hide logic
 
@@ -1160,7 +1183,7 @@ void ABaseCharacter::Regen()
 
 void ABaseCharacter::AbortAttack()
 {
-	CombatMode = ECombatMode::ECM_ReadyInCombat;
+	SetCombatMode(ECombatMode::ECM_ReadyInCombat);
 	ActionState = EActionState::EAS_Unoccupied;
 	if(EquippedWeapon){ EquippedWeapon->SetWeaponCollisionState(EWeaponCollisionState::EWS_CollisionOff); }
 	
@@ -1173,11 +1196,11 @@ void ABaseCharacter::SetReadyInCombat()
 
 	if (SlashCharacter)
 	{
-		CombatMode = ECombatMode::ECM_ReadyInCombat;
+		SetCombatMode(ECombatMode::ECM_ReadyInCombat);
 	}
 	if (Enemy)
 	{
-		CombatMode = ECombatMode::ECM_Chasing;
+		SetCombatMode(ECombatMode::ECM_Chasing);
 	}
 }
 

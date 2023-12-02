@@ -116,6 +116,9 @@ protected:
 
 	virtual void Death();
 
+	UFUNCTION(BlueprintCallable)
+	virtual void SetCombatMode(ECombatMode NewCombatMode);
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool IsInCombat = false;

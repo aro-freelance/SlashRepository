@@ -122,13 +122,16 @@ void AWeapon::AttachMeshToSocket(USceneComponent* InParent, const FName& InSocke
 void AWeapon::DetachMeshFromSocket()
 {
 	FDetachmentTransformRules DeTransformRules(EDetachmentRule::KeepWorld, true);
-	ItemMesh->DetachFromComponent(DeTransformRules);
+	if (ItemMesh)
+	{
+		ItemMesh->DetachFromComponent(DeTransformRules);
 
-	ItemMesh->SetWorldRotation(StartingRotation);
-	SetItemState(EItemState::EIS_Hovering);
+		ItemMesh->SetWorldRotation(StartingRotation);
+		SetItemState(EItemState::EIS_Hovering);
 
-	ToggleCollisionSphere(true);
-	ToggleEmberEffect(true);
+		ToggleCollisionSphere(true);
+		ToggleEmberEffect(true);
+	}
 
 }
 

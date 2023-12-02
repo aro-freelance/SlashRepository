@@ -526,11 +526,11 @@ void ASlashCharacter::SetReadyInCombat()
 
 	if (IsInCombat)
 	{
-		CombatMode = ECombatMode::ECM_ReadyInCombat;
+		SetCombatMode(ECombatMode::ECM_ReadyInCombat);
 	}
 	else
 	{
-		CombatMode = ECombatMode::ECM_OutOfCombat;
+		SetCombatMode(ECombatMode::ECM_OutOfCombat);
 	}
 }
 

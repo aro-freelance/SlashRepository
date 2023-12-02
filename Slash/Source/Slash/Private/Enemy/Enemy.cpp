@@ -180,7 +180,7 @@ void AEnemy::StartCombat()
 		HealthBarWidget->SetVisibility(true);
 	}
 
-	CombatMode = ECombatMode::ECM_Chasing;
+	SetCombatMode(ECombatMode::ECM_Chasing);
 	IsCombatTickReady = true;
 
 }
@@ -215,11 +215,11 @@ void AEnemy::SetReadyInCombat()
 
 	if (IsInCombat)
 	{
-		CombatMode = ECombatMode::ECM_Chasing;
+		SetCombatMode(ECombatMode::ECM_Chasing);
 	}
 	else
 	{
-		CombatMode = ECombatMode::ECM_OutOfCombat;
+		SetCombatMode(ECombatMode::ECM_OutOfCombat);
 	}
 }
 
@@ -290,7 +290,20 @@ void AEnemy::SpawnDrops()
 	{
 		FVector SoulSpawnPoint = GetActorLocation() + DropLocationOffset;
 		ASoul* SpawnedSoul = World->SpawnActor<ASoul>(SoulClass, SoulSpawnPoint, GetActorRotation());
-		SpawnedSoul->SetValue(Attributes->GetSoulDropAmount());
+		SpawnedSoul->SetActorEnableCollision(false);
+		
+		//@yelsa this is causing an error when calling setsouldropamount. debug
+
+		//if (Attributes->GetSoulDropAmount())
+		//{
+		//	SpawnedSoul->SetValue(Attributes->GetSoulDropAmount());
+		//	SpawnedSoul->SetActorEnableCollision(true);
+		//}
+		//else
+		//{
+		//	UE_LOG(LogTemp, Warning, TEXT("soul drop amount attribute not set"));
+		//}
+		
 	
 	}
 
@@ -388,7 +401,7 @@ void AEnemy::Flee()
 
 	UE_LOG(LogTemp, Warning, TEXT("Flee Method"));
 
-	CombatMode = ECombatMode::ECM_Fleeing;
+	SetCombatMode(ECombatMode::ECM_Fleeing);
 	//TODO: execute the flee logic
 
 	//TODO: make a check to see if chasing should be turned back on after x time or x percent hp?
@@ -451,7 +464,7 @@ void AEnemy::AbortAttack()
 {
 	Super::AbortAttack();
 
-	CombatMode = ECombatMode::ECM_Chasing;
+	SetCombatMode(ECombatMode::ECM_Chasing);
 }
 
 
