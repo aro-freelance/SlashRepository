@@ -33,6 +33,8 @@ ABaseCharacter::ABaseCharacter()
 void ABaseCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	SetWeaponSettings();
 	
 }
 
@@ -56,15 +58,16 @@ this is called in blueprints
 when the animation notify happens
 from the player hitting the equip button to start the animation
 */
-void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquipping)
+void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquipping, bool isSecondWeapon)
 {
+
 	if (EquippedWeapon)
 	{
-		//socket the weapon
-		FName SocketName = WeaponTypeToSocketFName(WeaponType, isEquipping);
+		//socket the weapon (if isSecondWeapon is a bool that allows for equipping weapons to a second socket if they are the second one)
+		FName SocketName = WeaponTypeToSocketFName(WeaponType, isEquipping, isSecondWeapon);
 		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
 
-		SetEquippedWeaponSettings();
+		SetWeaponSettings();
 
 		//and then update its itemstate
 		if (isEquipping)
@@ -79,7 +82,7 @@ void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquippin
 
 }
 
-void ABaseCharacter::SetEquippedWeaponSettings()
+void ABaseCharacter::SetWeaponSettings()
 {
 	//TODO: set other stuff based on weapon type here. this is called when weapon is attached to character
 	if (EquippedWeapon)
@@ -112,13 +115,48 @@ void ABaseCharacter::SetEquippedWeaponSettings()
 			AttackMontageSectionNames = BowAttackMontageSectionNames;
 			HasRangedWeapon = true;
 			break;
+		case EWeaponType::EWT_HandToHand:
+			AttackMontage = AttackHandToHandMontage;
+			AttackMontageSectionNames = BowAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+			UsesHandToHand = true;
+			break;
+		case EWeaponType::EWT_Bite:
+			AttackMontage = AttackBiteMontage;
+			AttackMontageSectionNames = BiteAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+			IsAnimal = true;
+			break;
+		case EWeaponType::EWT_Claw:
+			AttackMontage = AttackClawMontage;
+			AttackMontageSectionNames = ClawAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+			IsAnimal = true;
+			break;
 
 		}
 
 	}
+	/*else
+	{
+		if (IsAnimal)
+		{
+			AttackMontage = AttackAnimalMontage;
+			AttackMontageSectionNames = AnimalAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+		} 
+
+		if (UsesHandToHand)
+		{
+			AttackMontage = AttackHandToHandMontage;
+			AttackMontageSectionNames = HandToHandAttackMontageSectionNames;
+			HasMeleeWeapon = true;
+		}
+	
+	}*/
 }
 
-FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping)
+FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping, bool isSecondWeapon)
 {
 	FName SocketName = FName();
 
@@ -176,6 +214,52 @@ FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, boo
 			SocketName = FName("OneHandedSheathSocket");
 		}
 		break;
+	case EWeaponType::EWT_HandToHand:
+		if (isEquipping)
+		{
+			if (!isSecondWeapon)
+			{
+				SocketName = FName("RightHandToHandSocket");
+			}
+			else
+			{
+				SocketName = FName("LeftHandToHandSocket");
+			}
+			
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_Bite:
+		if (isEquipping)
+		{
+			SocketName = FName("MouthSocket");
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+	case EWeaponType::EWT_Claw:
+		if (isEquipping)
+		{
+			if (!isSecondWeapon)
+			{
+				SocketName = FName("RightClawSocket");
+			}
+			else
+			{
+				SocketName = FName("LeftClawSocket");
+			}
+		}
+		else
+		{
+			SocketName = FName("OneHandedSheathSocket");
+		}
+		break;
+
 	default:
 		break;
 
@@ -296,6 +380,25 @@ void ABaseCharacter::IncreaseTP()
 	float MaxTP = Attributes->GetMaxTP();
 	float Amount = FMath::Clamp(TP + (MaxTP * TPGainPercent), 0.0f, MaxTP);
 	Attributes->SetTP(Amount);
+}
+
+bool ABaseCharacter::HasMultipleWeapons()
+{
+	bool b = false;
+
+	if (EquippedWeapon)
+	{
+		if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_HandToHand)
+		{
+			b = true;
+		}
+		if (EquippedWeapon->GetWeaponType() == EWeaponType::EWT_Claw)
+		{
+			b = true;
+		}
+	}
+
+	return b;
 }
 
 float ABaseCharacter::CalculatePhysicalDamage(float DamageAmount)
@@ -925,11 +1028,23 @@ void ABaseCharacter::MeleeAttack()
 
 	UE_LOG(LogTemp, Warning, TEXT("MeleeAttack Method called by %s"), *GetName());
 
-	if (!EquippedWeapon)
+	if (!EquippedWeapon && !IsAnimal && !UsesHandToHand)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("no equipped weapon"));
+		UE_LOG(LogTemp, Warning, TEXT("no viable weapon"));
 		return;
 	}
+
+	//TODO remove when animal attack functional
+	if (IsAnimal)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("is animal"));
+	}
+
+	if (UsesHandToHand)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("uses h2h"));
+	}
+
 
 	SetCombatMode(ECombatMode::ECM_MeleeAttacking);
 	ActionState = EActionState::EAS_Attacking;

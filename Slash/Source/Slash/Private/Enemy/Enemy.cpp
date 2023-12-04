@@ -489,6 +489,7 @@ FString AEnemy::BuildWeaponSocketString()
 	switch (EnemyWeaponType)
 	{
 	case EEnemyWeapon::EEW_Unarmed:
+
 		SocketString = "RightHandSocket";
 		break;
 	case EEnemyWeapon::EEW_Sword:
@@ -506,11 +507,39 @@ FString AEnemy::BuildWeaponSocketString()
 	case EEnemyWeapon::EEW_Bow:
 		SocketString = "RightHandSocket";
 		break;
+	case EEnemyWeapon::EEW_HandToHand:
+		SocketString = "RightHandToHandSocket";
+		break;
+	case EEnemyWeapon::EEW_Bite:
+		SocketString = "MouthSocket";
+		break;
+	case EEnemyWeapon::EEW_Claw:
+		SocketString = "RightClawSocket";
+		break;
 	default:
 		break;
 	}
 
 
+	return SocketString;
+}
+
+
+FString AEnemy::BuildWeaponSocketStringTwo()
+{
+	FString SocketString = FString();
+
+	switch (EnemyWeaponType)
+	{
+	case EEnemyWeapon::EEW_HandToHand:
+		SocketString = "LeftHandToHandSocket";
+		break;
+	case EEnemyWeapon::EEW_Claw:
+		SocketString = "LeftClawSocket";
+		break;
+	default:
+		break;
+	}
 	return SocketString;
 }
 

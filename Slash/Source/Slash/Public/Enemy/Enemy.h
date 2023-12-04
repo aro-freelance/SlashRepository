@@ -99,6 +99,9 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	TSubclassOf<AActor> EnemyWeapon;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+	TSubclassOf<AActor> EnemySecondWeapon;
+
 	UFUNCTION(BlueprintCallable)
 	AWeapon* GetEnemyWeapon();
 
@@ -120,6 +123,10 @@ protected:
 	//use the enemy specific sockets to attach weapon
 	UFUNCTION(BlueprintCallable)
 	FString BuildWeaponSocketString();
+
+	//if the enemy has multiple weapons, call this in BuildWeaponSocketString to set a second socket
+	UFUNCTION(BlueprintCallable)
+	FString BuildWeaponSocketStringTwo();
 
 	virtual void UpdateCombatHUD();
 

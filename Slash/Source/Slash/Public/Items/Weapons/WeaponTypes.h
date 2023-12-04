@@ -7,7 +7,10 @@ enum class EWeaponType : uint8
 	EWT_TwoHanded UMETA(DisplayName = "Two Handed"),
 	EWT_Bow UMETA(DisplayName = "Bow"),
 	EWT_Rifle UMETA(DisplayName = "Rifle"),
-	EWT_Pistol UMETA(DisplayName = "Pistol")
+	EWT_Pistol UMETA(DisplayName = "Pistol"),
+	EWT_HandToHand UMETA(DisplayName = "HandToHand"),
+	EWT_Bite UMETA(DisplayName = "Bite"),
+	EWT_Claw UMETA(DisplayName = "Claw")
 };
 
 UENUM(BlueprintType)

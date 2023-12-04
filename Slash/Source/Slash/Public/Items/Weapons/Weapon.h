@@ -144,7 +144,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon FX")
 	USoundBase* WeaponPickupSound;
 
-
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Weapon Stats")
+	bool IsDualLocationWeapon = false;
 	
 
 private:
@@ -167,7 +168,6 @@ private:
 	//debugging
 	bool CanAttack = true;
 	bool CanCollide = true;
-	
 	
 
 //Getters and Setters
@@ -195,6 +195,8 @@ public:
 	FORCEINLINE UDamageType* GetDamageType() const { return DamageType; }
 	FORCEINLINE float GetCriticalMultiplier() const { return CriticalMultiplier; }
 	FORCEINLINE float GetProjectileSpeedMultiplier() const { return ProjectileSpeedMultiplier; }
+
+	FORCEINLINE bool GetIsDualLocationWeapon() const { return IsDualLocationWeapon; }
 
 
 };

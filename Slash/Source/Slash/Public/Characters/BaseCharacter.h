@@ -47,6 +47,8 @@ protected:
 
 	virtual void PlaySoundLocal(USoundBase* Sound, const FVector& ImpactPoint);
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Animal")
+	bool IsAnimal = false;
 
 	/*
 	* Combat
@@ -60,6 +62,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
 	AWeapon* EquippedWeapon;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Weapon)
+	AWeapon* EquippedSecondWeapon;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Damaged By Properties")
 	ABaseCharacter* CombatTarget;
@@ -75,6 +80,10 @@ protected:
 	bool HasRangedWeapon = false;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	bool HasSnipeWeapon = false;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	bool UsesHandToHand = false;
+
+
 
 	virtual void MeleeAttack();
 	virtual void RangedAttack();
@@ -153,7 +162,7 @@ protected:
 	virtual void SetReadyInCombat();
 
 	UFUNCTION(BlueprintCallable)
-	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping);
+	virtual void AttachWeapon(const EWeaponType& WeaponType, bool isEquipping, bool isSecondWeapon);
 
 
 	UFUNCTION(BlueprintCallable)
@@ -184,7 +193,7 @@ protected:
 	UPROPERTY(BlueprintReadOnly)
 	EDeathPose DeathPose;
 
-	virtual void SetEquippedWeaponSettings();
+	virtual void SetWeaponSettings();
 
 	virtual void PlayMontage(UAnimMontage* Montage, const FName& SectionName);
 
@@ -293,6 +302,25 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Montages")
 	TArray<FName> BowAttackMontageSectionNames;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackClawMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> ClawAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackBiteMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> BiteAttackMontageSectionNames;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Montages")
+	UAnimMontage* AttackHandToHandMontage;
+
+	UPROPERTY(EditAnywhere, Category = "Montages")
+	TArray<FName> HandToHandAttackMontageSectionNames;
+
 
 	UPROPERTY(EditDefaultsOnly, Category = "Montages")
 	UAnimMontage* HitReactMontage;
@@ -340,8 +368,9 @@ private:
 	bool CheckCritical(const FVector& ImpactPoint);
 	void IncreaseTP();
 
+	bool HasMultipleWeapons();
 
-	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping);
+	FName WeaponTypeToSocketFName(const EWeaponType& WeaponType, bool isEquipping, bool isSecondWeapon);
 
 	float RegenTickTimer = 0.0f;
 

@@ -409,7 +409,23 @@ void ASlashCharacter::EquipNewWeapon()
 
 		CharacterState = WeaponSizeToCharacterState(WeaponSize);
 
-		AttachWeapon(WeaponSize, true);
+
+		//if it is a weapon that has 2 hit locations
+		if (EquippedWeapon->GetIsDualLocationWeapon())
+		{
+			//attach the first weapon
+			AttachWeapon(WeaponSize, true, false);
+			//attach the second weapon
+			AttachWeapon(WeaponSize, true, true);
+		}
+		else
+		{
+			//or if it only has one location attach once
+			AttachWeapon(WeaponSize, true, false);
+		}
+		
+			
+		
 
 		EquippedWeapon->PlayWeaponPickupSound();
 

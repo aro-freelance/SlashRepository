@@ -19,5 +19,8 @@ enum class EEnemyWeapon : uint8
 	EEW_GreatHammer UMETA(DisplayName = "Great Hammer"),
 	EEW_Rifle UMETA(DisplayName = "Rifle"),
 	EEW_Pistol UMETA(DisplayName = "Pistol"),
-	EEW_Bow UMETA(DisplayName = "Bow")
+	EEW_Bow UMETA(DisplayName = "Bow"),
+	EEW_HandToHand UMETA(DisplayName = "HandToHand"),
+	EEW_Bite UMETA(DisplayName = "Bite"),
+	EEW_Claw UMETA(DisplayName = "Claw")
 };
