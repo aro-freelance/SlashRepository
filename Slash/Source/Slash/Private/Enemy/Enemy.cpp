@@ -508,17 +508,19 @@ FString AEnemy::BuildWeaponSocketString()
 		SocketString = "RightHandSocket";
 		break;
 	case EEnemyWeapon::EEW_HandToHand:
-		SocketString = "RightHandToHandSocket";
+		SocketString = "RightHandSocket";
 		break;
 	case EEnemyWeapon::EEW_Bite:
 		SocketString = "MouthSocket";
 		break;
 	case EEnemyWeapon::EEW_Claw:
-		SocketString = "RightClawSocket";
+		SocketString = "RightHandSocket";
 		break;
 	default:
 		break;
 	}
+
+	UE_LOG(LogTemp, Warning, TEXT("%s buildsocketstring: %s ."), *GetName(), *SocketString);
 
 
 	return SocketString;
@@ -532,10 +534,10 @@ FString AEnemy::BuildWeaponSocketStringTwo()
 	switch (EnemyWeaponType)
 	{
 	case EEnemyWeapon::EEW_HandToHand:
-		SocketString = "LeftHandToHandSocket";
+		SocketString = "LeftHandSocket";
 		break;
 	case EEnemyWeapon::EEW_Claw:
-		SocketString = "LeftClawSocket";
+		SocketString = "LeftHandSocket";
 		break;
 	default:
 		break;

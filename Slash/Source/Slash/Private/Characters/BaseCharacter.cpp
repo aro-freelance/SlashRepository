@@ -67,6 +67,10 @@ void ABaseCharacter::AttachWeapon(const EWeaponType& WeaponType, bool isEquippin
 		FName SocketName = WeaponTypeToSocketFName(WeaponType, isEquipping, isSecondWeapon);
 		EquippedWeapon->AttachMeshToSocket(GetMesh(), SocketName);
 
+		FString SocketString = SocketName.ToString();
+
+		UE_LOG(LogTemp, Warning, TEXT("attachweapon to %s SocketName: %s ."), *GetName(), *SocketString);
+
 		SetWeaponSettings();
 
 		//and then update its itemstate
@@ -219,11 +223,11 @@ FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, boo
 		{
 			if (!isSecondWeapon)
 			{
-				SocketName = FName("RightHandToHandSocket");
+				SocketName = FName("RightHandSocket");
 			}
 			else
 			{
-				SocketName = FName("LeftHandToHandSocket");
+				SocketName = FName("LeftHandSocket");
 			}
 			
 		}
@@ -247,11 +251,11 @@ FName ABaseCharacter::WeaponTypeToSocketFName(const EWeaponType& WeaponType, boo
 		{
 			if (!isSecondWeapon)
 			{
-				SocketName = FName("RightClawSocket");
+				SocketName = FName("RightHandSocket");
 			}
 			else
 			{
-				SocketName = FName("LeftClawSocket");
+				SocketName = FName("LeftHandSocket");
 			}
 		}
 		else
@@ -947,7 +951,7 @@ void ABaseCharacter::Death()
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	//Log Message for Defeat
+	// Message for Defeat
 	if (GEngine)
 	{
 		GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Red, FString::Printf(TEXT("%s defeated %s"), *LastAttacker->GetName(), *Name));
